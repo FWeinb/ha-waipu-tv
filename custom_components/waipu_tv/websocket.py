@@ -22,7 +22,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import WaipuTvData, loaded_data
-from .views import base_url
 
 type Connection = websocket_api.ActiveConnection
 
@@ -173,20 +172,17 @@ async def ws_set_favorite(hass: HomeAssistant, connection: Connection, msg: dict
 @websocket_api.require_admin
 @callback
 def ws_playlists(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]) -> None:
-    """Playlist and guide URLs; they contain the access key, hence admins only."""
+    """Playlist and guide paths; they contain the access key, hence admins only. The panel
+    prefixes its own address, the same one players on that network reach."""
     data = loaded_data(hass)
     entry = data.channels.config_entry
-    base = base_url(hass, entry)
+    base = f"/api/{DOMAIN}"
     key = entry.options[CONF_ACCESS_KEY]
-    urls = (
-        {
-            **{name: f"{base}/{name}.m3u?key={key}" for name in FILTERS},
-            "recordings": f"{base}/recordings.m3u?key={key}",
-            "epg": f"{base}/epg.xml?key={key}",
-        }
-        if base
-        else {}
-    )
+    urls = {
+        **{name: f"{base}/{name}.m3u?key={key}" for name in FILTERS},
+        "recordings": f"{base}/recordings.m3u?key={key}",
+        "epg": f"{base}/epg.xml?key={key}",
+    }
     connection.send_result(
         msg["id"],
         {

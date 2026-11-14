@@ -33,7 +33,6 @@ GUIDE = {
 PLAYLISTS = {
     "playlists": True,
     "access_key": "",
-    "player_url": "https://ha.example.com/",
     "catchup": True,
     "timeshift": True,
     "hls_proxy": False,
@@ -74,7 +73,6 @@ async def test_full_flow(hass, mock_token):
         "guide_parallel": 2,
         "playlists": True,
         "access_key": entry.options["access_key"],
-        "player_url": "https://ha.example.com",
         "catchup": True,
         "timeshift": True,
         "hls_proxy": False,
@@ -116,20 +114,6 @@ async def test_login_errors_and_retry(hass, aioclient_mock, response, error):
     aioclient_mock.post(URL_TOKEN, json=token_response())
     result = await hass.config_entries.flow.async_configure(result["flow_id"], LOGIN)
     assert result["step_id"] == "guide"
-
-
-async def test_invalid_player_url(hass, mock_token):
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], LOGIN)
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], GUIDE)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**PLAYLISTS, "player_url": "ha.local:8123"}
-    )
-    assert result["errors"] == {"player_url": "invalid_url"}
-    # what was typed is shown again
-    schema = {key.schema: key for key in result["data_schema"].schema}
-    assert schema["player_url"].description["suggested_value"] == "ha.local:8123"
-    assert schema["timeshift"].default() is True
 
 
 async def test_single_account(hass, config_entry):

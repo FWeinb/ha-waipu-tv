@@ -68,7 +68,6 @@ const en = {
   running: "Running",
   off: "Off",
   playlists_off: "The playlist server is off. Turn it on in the integration options.",
-  no_url: "Set an address for players in the integration options; Home Assistant has no internal URL.",
   open_options: "Open integration options",
   copy: "Copy",
   copied: "Copied",
@@ -172,8 +171,6 @@ const de: Record<Key, string> = {
   running: "Aktiv",
   off: "Aus",
   playlists_off: "Der Playlist-Server ist aus. Schalte ihn in den Optionen der Integration ein.",
-  no_url:
-    "Lege in den Optionen der Integration eine Adresse für Player fest; Home Assistant hat keine interne URL.",
   open_options: "Optionen der Integration öffnen",
   copy: "Kopieren",
   copied: "Kopiert",

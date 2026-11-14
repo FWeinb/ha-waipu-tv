@@ -45,7 +45,6 @@ from .const import (
     CONF_GUIDE_INTERVAL,
     CONF_GUIDE_PARALLEL,
     CONF_HLS_PROXY,
-    CONF_PLAYER_URL,
     CONF_PLAYLISTS,
     CONF_RECORDINGS_INTERVAL,
     CONF_REFRESH_TOKEN,
@@ -141,9 +140,6 @@ def _playlists_schema(values: Mapping[str, Any]) -> probatio.Schema:
             probatio.Optional(
                 CONF_ACCESS_KEY, description={"suggested_value": values[CONF_ACCESS_KEY]}
             ): str,
-            probatio.Optional(
-                CONF_PLAYER_URL, description={"suggested_value": values[CONF_PLAYER_URL]}
-            ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
             probatio.Required(CONF_CATCHUP, default=values[CONF_CATCHUP]): bool,
             probatio.Required(CONF_TIMESHIFT, default=values[CONF_TIMESHIFT]): bool,
             probatio.Required(CONF_HLS_PROXY, default=values[CONF_HLS_PROXY]): bool,
@@ -151,13 +147,10 @@ def _playlists_schema(values: Mapping[str, Any]) -> probatio.Schema:
     )
 
 
-def _playlists_options(user_input: dict[str, Any], errors: dict[str, str]) -> dict[str, Any]:
-    """An empty access key gets a new one; the player address must be an http(s) URL."""
+def _playlists_options(user_input: dict[str, Any]) -> dict[str, Any]:
+    """An empty access key gets a new one."""
     access_key = user_input.get(CONF_ACCESS_KEY, "").strip() or generate_access_key()
-    player_url = user_input.get(CONF_PLAYER_URL, "").strip().rstrip("/")
-    if player_url and not player_url.startswith(("http://", "https://")):
-        errors[CONF_PLAYER_URL] = "invalid_url"
-    return {**user_input, CONF_ACCESS_KEY: access_key, CONF_PLAYER_URL: player_url}
+    return {**user_input, CONF_ACCESS_KEY: access_key}
 
 
 class WaipuTvConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -207,18 +200,15 @@ class WaipuTvConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Step 3: playlist server."""
-        errors: dict[str, str] = {}
         if user_input is not None:
-            options = _playlists_options(user_input, errors)
-            if not errors:
-                return self.async_create_entry(
-                    title=self._title, data=self._data, options={**self._options, **options}
-                )
+            return self.async_create_entry(
+                title=self._title,
+                data=self._data,
+                options={**self._options, **_playlists_options(user_input)},
+            )
 
         return self.async_show_form(
-            step_id="playlists",
-            data_schema=_playlists_schema({**self._options, **(user_input or {})}),
-            errors=errors,
+            step_id="playlists", data_schema=_playlists_schema(self._options)
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
@@ -286,14 +276,9 @@ class WaipuTvOptionsFlow(OptionsFlowWithReload):
     async def async_step_playlists(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        errors: dict[str, str] = {}
         if user_input is not None:
-            options = _playlists_options(user_input, errors)
-            if not errors:
-                return self.async_create_entry(data={**self._options, **options})
+            return self.async_create_entry(data={**self._options, **_playlists_options(user_input)})
 
         return self.async_show_form(
-            step_id="playlists",
-            data_schema=_playlists_schema({**self._options, **(user_input or {})}),
-            errors=errors,
+            step_id="playlists", data_schema=_playlists_schema(self._options)
         )

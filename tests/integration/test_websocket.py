@@ -21,9 +21,6 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 async def ws(hass, hass_ws_client, hass_admin_user, config_entry, mock_waipu, freezer):
     freezer.move_to("2026-11-14T12:30:00+00:00")
     await hass.config.async_set_time_zone("Europe/Berlin")
-    hass.config_entries.async_update_entry(
-        config_entry, options={**config_entry.options, "player_url": "https://ha.example.com"}
-    )
     mock_waipu.get(GRID, json=load_json("epg_grid_ard.json"))
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -116,7 +113,7 @@ async def test_playlists_for_admins(ws):
     result = (await command(ws, "playlists"))["result"]
 
     assert result["enabled"] is True
-    base = "https://ha.example.com/api/waipu_tv"
+    base = "/api/waipu_tv"
     assert result["urls"]["favorites"] == f"{base}/favorites.m3u?key={KEY}"
     assert result["urls"]["epg"] == f"{base}/epg.xml?key={KEY}"
     assert set(result["urls"]) == {"all", "favorites", "live", "vod", "recordings", "epg"}

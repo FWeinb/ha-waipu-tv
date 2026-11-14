@@ -52,21 +52,21 @@ class WaipuPlaylistsTab extends LitElement {
             ? html`<p class="muted">${t(this.hass, "loading")}</p>`
             : !data.enabled
               ? html`<p>${t(this.hass, "playlists_off")}</p>`
-              : !Object.keys(data.urls).length
-                ? html`<p>${t(this.hass, "no_url")}</p>`
-                : html`<ul class="urls">
-                    ${ORDER.map(
-                      (name) => html`<li>
-                        <div class="meta">
-                          <div>${t(this.hass, `url_${name}`)}</div>
-                          <div class="mono">${data.urls[name]}</div>
-                        </div>
-                        <button class="btn" @click=${() => this._copy(data.urls[name])}>
-                          ${copyIcon()}${t(this.hass, "copy")}
-                        </button>
-                      </li>`,
-                    )}
-                  </ul>`}
+              : html`<ul class="urls">
+                  ${ORDER.map((name) => {
+                    // the address this browser uses, which players on the same network reach too
+                    const url = location.origin + data.urls[name];
+                    return html`<li>
+                      <div class="meta">
+                        <div>${t(this.hass, `url_${name}`)}</div>
+                        <div class="mono">${url}</div>
+                      </div>
+                      <button class="btn" @click=${() => this._copy(url)}>
+                        ${copyIcon()}${t(this.hass, "copy")}
+                      </button>
+                    </li>`;
+                  })}
+                </ul>`}
         </div>
         ${data
           ? html`<div class="card-b actions">

@@ -16,7 +16,6 @@ from aiohttp import web
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import KEY_HASS, HomeAssistantView
-from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util import dt as dt_util
 
 from .api import Channel, WaipuError
@@ -33,7 +32,6 @@ from .const import (
     CONF_ACCESS_KEY,
     CONF_CATCHUP,
     CONF_HLS_PROXY,
-    CONF_PLAYER_URL,
     CONF_PLAYLISTS,
     CONF_TIMESHIFT,
     DOMAIN,
@@ -44,16 +42,6 @@ from .coordinator import WaipuTvConfigEntry
 M3U = "audio/x-mpegurl"
 HLS = "application/vnd.apple.mpegurl"
 EXTENSIONS = {"mpd": "dash", "m3u8": "hls"}
-
-
-def base_url(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> str | None:
-    """The address players use: the configured one, else Home Assistant's internal URL."""
-    if not (base := entry.options[CONF_PLAYER_URL]):
-        try:
-            base = get_url(hass, allow_external=False, allow_cloud=False)
-        except NoURLAvailableError:
-            return None
-    return f"{base}/api/{DOMAIN}"
 
 
 class BadRequest(ValueError):
@@ -128,12 +116,8 @@ class _Request:
         self.key = entry.options[CONF_ACCESS_KEY]
         self.request = request
         self.query = request.query
-        self.base_url = self._base_url()
-
-    def _base_url(self) -> str:
-        return base_url(self.hass, self.entry) or (
-            f"{self.request.scheme}://{self.request.host}/api/{DOMAIN}"
-        )
+        # the address the player used, so each network gets URLs it can reach
+        self.base_url = f"{request.scheme}://{request.host}/api/{DOMAIN}"
 
     async def handle(self, path: str) -> web.StreamResponse:
         name, _, ext = path.rpartition(".") if "." in path else (path, "", "")

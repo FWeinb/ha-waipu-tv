@@ -92,9 +92,8 @@ client, guide cache and playlist endpoints. It is ported into the integration an
        | Guide refresh | 2 h | at least 30 min |
        | Parallel guide requests | 4 | 1–8 |
 
-    3. **Playlist server:** on/off, access key (generated, can be replaced), optional address for
-       players, catch-up (on), time-shift from program start (off), serve HLS playlists through Home
-       Assistant (off).
+    3. **Playlist server:** on/off, access key (generated, can be replaced), catch-up (on),
+       time-shift from program start (off), serve HLS playlists through Home Assistant (off).
 15. **Changes made through the integration reload the affected data immediately**: recording,
     deleting, setting a favorite. The intervals only apply to changes made elsewhere.
 16. **Stream quality is fixed:** the device capabilities sent to waipu.tv are up to 1080p50 H.264
@@ -204,8 +203,9 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 
 41. **Access key in the options:** Home Assistant forms have no "New key" button, so clearing the
     field generates a new key.
-42. **Address for players:** the configured one, else Home Assistant's internal URL, else the
-    address the player used for the request.
+42. **Address for players:** mirrored from each request (scheme and host, so behind a reverse proxy
+    the forwarded ones), not configured: players in different networks or VLANs each get URLs with
+    the address they reached Home Assistant on. The panel shows its own browser address.
 43. **Guide timing:** missing and stale windows are looked for every 10 minutes and fetched once older
     than the guide refresh interval; a broken window is retried after 5 minutes. The guide loads in the
     background after setup. The refresh button also reloads the whole guide, in the background.
@@ -235,6 +235,8 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 - **Separate playlist server port, standalone server, Docker image:** replaced by Home Assistant's
   web server.
 - **Playlist-server switch entity:** configuration only.
+- **Configurable address for players:** one address can't fit several networks or VLANs; the
+  address is mirrored from each request instead (decision 42).
 - **Per-channel calendars or "now playing" sensors:** one calendar covers it.
 - **Favorites order stored only in Home Assistant:** would drift from the waipu.tv apps.
 

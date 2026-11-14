@@ -12,7 +12,7 @@ import pytest
 from ..conftest import URL_RECORDINGS, load_json, token_response
 
 KEY = "aaaa-bbbb-cccc-dddd"
-BASE = "https://ha.example.com/api/waipu_tv"
+BASE = "http://ha.example.com:8123/api/waipu_tv"
 GRID = re.compile(r"^https://epg-cache\.waipu\.tv/api/grid/")
 URL_DEVICE_CAPS = "https://device-capabilities.waipu.tv/api/device-capabilities"
 URL_STREAM = "https://stream-url-provider.waipu.tv/api/stream-url"
@@ -28,9 +28,6 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 async def client(hass, hass_client_no_auth, config_entry, mock_waipu, freezer):
     freezer.move_to("2026-11-14T12:30:00+00:00")
     await hass.config.async_set_time_zone("Europe/Berlin")
-    hass.config_entries.async_update_entry(
-        config_entry, options={**config_entry.options, "player_url": "https://ha.example.com"}
-    )
     mock_waipu.get(GRID, json=load_json("epg_grid_ard.json"))
     mock_waipu.post(URL_DEVICE_CAPS, json={"token": token_response()["access_token"]})
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -40,7 +37,11 @@ async def client(hass, hass_client_no_auth, config_entry, mock_waipu, freezer):
 
 async def get(client, path, **params):
     return await client.get(
-        f"/api/waipu_tv/{path}", params={"key": KEY, **params}, allow_redirects=False
+        f"/api/waipu_tv/{path}",
+        params={"key": KEY, **params},
+        # the address the player used; playlist URLs mirror it
+        headers={"Host": "ha.example.com:8123"},
+        allow_redirects=False,
     )
 
 

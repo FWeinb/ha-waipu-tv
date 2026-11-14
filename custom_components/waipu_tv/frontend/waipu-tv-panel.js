@@ -585,7 +585,6 @@ var B = (e, t, n = {}) => e.callWS({
 	running: "Running",
 	off: "Off",
 	playlists_off: "The playlist server is off. Turn it on in the integration options.",
-	no_url: "Set an address for players in the integration options; Home Assistant has no internal URL.",
 	open_options: "Open integration options",
 	copy: "Copy",
 	copied: "Copied",
@@ -681,7 +680,6 @@ var B = (e, t, n = {}) => e.callWS({
 	running: "Aktiv",
 	off: "Aus",
 	playlists_off: "Der Playlist-Server ist aus. Schalte ihn in den Optionen der Integration ein.",
-	no_url: "Lege in den Optionen der Integration eine Adresse für Player fest; Home Assistant hat keine interne URL.",
 	open_options: "Optionen der Integration öffnen",
 	copy: "Kopieren",
 	copied: "Kopiert",
@@ -1765,17 +1763,20 @@ var Ge = [
           ${e ? e.enabled ? O`<span class="chip live"><span class="dot"></span>${U(this.hass, "running")}</span>` : O`<span class="chip">${U(this.hass, "off")}</span>` : j}
         </div>
         <div class="card-b">
-          ${e ? e.enabled ? Object.keys(e.urls).length ? O`<ul class="urls">
-                    ${Ge.map((t) => O`<li>
-                        <div class="meta">
-                          <div>${U(this.hass, `url_${t}`)}</div>
-                          <div class="mono">${e.urls[t]}</div>
-                        </div>
-                        <button class="btn" @click=${() => this._copy(e.urls[t])}>
-                          ${ze()}${U(this.hass, "copy")}
-                        </button>
-                      </li>`)}
-                  </ul>` : O`<p>${U(this.hass, "no_url")}</p>` : O`<p>${U(this.hass, "playlists_off")}</p>` : O`<p class="muted">${U(this.hass, "loading")}</p>`}
+          ${e ? e.enabled ? O`<ul class="urls">
+                  ${Ge.map((t) => {
+			let n = location.origin + e.urls[t];
+			return O`<li>
+                      <div class="meta">
+                        <div>${U(this.hass, `url_${t}`)}</div>
+                        <div class="mono">${n}</div>
+                      </div>
+                      <button class="btn" @click=${() => this._copy(n)}>
+                        ${ze()}${U(this.hass, "copy")}
+                      </button>
+                    </li>`;
+		})}
+                </ul>` : O`<p>${U(this.hass, "playlists_off")}</p>` : O`<p class="muted">${U(this.hass, "loading")}</p>`}
         </div>
         ${e ? O`<div class="card-b actions">
               <a class="btn" href="/config/integrations/integration/waipu_tv">${U(this.hass, "open_options")}</a>
