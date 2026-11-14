@@ -6,9 +6,15 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import WaipuClient
 from .const import CONF_DEVICE_ID, CONF_REFRESH_TOKEN
-from .coordinator import ChannelsCoordinator, RecordingsCoordinator, WaipuTvConfigEntry, WaipuTvData
+from .coordinator import (
+    ChannelsCoordinator,
+    GuideCoordinator,
+    RecordingsCoordinator,
+    WaipuTvConfigEntry,
+    WaipuTvData,
+)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CALENDAR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> None:
@@ -26,14 +32,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> N
         entry.data[CONF_REFRESH_TOKEN],
         store_refresh_token,
     )
+    channels = ChannelsCoordinator(hass, entry, client)
     data = WaipuTvData(
-        client, ChannelsCoordinator(hass, entry, client), RecordingsCoordinator(hass, entry, client)
+        client,
+        channels,
+        RecordingsCoordinator(hass, entry, client),
+        GuideCoordinator(hass, entry, client, channels),
     )
     # the first refresh signs in (token refresh) once; the second reuses the access token
     await data.channels.async_config_entry_first_refresh()
     await data.recordings.async_config_entry_first_refresh()
-
     entry.runtime_data = data
+    # the guide takes many requests: load it in the background, the calendar fills in after
+    entry.async_create_background_task(hass, data.guide.async_refresh(), "waipu.tv guide")
+    entry.async_on_unload(data.guide.guide.close)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 

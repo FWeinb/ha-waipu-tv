@@ -1,4 +1,4 @@
-"""Reload channels, favorites and recordings from waipu.tv."""
+"""Reload channels, favorites, recordings and the guide from waipu.tv."""
 
 import asyncio
 
@@ -25,4 +25,8 @@ class RefreshButton(WaipuTvEntity[ChannelsCoordinator], ButtonEntity):
         data = self.coordinator.config_entry.runtime_data
         await asyncio.gather(
             data.channels.async_request_refresh(), data.recordings.async_request_refresh()
+        )
+        # thousands of requests for a full guide: don't keep the button waiting
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass, data.guide.async_reload(), "waipu.tv guide reload"
         )

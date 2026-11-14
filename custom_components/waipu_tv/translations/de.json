@@ -167,6 +167,11 @@
       "recordings": {
         "name": "Aufnahmen"
       }
+    },
+    "calendar": {
+      "guide": {
+        "name": "TV-Programm"
+      }
     }
   }
 }

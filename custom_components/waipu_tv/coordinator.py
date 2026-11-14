@@ -1,16 +1,32 @@
-"""Coordinators for the account's channels and recordings."""
+"""Coordinators for the account's channels, recordings and the guide."""
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .api import Account, Channel, Recording, WaipuAuthError, WaipuClient, WaipuError
-from .const import CONF_CHANNELS_INTERVAL, CONF_RECORDINGS_INTERVAL, DOMAIN, LOGGER
+from .api import Account, Channel, Guide, Recording, WaipuAuthError, WaipuClient, WaipuError
+from .const import (
+    CHANNELS_FAVORITES,
+    CHANNELS_LIVE,
+    CONF_CHANNELS,
+    CONF_CHANNELS_INTERVAL,
+    CONF_GUIDE_DAYS,
+    CONF_GUIDE_INTERVAL,
+    CONF_GUIDE_PARALLEL,
+    CONF_RECORDINGS_INTERVAL,
+    DOMAIN,
+    LOGGER,
+)
+
+# how often missing and stale guide windows are looked for; they are only fetched again once
+# older than the guide refresh interval
+GUIDE_CHECK_INTERVAL = timedelta(minutes=10)
 
 
 @dataclass
@@ -18,6 +34,7 @@ class WaipuTvData:
     client: WaipuClient
     channels: ChannelsCoordinator
     recordings: RecordingsCoordinator
+    guide: GuideCoordinator
 
 
 type WaipuTvConfigEntry = ConfigEntry[WaipuTvData]
@@ -27,6 +44,16 @@ type WaipuTvConfigEntry = ConfigEntry[WaipuTvData]
 class ChannelsData:
     account: Account
     channels: list[Channel]
+
+    def imported(self, selection: str) -> list[Channel]:
+        """The channels chosen in the options; hidden channels are never imported."""
+        return [
+            c
+            for c in self.channels
+            if c.visible
+            and (selection != CHANNELS_FAVORITES or c.favorite)
+            and (selection != CHANNELS_LIVE or not c.vod)
+        ]
 
 
 @dataclass(frozen=True)
@@ -92,3 +119,48 @@ class RecordingsCoordinator(WaipuTvCoordinator[RecordingsData]):
             await self.client.recorded_seconds(),
             account.recording_hours,
         )
+
+
+class GuideCoordinator(DataUpdateCoordinator[None]):
+    """Keeps the guide of the imported channels warm, from today for the configured days."""
+
+    config_entry: WaipuTvConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: WaipuTvConfigEntry,
+        client: WaipuClient,
+        channels: ChannelsCoordinator,
+    ) -> None:
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN} guide",
+            update_interval=GUIDE_CHECK_INTERVAL,
+        )
+        self.guide = Guide(
+            client,
+            ttl=timedelta(minutes=entry.options[CONF_GUIDE_INTERVAL]),
+            parallel=entry.options[CONF_GUIDE_PARALLEL],
+        )
+        self._channels = channels
+
+    def range(self) -> tuple[datetime, datetime]:
+        """Nothing from earlier days: the guide starts at midnight today."""
+        start = dt_util.start_of_local_day()
+        return start, start + timedelta(days=self.config_entry.options[CONF_GUIDE_DAYS])
+
+    def channels(self) -> list[Channel]:
+        return self._channels.data.imported(self.config_entry.options[CONF_CHANNELS])
+
+    @override
+    async def _async_update_data(self) -> None:
+        # broken windows are skipped and logged by the guide, never fail the whole update
+        await self.guide.warm([c.id for c in self.channels()], *self.range())
+
+    async def async_reload(self) -> None:
+        """Fetch the whole guide again, e.g. from the refresh button."""
+        await self.guide.warm([c.id for c in self.channels()], *self.range(), force=True)
+        self.async_update_listeners()
