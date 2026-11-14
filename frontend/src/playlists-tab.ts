@@ -74,7 +74,54 @@ class WaipuPlaylistsTab extends LitElement {
             </div>`
           : nothing}
       </div>
+      ${data?.enabled ? this._renderOptions(data) : nothing}
       <p class="muted note">${t(this.hass, "playlists_note")}</p>
+    </div>`;
+  }
+
+  private _renderOptions(data: PlaylistsResult) {
+    const onOff = (value: boolean) => t(this.hass, value ? "on" : "off_value");
+    const fromOptions = (value: boolean) => t(this.hass, "from_options", { value: onOff(value) });
+    const m3u = t(this.hass, "m3u_playlists");
+    const restart = data.instant_restart ? "" : ` ${t(this.hass, "needs_restart")}`;
+    const rows: [string, string, string, string, string][] = [
+      ["hidden", "0 | 1", onOff(false), `${m3u}, epg.xml`, t(this.hass, "param_hidden")],
+      ["drm", "0 | 1", onOff(true), `${m3u}, epg.xml`, t(this.hass, "param_drm")],
+      ["protocol", "auto | hls | dash", "auto", `${m3u}, recordings.m3u`, t(this.hass, "param_protocol")],
+      ["catchup", "0 | 1", fromOptions(data.defaults.catchup), m3u, t(this.hass, "param_catchup") + restart],
+      ["timeshift", "0 | 1", fromOptions(data.defaults.timeshift), m3u, t(this.hass, "param_timeshift") + restart],
+      ["hls_proxy", "0 | 1", fromOptions(data.defaults.hls_proxy), m3u, t(this.hass, "param_hls_proxy")],
+      ["filter", "all | favorites | live | vod", "all", "epg.xml", t(this.hass, "param_filter")],
+    ];
+    return html`<div class="card">
+      <div class="card-h"><h2>${t(this.hass, "options_title")}</h2></div>
+      <div class="card-b">
+        <p class="intro">${t(this.hass, "options_intro")}</p>
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>${t(this.hass, "parameter")}</th>
+                <th>${t(this.hass, "values")}</th>
+                <th>${t(this.hass, "default")}</th>
+                <th>${t(this.hass, "applies_to")}</th>
+                <th>${t(this.hass, "meaning")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(
+                ([name, values, def, applies, meaning]) => html`<tr>
+                  <td class="mono">${name}</td>
+                  <td class="mono">${values}</td>
+                  <td>${def}</td>
+                  <td>${applies}</td>
+                  <td>${meaning}</td>
+                </tr>`,
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>`;
   }
 
@@ -83,7 +130,7 @@ class WaipuPlaylistsTab extends LitElement {
     css`
       .card,
       .note {
-        max-width: 760px;
+        max-width: 1000px;
       }
       .note {
         margin: 0;
@@ -119,6 +166,36 @@ class WaipuPlaylistsTab extends LitElement {
       }
       .actions {
         padding-top: 0;
+      }
+      .intro {
+        margin: 0 0 12px;
+        color: var(--wt-muted);
+        font-size: 13px;
+      }
+      .table-box {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px;
+      }
+      th {
+        text-align: left;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--wt-muted);
+        padding: 8px;
+        border-bottom: 1px solid var(--wt-line);
+      }
+      td {
+        padding: 8px;
+        border-bottom: 1px solid var(--wt-line);
+        vertical-align: top;
+        font-size: 13px;
+      }
+      td.mono {
+        white-space: nowrap;
       }
     `,
   ];

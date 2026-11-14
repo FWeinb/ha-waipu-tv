@@ -46,6 +46,11 @@ class WaipuProgramDialog extends LitElement {
       .catch(() => (this._description = ""));
   }
 
+  /** The dialog's content fills it, so a click on the dialog itself is on the backdrop. */
+  private _backdropClick(e: MouseEvent) {
+    if (e.target === e.currentTarget) this._close();
+  }
+
   private _close() {
     this.renderRoot.querySelector("dialog")?.close();
   }
@@ -73,7 +78,10 @@ class WaipuProgramDialog extends LitElement {
     const rec = this.recording;
     const fav = this.channel?.favorite ?? false;
 
-    return html`<dialog @close=${() => this.dispatchEvent(new CustomEvent("closed"))}>
+    return html`<dialog
+      @close=${() => this.dispatchEvent(new CustomEvent("closed"))}
+      @click=${this._backdropClick}
+    >
       <div class="dlg-h">
         ${this.channel ? html`<img class="logo" src=${this.channel.logo} alt="" />` : nothing}
         <div class="meta">

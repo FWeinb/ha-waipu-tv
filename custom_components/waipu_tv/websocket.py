@@ -13,7 +13,14 @@ from homeassistant.util import dt as dt_util
 
 from .api import Program, Recording
 from .api.playlist import FILTERS
-from .const import CONF_ACCESS_KEY, CONF_PLAYLISTS, DOMAIN
+from .const import (
+    CONF_ACCESS_KEY,
+    CONF_CATCHUP,
+    CONF_HLS_PROXY,
+    CONF_PLAYLISTS,
+    CONF_TIMESHIFT,
+    DOMAIN,
+)
 from .coordinator import WaipuTvData, loaded_data
 from .views import base_url
 
@@ -167,7 +174,8 @@ async def ws_set_favorite(hass: HomeAssistant, connection: Connection, msg: dict
 @callback
 def ws_playlists(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]) -> None:
     """Playlist and guide URLs; they contain the access key, hence admins only."""
-    entry = loaded_data(hass).channels.config_entry
+    data = loaded_data(hass)
+    entry = data.channels.config_entry
     base = base_url(hass, entry)
     key = entry.options[CONF_ACCESS_KEY]
     urls = (
@@ -181,5 +189,16 @@ def ws_playlists(hass: HomeAssistant, connection: Connection, msg: dict[str, Any
     )
     connection.send_result(
         msg["id"],
-        {"enabled": entry.options[CONF_PLAYLISTS], "entry_id": entry.entry_id, "urls": urls},
+        {
+            "enabled": entry.options[CONF_PLAYLISTS],
+            "entry_id": entry.entry_id,
+            "urls": urls,
+            # defaults of the per-playlist options, for the panel's explanation
+            "defaults": {
+                "catchup": entry.options[CONF_CATCHUP],
+                "timeshift": entry.options[CONF_TIMESHIFT],
+                "hls_proxy": entry.options[CONF_HLS_PROXY],
+            },
+            "instant_restart": data.channels.data.account.instant_restart,
+        },
     )

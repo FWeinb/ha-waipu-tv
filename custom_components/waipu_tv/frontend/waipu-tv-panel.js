@@ -597,6 +597,25 @@ var B = (e, t, n = {}) => e.callWS({
 	url_vod: "On-demand channels",
 	url_recordings: "Recordings",
 	url_epg: "XMLTV guide",
+	options_title: "Playlist options",
+	options_intro: "Add these to a playlist URL to change what it contains, e.g. …/favorites.m3u?key=…&drm=0. Each playlist's guide link (url-tvg) follows the same channel selection.",
+	parameter: "Parameter",
+	values: "Values",
+	default: "Default",
+	applies_to: "Applies to",
+	meaning: "Meaning",
+	m3u_playlists: "Channel playlists",
+	on: "on",
+	off_value: "off",
+	from_options: "{value} (options)",
+	param_hidden: "Include channels hidden in your waipu.tv channel list.",
+	param_drm: "0: only channels without DRM (HLS), for players without Widevine.",
+	param_protocol: "auto: HLS for channels pvr.waipu plays without DRM, DASH + Widevine for all others. Recordings: dash or hls.",
+	param_catchup: "Catch-up: players can restart running and recently started programs from the guide.",
+	param_timeshift: "Live channels open at the start of the running program so you can rewind.",
+	param_hls_proxy: "Serve HLS playlists through Home Assistant, for ffmpeg-based players (VLC, Jellyfin).",
+	param_filter: "Channel selection of the guide: all, favorites, live or vod.",
+	needs_restart: "Needs instant restart, which your waipu.tv package doesn't include.",
 	error: "waipu.tv: {message}"
 }, Fe = {
 	guide: "Programm",
@@ -674,6 +693,25 @@ var B = (e, t, n = {}) => e.callWS({
 	url_vod: "On-Demand-Sender",
 	url_recordings: "Aufnahmen",
 	url_epg: "XMLTV-Programm",
+	options_title: "Playlist-Optionen",
+	options_intro: "Hänge sie an eine Playlist-URL an, um den Inhalt zu ändern, z. B. …/favorites.m3u?key=…&drm=0. Der Programm-Link jeder Playlist (url-tvg) folgt derselben Senderauswahl.",
+	parameter: "Parameter",
+	values: "Werte",
+	default: "Standard",
+	applies_to: "Gilt für",
+	meaning: "Bedeutung",
+	m3u_playlists: "Sender-Playlists",
+	on: "an",
+	off_value: "aus",
+	from_options: "{value} (Optionen)",
+	param_hidden: "Auch Sender, die in deiner waipu.tv-Senderliste ausgeblendet sind.",
+	param_drm: "0: nur Sender ohne DRM (HLS), für Player ohne Widevine.",
+	param_protocol: "auto: HLS für Sender, die pvr.waipu ohne DRM abspielt, DASH + Widevine für alle anderen. Aufnahmen: dash oder hls.",
+	param_catchup: "Catch-up: Player können laufende und kürzlich begonnene Sendungen aus dem Programm neu starten.",
+	param_timeshift: "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
+	param_hls_proxy: "HLS-Playlists über Home Assistant ausliefern, für ffmpeg-basierte Player (VLC, Jellyfin).",
+	param_filter: "Senderauswahl des Programms: all, favorites, live oder vod.",
+	needs_restart: "Benötigt Instant Restart, das dein waipu.tv-Paket nicht enthält.",
 	error: "waipu.tv: {message}"
 };
 function U(e, t, n = {}) {
@@ -1135,6 +1173,9 @@ var He = class extends z {
 	firstUpdated() {
 		this.renderRoot.querySelector("dialog").showModal(), ke(this.hass, this.program.id).then((e) => this._description = e.textContent?.descLong || e.textContent?.descShort || "").catch(() => this._description = "");
 	}
+	_backdropClick(e) {
+		e.target === e.currentTarget && this._close();
+	}
 	_close() {
 		this.renderRoot.querySelector("dialog")?.close();
 	}
@@ -1152,7 +1193,10 @@ var He = class extends z {
 			day: "numeric",
 			month: "long"
 		}), o = t <= r && r < n, s = n <= r, c = this.recording, l = this.channel?.favorite ?? !1;
-		return O`<dialog @close=${() => this.dispatchEvent(new CustomEvent("closed"))}>
+		return O`<dialog
+      @close=${() => this.dispatchEvent(new CustomEvent("closed"))}
+      @click=${this._backdropClick}
+    >
       <div class="dlg-h">
         ${this.channel ? O`<img class="logo" src=${this.channel.logo} alt="" />` : j}
         <div class="meta">
@@ -1737,14 +1781,96 @@ var Ge = [
               <a class="btn" href="/config/integrations/integration/waipu_tv">${U(this.hass, "open_options")}</a>
             </div>` : j}
       </div>
+      ${e?.enabled ? this._renderOptions(e) : j}
       <p class="muted note">${U(this.hass, "playlists_note")}</p>
+    </div>`;
+	}
+	_renderOptions(e) {
+		let t = (e) => U(this.hass, e ? "on" : "off_value"), n = (e) => U(this.hass, "from_options", { value: t(e) }), r = U(this.hass, "m3u_playlists"), i = e.instant_restart ? "" : ` ${U(this.hass, "needs_restart")}`, a = [
+			[
+				"hidden",
+				"0 | 1",
+				t(!1),
+				`${r}, epg.xml`,
+				U(this.hass, "param_hidden")
+			],
+			[
+				"drm",
+				"0 | 1",
+				t(!0),
+				`${r}, epg.xml`,
+				U(this.hass, "param_drm")
+			],
+			[
+				"protocol",
+				"auto | hls | dash",
+				"auto",
+				`${r}, recordings.m3u`,
+				U(this.hass, "param_protocol")
+			],
+			[
+				"catchup",
+				"0 | 1",
+				n(e.defaults.catchup),
+				r,
+				U(this.hass, "param_catchup") + i
+			],
+			[
+				"timeshift",
+				"0 | 1",
+				n(e.defaults.timeshift),
+				r,
+				U(this.hass, "param_timeshift") + i
+			],
+			[
+				"hls_proxy",
+				"0 | 1",
+				n(e.defaults.hls_proxy),
+				r,
+				U(this.hass, "param_hls_proxy")
+			],
+			[
+				"filter",
+				"all | favorites | live | vod",
+				"all",
+				"epg.xml",
+				U(this.hass, "param_filter")
+			]
+		];
+		return O`<div class="card">
+      <div class="card-h"><h2>${U(this.hass, "options_title")}</h2></div>
+      <div class="card-b">
+        <p class="intro">${U(this.hass, "options_intro")}</p>
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>${U(this.hass, "parameter")}</th>
+                <th>${U(this.hass, "values")}</th>
+                <th>${U(this.hass, "default")}</th>
+                <th>${U(this.hass, "applies_to")}</th>
+                <th>${U(this.hass, "meaning")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${a.map(([e, t, n, r, i]) => O`<tr>
+                  <td class="mono">${e}</td>
+                  <td class="mono">${t}</td>
+                  <td>${n}</td>
+                  <td>${r}</td>
+                  <td>${i}</td>
+                </tr>`)}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>`;
 	}
 	static {
 		this.styles = [Y, o`
       .card,
       .note {
-        max-width: 760px;
+        max-width: 1000px;
       }
       .note {
         margin: 0;
@@ -1780,6 +1906,36 @@ var Ge = [
       }
       .actions {
         padding-top: 0;
+      }
+      .intro {
+        margin: 0 0 12px;
+        color: var(--wt-muted);
+        font-size: 13px;
+      }
+      .table-box {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px;
+      }
+      th {
+        text-align: left;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--wt-muted);
+        padding: 8px;
+        border-bottom: 1px solid var(--wt-line);
+      }
+      td {
+        padding: 8px;
+        border-bottom: 1px solid var(--wt-line);
+        vertical-align: top;
+        font-size: 13px;
+      }
+      td.mono {
+        white-space: nowrap;
       }
     `];
 	}
