@@ -1,0 +1,72 @@
+[
+  {
+    "id": "5e9b103c-e92d-5408-b5c9-cb15136c32dc",
+    "trackingContentId": "epg/5e9b103c-e92d-5408-b5c9-cb15136c32dc",
+    "startTime": "2026-11-14T11:15:00Z",
+    "stopTime": "2026-11-14T12:00:00Z",
+    "title": "Die Tierärzte - Retter mit Herz",
+    "episodeTitle": "Das Zwischenzeugnis",
+    "genre": "Dokus",
+    "previewImage": "https://images.wpstr.tv/image/fetch/s-rtWovqNXSbXNmrTMI_nflChabzi-FvWKAVS2Rq7_-aQ=//https%3A%2F%2Fcdn.images.simply.tv%2F14786059827684005303%3Faspect_ratio%3D16%253A9%26limit%3D1920x1080?res=${resolution}",
+    "recordingForbidden": false,
+    "seriesId": "213"
+  },
+  {
+    "id": "84297391-0dc5-57d6-b1e4-23960d057270",
+    "trackingContentId": "epg/84297391-0dc5-57d6-b1e4-23960d057270",
+    "startTime": "2026-11-14T12:00:00Z",
+    "stopTime": "2026-11-14T12:45:00Z",
+    "title": "Die Tierärzte - Retter mit Herz",
+    "episodeTitle": "Die Rettungshunde",
+    "genre": "Dokus",
+    "previewImage": "https://images.wpstr.tv/image/fetch/s-kT6Hj_8tVRtfykYAZBM5EV5-1Po23RNJGtaTfsjvPk0=//https%3A%2F%2Fcdn.images.simply.tv%2F8911625359274593428%3Faspect_ratio%3D16%253A9%26limit%3D1920x1080?res=${resolution}",
+    "recordingForbidden": false,
+    "seriesId": "213"
+  },
+  {
+    "id": "7b7f9d2c-bd63-54e8-8f21-77fd1238acd6",
+    "trackingContentId": "epg/7b7f9d2c-bd63-54e8-8f21-77fd1238acd6",
+    "startTime": "2026-11-14T12:45:00Z",
+    "stopTime": "2026-11-14T13:00:00Z",
+    "title": "Tagesschau",
+    "episodeTitle": "14.11.2026 13:45",
+    "genre": "Aktuelles",
+    "previewImage": "https://images.wpstr.tv/image/fetch/s-4C-6raea-RYhpGOi9oyU9o461qLkDFBqnjfGt3cglkU=//https%3A%2F%2Fcdn.images.simply.tv%2F5340620334986556566%3Faspect_ratio%3D16%253A9%26limit%3D1920x1080?res=${resolution}",
+    "recordingForbidden": false,
+    "seriesId": "104121"
+  },
+  {
+    "id": "9adb3358-53e6-5122-9735-7595de98a1e8",
+    "trackingContentId": "epg/9adb3358-53e6-5122-9735-7595de98a1e8",
+    "startTime": "2026-11-14T13:00:00Z",
+    "stopTime": "2026-11-14T14:30:00Z",
+    "title": "Zurück aufs Eis",
+    "genre": "Filme",
+    "previewImage": "https://images.wpstr.tv/image/fetch/s-iLFft77Kk9EdHCHzOouqHJ_h60N4FIu_mkM5wRs-T8E=//https%3A%2F%2Fcdn.images.simply.tv%2F6799492818590550124%3Faspect_ratio%3D16%253A9%26limit%3D1920x1080?res=${resolution}",
+    "recordingForbidden": false
+  },
+  {
+    "id": "74bab28d-0c00-5117-b9e1-19ca115b561c",
+    "trackingContentId": "epg/74bab28d-0c00-5117-b9e1-19ca115b561c",
+    "startTime": "2026-11-14T14:30:00Z",
+    "stopTime": "2026-11-14T14:45:00Z",
+    "title": "Tagesschau",
+    "episodeTitle": "14.11.2026 15:30",
+    "genre": "Aktuelles",
+    "previewImage": "https://images.wpstr.tv/image/fetch/s-4C-6raea-RYhpGOi9oyU9o461qLkDFBqnjfGt3cglkU=//https%3A%2F%2Fcdn.images.simply.tv%2F5340620334986556566%3Faspect_ratio%3D16%253A9%26limit%3D1920x1080?res=${resolution}",
+    "recordingForbidden": false,
+    "seriesId": "104121"
+  },
+  {
+    "id": "132b2a74-8c47-55ca-aa6b-ca59d5cf240d",
+    "trackingContentId": "epg/132b2a74-8c47-55ca-aa6b-ca59d5cf240d",
+    "startTime": "2026-11-14T14:45:00Z",
+    "stopTime": "2026-11-14T16:45:00Z",
+    "title": "Sportschau",
+    "episodeTitle": "Handball-Bundesliga: Füchse Berlin - THW Kiel",
+    "genre": "Aktuelles",
+    "previewImage": "https://images.wpstr.tv/image/fetch/s-3njFVPEuDy8Bs5YKSypeZMV09FnSMi9OPtARPhlgflg=//https%3A%2F%2Fcdn.images.simply.tv%2F1793201908489%3Faspect_ratio%3D16%253A9%26limit%3D1920x1080?res=${resolution}",
+    "recordingForbidden": false,
+    "seriesId": "93899"
+  }
+]

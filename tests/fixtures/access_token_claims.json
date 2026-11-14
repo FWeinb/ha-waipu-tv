@@ -3,7 +3,10 @@
   "userHandle": "00000000-0000-0000-0000-000000000001",
   "email": "user@example.com",
   "userAssets": {
-    "account": {"subscription": "perfect plus"},
-    "instantRestart": true
+    "account": {
+      "subscription": "perfect plus"
+    },
+    "instantRestart": true,
+    "hoursRecording": 50
   }
 }

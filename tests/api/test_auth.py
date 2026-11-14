@@ -11,7 +11,9 @@ from ..conftest import URL_TOKEN, make_jwt, token_response
 
 @pytest.fixture
 async def session(aioclient_mock):
-    return aioclient_mock.create_session(asyncio.get_running_loop())
+    session = aioclient_mock.create_session(asyncio.get_running_loop())
+    yield session
+    await session.close()
 
 
 async def test_login_returns_account_and_refresh_token(aioclient_mock, session):
@@ -26,6 +28,7 @@ async def test_login_returns_account_and_refresh_token(aioclient_mock, session):
         user_handle="00000000-0000-0000-0000-000000000001",
         subscription="perfect plus",
         instant_restart=True,
+        recording_hours=50,
     )
     assert client.refresh_token == "refresh-1"
     assert stored == ["refresh-1"]

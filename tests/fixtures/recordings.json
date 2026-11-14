@@ -1,0 +1,12 @@
+[
+  {"id": "1000000001", "programId": "5e9b103c-e92d-5408-b5c9-cb15136c32dc", "stationId": "ARD",
+   "stationDisplay": "Das Erste HD", "title": "Tatort", "episodeTitle": "Ein Fall für zwei",
+   "status": "FINISHED", "epgStartTime": "2026-11-08T19:15:00.000Z", "durationSeconds": 5400,
+   "recordingStartTime": "2026-11-08T19:13:00.000Z", "genreDisplayName": "Krimi",
+   "previewImage": "https://images.example.com/tatort?res=${resolution}", "locked": false},
+  {"id": "1000000002", "programId": "11111111-2222-3333-4444-555555555555", "stationId": "ZDF",
+   "title": "heute-show", "status": "SCHEDULED", "epgStartTime": "2026-11-15T21:30:00.000Z",
+   "durationSeconds": 1800, "recordingGroup": 7, "locked": false},
+  {"id": "1000000003", "stationId": "ARD", "title": "Locked one", "status": "FINISHED",
+   "locked": true}
+]

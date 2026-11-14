@@ -206,7 +206,9 @@ endpoints. The manual release checklist covers:
 
 - login, stream URLs, the license relay, recordings and instant restart (ported or captured, not
   tested end to end);
-- the series-recording and cancel calls (in pvr.waipu and ha-waipu, not yet ported);
+- the series-recording and cancel calls (ported from pvr.waipu, not tested);
+- the delete body: pvr.waipu sends `{"ids": [...]}`, ha-waipu `{"recordingIds": [...]}`; we follow
+  pvr.waipu;
 - that HLS segments don't need gzip, only playlists;
 - that on-demand channels play via DASH in Kodi and TiviMate, not only in the player you tried;
 - TiviMate's support for the `{utc}` catch-up placeholder.

@@ -1,0 +1,12 @@
+[
+  {"stationId": "ard", "displayName": "Das Erste HD", "streamQuality": "hd",
+   "locked": false, "userSettings": {"favorite": true, "visible": true}},
+  {"stationId": "zdf", "displayName": "ZDF HD", "streamQuality": "hd",
+   "locked": false, "userSettings": {"favorite": false, "visible": true}},
+  {"stationId": "pro7", "displayName": "ProSieben HD", "streamQuality": "hd",
+   "locked": true, "userSettings": {"favorite": false, "visible": true}},
+  {"stationId": "filmtastic", "displayName": "filmtastic", "streamQuality": "hd",
+   "locked": false, "userSettings": {"favorite": false, "visible": false}},
+  {"stationId": "unknown", "displayName": "Not in the station config", "locked": false},
+  {"stationId": "arte", "displayName": "arte HD", "streamQuality": "hd", "locked": false}
+]

@@ -1,0 +1,9 @@
+[
+  {"id": "1000000002", "programId": "11111111-2222-3333-4444-555555555555", "stationId": "ZDF",
+   "title": "heute-show", "status": "SCHEDULED", "epgStartTime": "2026-11-15T21:30:00.000Z",
+   "durationSeconds": 1800, "recordingGroup": 7, "locked": false},
+  {"id": "1000000004", "programId": "66666666-7777-8888-9999-000000000000", "stationId": "ZDF",
+   "title": "heute-show", "episodeTitle": "Folge 12", "season": "2026", "episode": "12",
+   "status": "FINISHED", "epgStartTime": "2026-11-07T21:30:00.000Z", "durationSeconds": 1800,
+   "recordingGroup": 7, "locked": false}
+]
