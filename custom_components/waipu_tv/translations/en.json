@@ -140,5 +140,33 @@
         "7": "7 days"
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "recording": {
+        "name": "Recording"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh"
+      }
+    },
+    "sensor": {
+      "subscription": {
+        "name": "Subscription"
+      },
+      "recording_storage": {
+        "name": "Recording storage",
+        "state_attributes": {
+          "booked_hours": {
+            "name": "Booked hours"
+          }
+        }
+      },
+      "recordings": {
+        "name": "Recordings"
+      }
+    }
   }
 }

@@ -1,16 +1,14 @@
 """The waipu.tv integration."""
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import WaipuAuthError, WaipuClient, WaipuError
+from .api import WaipuClient
 from .const import CONF_DEVICE_ID, CONF_REFRESH_TOKEN
+from .coordinator import ChannelsCoordinator, RecordingsCoordinator, WaipuTvConfigEntry, WaipuTvData
 
-PLATFORMS: list[str] = []
-
-type WaipuTvConfigEntry = ConfigEntry[WaipuClient]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> None:
@@ -28,14 +26,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> N
         entry.data[CONF_REFRESH_TOKEN],
         store_refresh_token,
     )
-    try:
-        await client.account()
-    except WaipuAuthError as err:
-        raise ConfigEntryAuthFailed(str(err)) from err
-    except WaipuError as err:
-        raise ConfigEntryNotReady(str(err)) from err
+    data = WaipuTvData(
+        client, ChannelsCoordinator(hass, entry, client), RecordingsCoordinator(hass, entry, client)
+    )
+    # the first refresh signs in (token refresh) once; the second reuses the access token
+    await data.channels.async_config_entry_first_refresh()
+    await data.recordings.async_config_entry_first_refresh()
 
-    entry.runtime_data = client
+    entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 

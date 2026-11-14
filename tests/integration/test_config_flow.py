@@ -6,13 +6,11 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResultType
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.waipu_tv.const import (
     CONF_ACCESS_KEY,
     CONF_DEVICE_ID,
     CONF_REFRESH_TOKEN,
-    DEFAULT_OPTIONS,
     DOMAIN,
 )
 
@@ -44,19 +42,6 @@ PLAYLISTS = {
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     return
-
-
-@pytest.fixture
-def config_entry(hass):
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="user@example.com",
-        unique_id=USER_HANDLE,
-        data={CONF_DEVICE_ID: "device-old", CONF_REFRESH_TOKEN: "refresh-old"},
-        options={**DEFAULT_OPTIONS, CONF_ACCESS_KEY: "aaaa-bbbb-cccc-dddd"},
-    )
-    entry.add_to_hass(hass)
-    return entry
 
 
 async def test_full_flow(hass, mock_token):
@@ -152,7 +137,7 @@ async def test_single_account(hass, config_entry):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_options_flow_keeps_access_key(hass, config_entry, mock_token):
+async def test_options_flow_keeps_access_key(hass, config_entry, mock_waipu):
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -170,7 +155,7 @@ async def test_options_flow_keeps_access_key(hass, config_entry, mock_token):
     assert config_entry.options[CONF_ACCESS_KEY] == "aaaa-bbbb-cccc-dddd"
 
 
-async def test_options_flow_cleared_key_gets_new_one(hass, config_entry, mock_token):
+async def test_options_flow_cleared_key_gets_new_one(hass, config_entry, mock_waipu):
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

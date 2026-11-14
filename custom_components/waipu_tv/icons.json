@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "recording": {"default": "mdi:record-rec"}
+    },
+    "button": {
+      "refresh": {"default": "mdi:refresh"}
+    },
+    "sensor": {
+      "subscription": {"default": "mdi:television-classic"},
+      "recording_storage": {"default": "mdi:harddisk"},
+      "recordings": {"default": "mdi:filmstrip-box-multiple"}
+    }
+  }
+}

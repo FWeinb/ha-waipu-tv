@@ -140,5 +140,33 @@
         "7": "7 Tage"
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "recording": {
+        "name": "Aufnahme läuft"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Aktualisieren"
+      }
+    },
+    "sensor": {
+      "subscription": {
+        "name": "Paket"
+      },
+      "recording_storage": {
+        "name": "Aufnahmespeicher",
+        "state_attributes": {
+          "booked_hours": {
+            "name": "Gebuchte Stunden"
+          }
+        }
+      },
+      "recordings": {
+        "name": "Aufnahmen"
+      }
+    }
   }
 }
