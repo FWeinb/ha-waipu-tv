@@ -4,7 +4,9 @@
   "codeowners": [],
   "config_flow": true,
   "dependencies": [
+    "frontend",
     "http",
+    "panel_custom",
     "websocket_api"
   ],
   "integration_type": "service",

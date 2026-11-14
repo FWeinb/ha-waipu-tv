@@ -199,10 +199,17 @@ class GuideCoordinator(DataUpdateCoordinator[None]):
         )
         self._channels = channels
 
+    def days(self) -> list[datetime]:
+        """Local midnight of each guide day, from today; DST-safe wall-clock arithmetic."""
+        today = dt_util.start_of_local_day()
+        return [
+            today + timedelta(days=i) for i in range(self.config_entry.options[CONF_GUIDE_DAYS])
+        ]
+
     def range(self) -> tuple[datetime, datetime]:
         """Nothing from earlier days: the guide starts at midnight today."""
-        start = dt_util.start_of_local_day()
-        return start, start + timedelta(days=self.config_entry.options[CONF_GUIDE_DAYS])
+        days = self.days()
+        return days[0], days[-1] + timedelta(days=1)
 
     def channels(self) -> list[Channel]:
         return self._channels.data.imported(self.config_entry.options[CONF_CHANNELS])

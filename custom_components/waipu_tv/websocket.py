@@ -88,6 +88,7 @@ async def ws_guide(hass: HomeAssistant, connection: Connection, msg: dict[str, A
         {
             "start": _time(guide_start),
             "end": _time(guide_end),
+            "days": [_time(day) for day in data.guide.days()],
             "programs": {cid: [_program(p) for p in ps] for cid, ps in programs.items()},
         },
     )

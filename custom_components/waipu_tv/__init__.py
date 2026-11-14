@@ -15,6 +15,7 @@ from .coordinator import (
     WaipuTvConfigEntry,
     WaipuTvData,
 )
+from .panel import async_register_panel, async_register_static, async_remove_panel
 from .services import async_setup_services
 from .views import PlaylistView
 from .websocket import async_setup_websocket
@@ -30,6 +31,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
     hass.http.register_view(PlaylistView())
     async_setup_websocket(hass)
+    await async_register_static(hass)
     return True
 
 
@@ -64,6 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> N
     entry.async_on_unload(data.guide.guide.close)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await async_register_panel(hass)
+    entry.async_on_unload(lambda: async_remove_panel(hass))
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> None:

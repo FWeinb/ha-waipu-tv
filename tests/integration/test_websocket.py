@@ -64,6 +64,7 @@ async def test_guide(ws):
     result = msg["result"]
     assert result["start"] == "2026-11-14T00:00:00+01:00"
     assert result["end"] == "2026-11-16T00:00:00+01:00"
+    assert result["days"] == ["2026-11-14T00:00:00+01:00", "2026-11-15T00:00:00+01:00"]
     assert set(result["programs"]) == {"ard", "zdf", "arte"}
     ard = result["programs"]["ard"]
     assert [p["title"] for p in ard][:2] == ["Die Tierärzte - Retter mit Herz", "Tagesschau"]
