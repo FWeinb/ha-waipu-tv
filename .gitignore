@@ -1,0 +1,17 @@
+data/
+.env
+__pycache__/
+node_modules/
+.venv/
+.pytest_cache/
+config/
+
+# kept locally for reference, not part of the integration
+README.md
+Dockerfile
+docker-compose.yml
+.env.example
+waipu2m3u/
+mockups/
+tests/test_guide.py
+tests/test_playlist.py

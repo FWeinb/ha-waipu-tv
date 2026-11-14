@@ -1,0 +1,144 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Dieses waipu.tv-Konto ist bereits eingerichtet.",
+      "reauth_successful": "Erneut angemeldet.",
+      "single_instance_allowed": "Es ist bereits ein waipu.tv-Konto eingerichtet. Pro Home Assistant wird nur ein Konto unterstützt.",
+      "wrong_account": "Das ist ein anderes waipu.tv-Konto. Melde dich mit dem eingerichteten Konto an."
+    },
+    "error": {
+      "cannot_connect": "waipu.tv ist nicht erreichbar. Versuche es später noch einmal.",
+      "invalid_auth": "E-Mail oder Passwort ist falsch.",
+      "invalid_url": "Gib eine Adresse ein, die mit http:// oder https:// beginnt.",
+      "unknown": "Unerwarteter Fehler, siehe Protokoll."
+    },
+    "step": {
+      "user": {
+        "title": "waipu.tv einrichten",
+        "description": "Melde dich mit deinem waipu.tv-Konto an. Das Passwort wird nur einmal verwendet, um ein Refresh-Token zu erhalten.",
+        "data": {
+          "email": "E-Mail",
+          "password": "Passwort"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Erneut bei waipu.tv anmelden",
+        "description": "waipu.tv akzeptiert die gespeicherte Anmeldung nicht mehr. Gib dein Passwort ein, um dich erneut anzumelden.",
+        "data": {
+          "email": "E-Mail",
+          "password": "Passwort"
+        }
+      },
+      "guide": {
+        "title": "TV-Programm & Entitäten",
+        "data": {
+          "channels": "Zu importierende Sender",
+          "guide_days": "Tage im TV-Programm",
+          "guide_details": "Programmdetails für Favoriten"
+        },
+        "data_description": {
+          "guide_days": "Das TV-Programm wird im Hintergrund geladen; mehr Tage bedeuten mehr Anfragen an waipu.tv.",
+          "guide_details": "Beschreibungen, Besetzung und Bilder nur für Favoriten."
+        },
+        "sections": {
+          "update_intervals": {
+            "name": "Aktualisierungsintervalle",
+            "description": "Änderungen in Home Assistant (Aufnehmen, Löschen, Favoriten) werden sofort geladen; diese Intervalle gelten nur für Änderungen an anderer Stelle, z. B. in der waipu.tv-App.",
+            "data": {
+              "channels_interval": "Sender & Favoriten",
+              "recordings_interval": "Aufnahmen",
+              "guide_interval": "TV-Programm aktualisieren",
+              "guide_parallel": "Parallele Programmanfragen"
+            }
+          }
+        }
+      },
+      "playlists": {
+        "title": "Playlist-Server",
+        "description": "M3U-Playlists und ein XMLTV-Programm für IPTV-Player wie Kodi oder TiviMate, bereitgestellt von Home Assistant unter /api/waipu_tv. Streams gehen direkt von waipu.tv zum Player; nichts wird neu kodiert.",
+        "data": {
+          "playlists": "M3U-Playlists & XMLTV-Programm",
+          "access_key": "Zugangsschlüssel",
+          "player_url": "Adresse für Player",
+          "catchup": "Catch-up aus dem TV-Programm",
+          "timeshift": "Timeshift ab Sendungsbeginn",
+          "hls_proxy": "HLS-Playlists über Home Assistant ausliefern"
+        },
+        "data_description": {
+          "access_key": "Wird an jede Playlist-URL als ?key=… angehängt. Jeder mit dem Schlüssel kann über dein Konto schauen. Leere das Feld, um einen neuen Schlüssel zu erzeugen; alte Links funktionieren dann nicht mehr.",
+          "player_url": "Optional. Leer lassen, um die interne URL von Home Assistant zu verwenden.",
+          "catchup": "Player können laufende und kürzlich begonnene Sendungen neu starten.",
+          "timeshift": "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
+          "hls_proxy": "Nur für ffmpeg-basierte Player (VLC, Jellyfin) nötig; auch pro Playlist einstellbar."
+        }
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_url": "Gib eine Adresse ein, die mit http:// oder https:// beginnt."
+    },
+    "step": {
+      "init": {
+        "title": "TV-Programm & Entitäten",
+        "data": {
+          "channels": "Zu importierende Sender",
+          "guide_days": "Tage im TV-Programm",
+          "guide_details": "Programmdetails für Favoriten"
+        },
+        "data_description": {
+          "guide_days": "Das TV-Programm wird im Hintergrund geladen; mehr Tage bedeuten mehr Anfragen an waipu.tv.",
+          "guide_details": "Beschreibungen, Besetzung und Bilder nur für Favoriten."
+        },
+        "sections": {
+          "update_intervals": {
+            "name": "Aktualisierungsintervalle",
+            "description": "Änderungen in Home Assistant (Aufnehmen, Löschen, Favoriten) werden sofort geladen; diese Intervalle gelten nur für Änderungen an anderer Stelle, z. B. in der waipu.tv-App.",
+            "data": {
+              "channels_interval": "Sender & Favoriten",
+              "recordings_interval": "Aufnahmen",
+              "guide_interval": "TV-Programm aktualisieren",
+              "guide_parallel": "Parallele Programmanfragen"
+            }
+          }
+        }
+      },
+      "playlists": {
+        "title": "Playlist-Server",
+        "description": "M3U-Playlists und ein XMLTV-Programm für IPTV-Player wie Kodi oder TiviMate, bereitgestellt von Home Assistant unter /api/waipu_tv. Streams gehen direkt von waipu.tv zum Player; nichts wird neu kodiert.",
+        "data": {
+          "playlists": "M3U-Playlists & XMLTV-Programm",
+          "access_key": "Zugangsschlüssel",
+          "player_url": "Adresse für Player",
+          "catchup": "Catch-up aus dem TV-Programm",
+          "timeshift": "Timeshift ab Sendungsbeginn",
+          "hls_proxy": "HLS-Playlists über Home Assistant ausliefern"
+        },
+        "data_description": {
+          "access_key": "Wird an jede Playlist-URL als ?key=… angehängt. Jeder mit dem Schlüssel kann über dein Konto schauen. Leere das Feld, um einen neuen Schlüssel zu erzeugen; alte Links funktionieren dann nicht mehr.",
+          "player_url": "Optional. Leer lassen, um die interne URL von Home Assistant zu verwenden.",
+          "catchup": "Player können laufende und kürzlich begonnene Sendungen neu starten.",
+          "timeshift": "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
+          "hls_proxy": "Nur für ffmpeg-basierte Player (VLC, Jellyfin) nötig; auch pro Playlist einstellbar."
+        }
+      }
+    }
+  },
+  "selector": {
+    "channels": {
+      "options": {
+        "visible": "Alle sichtbaren Sender",
+        "favorites": "Nur Favoriten",
+        "live": "Nur Live-TV (ohne On-Demand)"
+      }
+    },
+    "guide_days": {
+      "options": {
+        "1": "1 Tag",
+        "2": "2 Tage",
+        "3": "3 Tage",
+        "7": "7 Tage"
+      }
+    }
+  }
+}

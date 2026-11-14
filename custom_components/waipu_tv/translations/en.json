@@ -1,0 +1,144 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This waipu.tv account is already configured.",
+      "reauth_successful": "Signed in again.",
+      "single_instance_allowed": "A waipu.tv account is already configured. Only one account per Home Assistant is supported.",
+      "wrong_account": "This is a different waipu.tv account. Sign in with the account that was set up."
+    },
+    "error": {
+      "cannot_connect": "Could not reach waipu.tv. Try again later.",
+      "invalid_auth": "Wrong e-mail or password.",
+      "invalid_url": "Enter an address starting with http:// or https://.",
+      "unknown": "Unexpected error, see the log."
+    },
+    "step": {
+      "user": {
+        "title": "Set up waipu.tv",
+        "description": "Sign in with your waipu.tv account. The password is only used once to get a refresh token.",
+        "data": {
+          "email": "E-mail",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Sign in to waipu.tv again",
+        "description": "waipu.tv no longer accepts the stored login. Enter your password to sign in again.",
+        "data": {
+          "email": "E-mail",
+          "password": "Password"
+        }
+      },
+      "guide": {
+        "title": "Guide & entities",
+        "data": {
+          "channels": "Channels to import",
+          "guide_days": "Guide days",
+          "guide_details": "Guide details for favorites"
+        },
+        "data_description": {
+          "guide_days": "The guide is fetched in the background; more days means more requests to waipu.tv.",
+          "guide_details": "Descriptions, cast and images for favorite channels only."
+        },
+        "sections": {
+          "update_intervals": {
+            "name": "Update intervals",
+            "description": "Changes you make in Home Assistant (recording, deleting, favorites) are loaded right away; these intervals only pick up changes made elsewhere, e.g. in the waipu.tv app.",
+            "data": {
+              "channels_interval": "Channels & favorites",
+              "recordings_interval": "Recordings",
+              "guide_interval": "Guide refresh",
+              "guide_parallel": "Parallel guide requests"
+            }
+          }
+        }
+      },
+      "playlists": {
+        "title": "Playlist server",
+        "description": "M3U playlists and an XMLTV guide for IPTV players like Kodi or TiviMate, served by Home Assistant under /api/waipu_tv. Streams go directly from waipu.tv to the player; nothing is re-encoded.",
+        "data": {
+          "playlists": "M3U playlists & XMLTV guide",
+          "access_key": "Access key",
+          "player_url": "Address for players",
+          "catchup": "Catch-up from the guide",
+          "timeshift": "Time-shift from program start",
+          "hls_proxy": "Serve HLS playlists through Home Assistant"
+        },
+        "data_description": {
+          "access_key": "Added to every playlist URL as ?key=…. Anyone with the key can watch on your account. Clear the field to generate a new key; it locks out old links.",
+          "player_url": "Optional. Leave empty to use Home Assistant's internal URL.",
+          "catchup": "Players can restart running and recently started programs.",
+          "timeshift": "Live channels open at the start of the running program so you can rewind.",
+          "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist."
+        }
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_url": "Enter an address starting with http:// or https://."
+    },
+    "step": {
+      "init": {
+        "title": "Guide & entities",
+        "data": {
+          "channels": "Channels to import",
+          "guide_days": "Guide days",
+          "guide_details": "Guide details for favorites"
+        },
+        "data_description": {
+          "guide_days": "The guide is fetched in the background; more days means more requests to waipu.tv.",
+          "guide_details": "Descriptions, cast and images for favorite channels only."
+        },
+        "sections": {
+          "update_intervals": {
+            "name": "Update intervals",
+            "description": "Changes you make in Home Assistant (recording, deleting, favorites) are loaded right away; these intervals only pick up changes made elsewhere, e.g. in the waipu.tv app.",
+            "data": {
+              "channels_interval": "Channels & favorites",
+              "recordings_interval": "Recordings",
+              "guide_interval": "Guide refresh",
+              "guide_parallel": "Parallel guide requests"
+            }
+          }
+        }
+      },
+      "playlists": {
+        "title": "Playlist server",
+        "description": "M3U playlists and an XMLTV guide for IPTV players like Kodi or TiviMate, served by Home Assistant under /api/waipu_tv. Streams go directly from waipu.tv to the player; nothing is re-encoded.",
+        "data": {
+          "playlists": "M3U playlists & XMLTV guide",
+          "access_key": "Access key",
+          "player_url": "Address for players",
+          "catchup": "Catch-up from the guide",
+          "timeshift": "Time-shift from program start",
+          "hls_proxy": "Serve HLS playlists through Home Assistant"
+        },
+        "data_description": {
+          "access_key": "Added to every playlist URL as ?key=…. Anyone with the key can watch on your account. Clear the field to generate a new key; it locks out old links.",
+          "player_url": "Optional. Leave empty to use Home Assistant's internal URL.",
+          "catchup": "Players can restart running and recently started programs.",
+          "timeshift": "Live channels open at the start of the running program so you can rewind.",
+          "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist."
+        }
+      }
+    }
+  },
+  "selector": {
+    "channels": {
+      "options": {
+        "visible": "All visible channels",
+        "favorites": "Favorites only",
+        "live": "Live TV only (no on-demand)"
+      }
+    },
+    "guide_days": {
+      "options": {
+        "1": "1 day",
+        "2": "2 days",
+        "3": "3 days",
+        "7": "7 days"
+      }
+    }
+  }
+}

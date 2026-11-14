@@ -1,0 +1,16 @@
+[tool.pytest.ini_options]
+# tests/test_*.py cover the old waipu2m3u reference package (unittest, removed after the port)
+testpaths = ["tests/api", "tests/integration"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["custom_components"]
+force-sort-within-sections = true

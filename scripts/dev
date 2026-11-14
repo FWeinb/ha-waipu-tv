@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Start Home Assistant on http://localhost:8123 with this integration loaded.
+# On first start it finishes onboarding with the owner "dev", password "dev".
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+URL=http://localhost:8123
+CLIENT_ID=$URL/
+
+if [[ ! -x .venv/bin/hass ]]; then
+  uv venv -p 3.14 .venv
+  uv pip install -p .venv pytest-homeassistant==2026.11.1
+fi
+
+mkdir -p config/custom_components
+ln -sfn "$PWD/custom_components/waipu_tv" config/custom_components/waipu_tv
+
+if [[ ! -f config/configuration.yaml ]]; then
+  cat > config/configuration.yaml <<'YAML'
+default_config:
+
+logger:
+  default: info
+  logs:
+    custom_components.waipu_tv: debug
+YAML
+fi
+
+.venv/bin/hass --config config --debug "$@" &
+HASS_PID=$!
+trap 'kill $HASS_PID 2>/dev/null; wait $HASS_PID' INT TERM
+
+if [[ ! -f config/.storage/onboarding ]]; then
+  until curl -sf $URL/api/onboarding > /dev/null; do
+    kill -0 $HASS_PID 2>/dev/null || exit 1
+    sleep 1
+  done
+
+  json() { .venv/bin/python -c "import json, sys; print(json.load(sys.stdin)['$1'])"; }
+
+  code=$(curl -sf -X POST $URL/api/onboarding/users -H 'Content-Type: application/json' \
+    -d "{\"client_id\": \"$CLIENT_ID\", \"name\": \"Dev\", \"username\": \"dev\",
+         \"password\": \"dev\", \"language\": \"en\"}" | json auth_code)
+  token=$(curl -sf -X POST $URL/auth/token \
+    -d "grant_type=authorization_code&code=$code&client_id=$CLIENT_ID" | json access_token)
+  for step in core_config analytics; do
+    curl -sf -X POST $URL/api/onboarding/$step -H "Authorization: Bearer $token" > /dev/null
+  done
+  curl -sf -X POST $URL/api/onboarding/integration -H "Authorization: Bearer $token" \
+    -H 'Content-Type: application/json' \
+    -d "{\"client_id\": \"$CLIENT_ID\", \"redirect_uri\": \"$CLIENT_ID?auth_callback=1\"}" \
+    > /dev/null
+  echo "Onboarding done: log in at $URL as dev / dev"
+fi
+
+wait $HASS_PID
