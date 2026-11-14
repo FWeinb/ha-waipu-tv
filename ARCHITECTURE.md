@@ -29,8 +29,9 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 3. **Requires Home Assistant 2026.11** or later; no compatibility code for older versions.
 4. **No standalone server and no Docker image.** The playlist server only exists inside Home
    Assistant.
-5. **One waipu.tv account per Home Assistant instance.** A second setup attempt aborts with
-   "already configured".
+5. **One waipu.tv account per Home Assistant instance** (`single_config_entry` in the manifest): a
+   second setup attempt aborts with Home Assistant's "single instance" message. The entry's unique
+   id is waipu.tv's user handle, so re-authentication refuses a different account.
 6. **waipu.tv logins only.** No O2 or device-code login, no provider choice.
 7. **Translations:** English and German. Channel names and program data stay as waipu.tv delivers
    them.
@@ -48,9 +49,18 @@ client, guide cache and playlist endpoints. It is ported into the integration an
      ...             integration: config flow, coordinators, entities, actions, views, websocket
    frontend/         panel source (TypeScript, Lit, Vite)
    tests/
-   scripts/dev       starts a local Home Assistant with the integration (http://localhost:8123)
+     api/            library tests against saved responses (tests/fixtures, anonymized or public)
+     integration/    pytest-homeassistant tests
+   scripts/dev       local Home Assistant on http://localhost:8123 with the integration; first start
+                     onboards an owner "dev" / "dev"; data in config/ (ignored)
+   requirements_test.txt
    ARCHITECTURE.md
    ```
+
+   Inside the integration: `api/client.py` (HTTP calls), `api/models.py` (Channel, Program,
+   Recording), `api/guide.py` (guide cache), `api/playlist.py` (M3U/XMLTV/HLS rendering);
+   `coordinator.py` (runtime data and the shared changes used by actions and panel),
+   `views.py` (playlist server), `websocket.py`, `services.py`, `panel.py`, `diagnostics.py`.
 
    `mockups/`, the `waipu2m3u` reference package and its old files stay local, outside git.
 
@@ -67,7 +77,8 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 
 ## Setup and options
 
-13. **Credentials:** only the refresh token and device id are stored, never the password. When the
+13. **Credentials:** only the refresh token and device id are stored, never the password; each
+    sign-in (setup or re-authentication) uses a fresh device id, like a new pvr.waipu install. When the
     refresh token stops working, Home Assistant's re-authentication flow asks for the password again.
 14. **Config flow in three steps.** Steps 2 and 3 are also the integration's Options.
     1. **Sign in:** e-mail and password.
@@ -189,6 +200,34 @@ client, guide cache and playlist endpoints. It is ported into the integration an
     live); catch-up uses `catchup="default"`, `catchup-days="1"` and `?start={utc}`.
 40. **Unexpected errors answer HTTP 500** and are logged instead of dropping the connection.
 
+## Decided during implementation
+
+41. **Access key in the options:** Home Assistant forms have no "New key" button, so clearing the
+    field generates a new key.
+42. **Address for players:** the configured one, else Home Assistant's internal URL, else the
+    address the player used for the request.
+43. **Guide timing:** missing and stale windows are looked for every 10 minutes and fetched once older
+    than the guide refresh interval; a broken window is retried after 5 minutes. The guide loads in the
+    background after setup. The refresh button also reloads the whole guide, in the background.
+44. **Calendar:** scheduled and running recordings show on every channel; only guide entries are
+    limited to favorites. A recorded program shows once, as the recording.
+45. **Shared changes:** recording, deleting and favorites live on the runtime data
+    (`WaipuTvData`), used by both actions and websocket commands; each reloads the affected
+    coordinator right away. With "favorites only" imports a favorite change also refreshes the guide.
+46. **Websocket commands:** `waipu_tv/channels`, `guide` (returns the guide's days as local midnights,
+    so the panel needs no time-zone arithmetic), `program`, `recordings`, `record` (`series` flag),
+    `delete_recordings`, `set_favorite`, `playlists` (admins only; URLs, option defaults, instant
+    restart).
+47. **Panel registration:** registered while the account is loaded, removed on unload; the bundle is
+    served from `/waipu_tv_static/` with a content hash in the URL. Vite's library mode leaves the
+    committed bundle unminified, which keeps its diffs readable.
+48. **Panel scope v1:** no "watched" column (watch progress isn't loaded), deleting asks with the
+    browser's confirm dialog, the program dialog closes on backdrop clicks, the Playlists tab
+    explains the per-playlist query parameters.
+49. **Not built yet:** "Guide details for favorites" is a stored option, but descriptions and cast are
+    not fetched for XMLTV; the panel loads details on demand through `waipu_tv/program`. Cancelling a
+    whole series rule (pvr.waipu's `recording-scheduler` delete request) isn't ported.
+
 ## Rejected
 
 - **Browser playback** in the panel: built with Shaka Player and removed. Dolby audio, FairPlay and
@@ -201,11 +240,12 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 
 ## Unverified
 
-Nothing has been run against a real waipu.tv account yet, except the public EPG and station-config
-endpoints. The manual release checklist covers:
+Run against a real account so far: sign-in, channels, recordings and the full background guide load
+(about 19 s) in the dev instance. The manual release checklist still covers:
 
-- login, stream URLs, the license relay, recordings and instant restart (ported or captured, not
-  tested end to end);
+- stream URLs, the license relay, recording and deleting, favorites and instant restart (ported or
+  captured, not tested end to end);
+- the panel against real data (built and type-checked, not yet looked at in a browser);
 - the series-recording and cancel calls (ported from pvr.waipu, not tested);
 - the delete body: pvr.waipu sends `{"ids": [...]}`, ha-waipu `{"recordingIds": [...]}`; we follow
   pvr.waipu;
