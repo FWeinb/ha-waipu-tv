@@ -173,5 +173,62 @@
         "name": "TV-Programm"
       }
     }
+  },
+  "services": {
+    "record_program": {
+      "name": "Sendung aufnehmen",
+      "description": "Nimmt eine Sendung auf. Die Programm-ID ist die uid eines Termins in calendar.waipu_tv.",
+      "fields": {
+        "program_id": {
+          "name": "Programm-ID",
+          "description": "waipu.tv-Programm-ID, z. B. trigger.calendar_event.uid."
+        }
+      }
+    },
+    "record_series": {
+      "name": "Serie aufnehmen",
+      "description": "Nimmt alle Folgen der Serie dieser Sendung auf ihrem Sender auf.",
+      "fields": {
+        "program_id": {
+          "name": "Programm-ID",
+          "description": "Eine beliebige Folge der Serie."
+        }
+      }
+    },
+    "delete_recordings": {
+      "name": "Aufnahmen löschen",
+      "description": "Bricht geplante Aufnahmen ab und löscht fertige.",
+      "fields": {
+        "recording_ids": {
+          "name": "Aufnahme-IDs",
+          "description": "waipu.tv-Aufnahme-IDs."
+        }
+      }
+    },
+    "set_favorite": {
+      "name": "Favorit setzen",
+      "description": "Fügt einen Sender zu den Favoriten deines waipu.tv-Kontos hinzu oder entfernt ihn.",
+      "fields": {
+        "channel": {
+          "name": "Sender",
+          "description": "waipu.tv-Sender-ID, z. B. ard."
+        },
+        "favorite": {
+          "name": "Favorit",
+          "description": "An zum Hinzufügen, aus zum Entfernen."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Das waipu.tv-Konto ist nicht geladen."
+    },
+    "unknown_channel": {
+      "message": "Unbekannter Sender {channel}."
+    },
+    "api_error": {
+      "message": "Anfrage an waipu.tv fehlgeschlagen: {error}"
+    }
   }
 }

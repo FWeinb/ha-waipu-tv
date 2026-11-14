@@ -1,8 +1,9 @@
 """Entities on the waipu.tv device."""
 
+import pytest
+
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr
-import pytest
 
 from ..conftest import URL_RECORDINGS, load_json
 

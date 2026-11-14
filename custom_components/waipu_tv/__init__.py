@@ -2,10 +2,12 @@
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .api import WaipuClient
-from .const import CONF_DEVICE_ID, CONF_REFRESH_TOKEN
+from .const import CONF_DEVICE_ID, CONF_REFRESH_TOKEN, DOMAIN
 from .coordinator import (
     ChannelsCoordinator,
     GuideCoordinator,
@@ -13,8 +15,17 @@ from .coordinator import (
     WaipuTvConfigEntry,
     WaipuTvData,
 )
+from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CALENDAR, Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Actions are registered once, whether or not the account is loaded."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> None:

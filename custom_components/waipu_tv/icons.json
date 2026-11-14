@@ -26,5 +26,19 @@
         "default": "mdi:television-guide"
       }
     }
+  },
+  "services": {
+    "record_program": {
+      "service": "mdi:record-rec"
+    },
+    "record_series": {
+      "service": "mdi:record-circle-outline"
+    },
+    "delete_recordings": {
+      "service": "mdi:delete"
+    },
+    "set_favorite": {
+      "service": "mdi:star"
+    }
   }
 }

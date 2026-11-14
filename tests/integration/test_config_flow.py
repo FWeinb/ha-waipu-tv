@@ -2,10 +2,11 @@
 
 import re
 
+import pytest
+
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResultType
-import pytest
 
 from custom_components.waipu_tv.const import (
     CONF_ACCESS_KEY,

@@ -2,10 +2,11 @@
 
 import re
 
+import pytest
+
 from homeassistant.components.calendar import DATA_COMPONENT as CALENDAR_COMPONENT
 from homeassistant.const import STATE_ON
 from homeassistant.util import dt as dt_util
-import pytest
 
 from ..conftest import URL_RECORDINGS, load_json
 

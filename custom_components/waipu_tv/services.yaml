@@ -1,0 +1,35 @@
+record_program:
+  fields:
+    program_id:
+      required: true
+      example: "{{ trigger.calendar_event.uid }}"
+      selector:
+        text:
+
+record_series:
+  fields:
+    program_id:
+      required: true
+      selector:
+        text:
+
+delete_recordings:
+  fields:
+    recording_ids:
+      required: true
+      selector:
+        text:
+          multiple: true
+
+set_favorite:
+  fields:
+    channel:
+      required: true
+      example: ard
+      selector:
+        text:
+    favorite:
+      required: true
+      default: true
+      selector:
+        boolean:

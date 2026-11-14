@@ -33,8 +33,9 @@ class WaipuTvCalendar(WaipuTvEntity[GuideCoordinator], CalendarEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        recordings = self.coordinator.config_entry.runtime_data.recordings
-        self.async_on_remove(recordings.async_add_listener(self._handle_coordinator_update))
+        data = self.coordinator.config_entry.runtime_data
+        for coordinator in (data.channels, data.recordings):
+            self.async_on_remove(coordinator.async_add_listener(self._handle_coordinator_update))
 
     def _events(
         self, programs: dict[str, list[Program]], start: datetime, end: datetime

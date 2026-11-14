@@ -1,12 +1,17 @@
 """Coordinators for the account's channels, recordings and the guide."""
 
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -31,10 +36,49 @@ GUIDE_CHECK_INTERVAL = timedelta(minutes=10)
 
 @dataclass
 class WaipuTvData:
+    """Runtime data; the changes below are shared by the actions and the panel. Each one reloads
+    the affected data right away, the intervals only pick up changes made elsewhere."""
+
     client: WaipuClient
     channels: ChannelsCoordinator
     recordings: RecordingsCoordinator
     guide: GuideCoordinator
+
+    async def async_record_program(self, program_id: str) -> None:
+        await _call(self.client.record_program(program_id))
+        await self.recordings.async_refresh()
+
+    async def async_record_series(self, program_id: str) -> None:
+        await _call(self.client.record_series(program_id))
+        await self.recordings.async_refresh()
+
+    async def async_delete_recordings(self, recording_ids: list[str]) -> None:
+        await _call(self.client.delete_recordings(recording_ids))
+        await self.recordings.async_refresh()
+
+    async def async_set_favorite(self, channel_id: str, favorite: bool) -> None:
+        channel_id = channel_id.lower()
+        if all(c.id != channel_id for c in self.channels.data.channels):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_channel",
+                translation_placeholders={"channel": channel_id},
+            )
+        await _call(self.client.set_favorite(channel_id, favorite))
+        await self.channels.async_refresh()
+        # with "favorites only", the guide needs the new channel's windows
+        await self.guide.async_request_refresh()
+
+
+async def _call(request: Awaitable[None]) -> None:
+    try:
+        await request
+    except WaipuError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="api_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
 
 type WaipuTvConfigEntry = ConfigEntry[WaipuTvData]

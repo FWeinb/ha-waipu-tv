@@ -5,6 +5,8 @@ import secrets
 from typing import Any, override
 import uuid
 
+import probatio
+
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -27,7 +29,6 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-import probatio
 
 from .api import WaipuAuthError, WaipuClient, WaipuError
 from .const import (

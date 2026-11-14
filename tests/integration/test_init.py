@@ -1,7 +1,8 @@
 """Setting up the config entry with the stored refresh token."""
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 import pytest
+
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 
 from custom_components.waipu_tv.const import (
     CONF_REFRESH_TOKEN,

@@ -173,5 +173,62 @@
         "name": "Guide"
       }
     }
+  },
+  "services": {
+    "record_program": {
+      "name": "Record program",
+      "description": "Records one program. The program id is the uid of a calendar.waipu_tv event.",
+      "fields": {
+        "program_id": {
+          "name": "Program id",
+          "description": "waipu.tv program id, e.g. trigger.calendar_event.uid."
+        }
+      }
+    },
+    "record_series": {
+      "name": "Record series",
+      "description": "Records all episodes of the program's series on its channel.",
+      "fields": {
+        "program_id": {
+          "name": "Program id",
+          "description": "Any episode of the series."
+        }
+      }
+    },
+    "delete_recordings": {
+      "name": "Delete recordings",
+      "description": "Cancels scheduled and deletes finished recordings.",
+      "fields": {
+        "recording_ids": {
+          "name": "Recording ids",
+          "description": "waipu.tv recording ids."
+        }
+      }
+    },
+    "set_favorite": {
+      "name": "Set favorite",
+      "description": "Adds a channel to or removes it from the favorites in your waipu.tv account.",
+      "fields": {
+        "channel": {
+          "name": "Channel",
+          "description": "waipu.tv station id, e.g. ard."
+        },
+        "favorite": {
+          "name": "Favorite",
+          "description": "On to add, off to remove."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "The waipu.tv account is not loaded."
+    },
+    "unknown_channel": {
+      "message": "Unknown channel {channel}."
+    },
+    "api_error": {
+      "message": "waipu.tv request failed: {error}"
+    }
   }
 }
