@@ -3,6 +3,9 @@
   "name": "waipu.tv",
   "codeowners": [],
   "config_flow": true,
+  "dependencies": [
+    "http"
+  ],
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "requirements": [],

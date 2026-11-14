@@ -16,6 +16,7 @@ from .coordinator import (
     WaipuTvData,
 )
 from .services import async_setup_services
+from .views import PlaylistView
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CALENDAR, Platform.SENSOR]
 
@@ -23,8 +24,10 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Actions are registered once, whether or not the account is loaded."""
+    """Actions and the playlist server are registered once, whether or not the account is
+    loaded; both look up the loaded account on each use."""
     async_setup_services(hass)
+    hass.http.register_view(PlaylistView())
     return True
 
 

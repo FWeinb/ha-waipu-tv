@@ -407,3 +407,10 @@ class WaipuClient:
             return base64.b64decode(json.loads(body)["license"])
         except (ValueError, KeyError, TypeError) as err:
             raise WaipuError("unexpected license response") from err
+
+    # --- CDN ------------------------------------------------------------------------------------
+
+    async def upstream_get(self, url: str) -> tuple[int, bytes]:
+        """Unauthenticated GET of a CDN resource (HLS playlists); gzip is accepted, which
+        waipu.tv's edge reportedly requires."""
+        return await self._request("GET", url, headers={"Accept-Encoding": "gzip"}, auth=False)
