@@ -2,6 +2,7 @@
 
 import asyncio
 import base64
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -127,6 +128,11 @@ class WaipuClient:
         self._access_token = ""
         self._device_token = ""
         self._lock = asyncio.Lock()
+        self.errors: deque[tuple[datetime, str]] = deque(maxlen=10)  # for diagnostics
+
+    def _error[E: WaipuError](self, err: E) -> E:
+        self.errors.append((datetime.now(UTC), str(err)))
+        return err
 
     # --- authentication -------------------------------------------------------------------------
 
@@ -160,12 +166,12 @@ class WaipuClient:
                 status = resp.status
                 doc = await resp.json(content_type=None)
         except (aiohttp.ClientError, TimeoutError, ValueError) as err:
-            raise WaipuError(f"waipu.tv login failed: {err}") from err
+            raise self._error(WaipuError(f"waipu.tv login failed: {err}")) from err
 
         if status in (400, 401):
-            raise WaipuAuthError(f"waipu.tv login rejected (HTTP {status})", status)
+            raise self._error(WaipuAuthError(f"waipu.tv login rejected (HTTP {status})", status))
         if status != 200 or not isinstance(doc, dict) or "access_token" not in doc:
-            raise WaipuError(f"waipu.tv login failed (HTTP {status})", status)
+            raise self._error(WaipuError(f"waipu.tv login failed (HTTP {status})", status))
         self._access_token = doc["access_token"]
         self._device_token = ""
         if doc.get("refresh_token") and doc["refresh_token"] != self.refresh_token:
@@ -219,7 +225,7 @@ class WaipuClient:
             ) as resp:
                 return resp.status, await resp.read()
         except (aiohttp.ClientError, TimeoutError) as err:
-            raise WaipuError(f"{method} {url} failed: {err!r}") from err
+            raise self._error(WaipuError(f"{method} {url} failed: {err!r}")) from err
 
     async def _json(
         self,
@@ -246,7 +252,7 @@ class WaipuClient:
             doc = None
         if not 200 <= status < 300:
             detail = doc.get("detail") or doc.get("error") if isinstance(doc, dict) else data[:200]
-            raise WaipuError(f"{url} returned HTTP {status}: {detail}", status)
+            raise self._error(WaipuError(f"{url} returned HTTP {status}: {detail}", status))
         return doc
 
     # --- channels -------------------------------------------------------------------------------

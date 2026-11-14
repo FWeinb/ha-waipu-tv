@@ -46,6 +46,16 @@ HLS = "application/vnd.apple.mpegurl"
 EXTENSIONS = {"mpd": "dash", "m3u8": "hls"}
 
 
+def base_url(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> str | None:
+    """The address players use: the configured one, else Home Assistant's internal URL."""
+    if not (base := entry.options[CONF_PLAYER_URL]):
+        try:
+            base = get_url(hass, allow_external=False, allow_cloud=False)
+        except NoURLAvailableError:
+            return None
+    return f"{base}/api/{DOMAIN}"
+
+
 class BadRequest(ValueError):
     """Invalid playlist option; answered with HTTP 400."""
 
@@ -121,13 +131,9 @@ class _Request:
         self.base_url = self._base_url()
 
     def _base_url(self) -> str:
-        if base := self.options[CONF_PLAYER_URL]:
-            return f"{base}/api/{DOMAIN}"
-        try:
-            base = get_url(self.hass, allow_external=False, allow_cloud=False)
-        except NoURLAvailableError:
-            base = f"{self.request.scheme}://{self.request.host}"
-        return f"{base}/api/{DOMAIN}"
+        return base_url(self.hass, self.entry) or (
+            f"{self.request.scheme}://{self.request.host}/api/{DOMAIN}"
+        )
 
     async def handle(self, path: str) -> web.StreamResponse:
         name, _, ext = path.rpartition(".") if "." in path else (path, "", "")

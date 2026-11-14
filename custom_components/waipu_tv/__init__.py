@@ -17,6 +17,7 @@ from .coordinator import (
 )
 from .services import async_setup_services
 from .views import PlaylistView
+from .websocket import async_setup_websocket
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CALENDAR, Platform.SENSOR]
 
@@ -24,10 +25,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Actions and the playlist server are registered once, whether or not the account is
-    loaded; both look up the loaded account on each use."""
+    """Actions, the playlist server and the panel's websocket commands are registered once,
+    whether or not the account is loaded; they look up the loaded account on each use."""
     async_setup_services(hass)
     hass.http.register_view(PlaylistView())
+    async_setup_websocket(hass)
     return True
 
 

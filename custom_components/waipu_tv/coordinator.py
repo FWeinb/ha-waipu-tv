@@ -70,6 +70,14 @@ class WaipuTvData:
         await self.guide.async_request_refresh()
 
 
+def loaded_data(hass: HomeAssistant) -> WaipuTvData:
+    """The one waipu.tv account, for actions and the panel."""
+    entries: list[WaipuTvConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    if not entries:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="not_loaded")
+    return entries[0].runtime_data
+
+
 async def _call(request: Awaitable[None]) -> None:
     try:
         await request

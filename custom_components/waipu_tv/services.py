@@ -3,11 +3,10 @@
 import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
-from .coordinator import WaipuTvConfigEntry, WaipuTvData
+from .coordinator import loaded_data
 
 ATTR_PROGRAM_ID = "program_id"
 ATTR_RECORDING_IDS = "recording_ids"
@@ -23,28 +22,22 @@ FAVORITE_SCHEMA = probatio.Schema(
 )
 
 
-def _data(hass: HomeAssistant) -> WaipuTvData:
-    """The one waipu.tv account."""
-    entries: list[WaipuTvConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
-    if not entries:
-        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="not_loaded")
-    return entries[0].runtime_data
-
-
 async def _record_program(call: ServiceCall) -> None:
-    await _data(call.hass).async_record_program(call.data[ATTR_PROGRAM_ID])
+    await loaded_data(call.hass).async_record_program(call.data[ATTR_PROGRAM_ID])
 
 
 async def _record_series(call: ServiceCall) -> None:
-    await _data(call.hass).async_record_series(call.data[ATTR_PROGRAM_ID])
+    await loaded_data(call.hass).async_record_series(call.data[ATTR_PROGRAM_ID])
 
 
 async def _delete_recordings(call: ServiceCall) -> None:
-    await _data(call.hass).async_delete_recordings(call.data[ATTR_RECORDING_IDS])
+    await loaded_data(call.hass).async_delete_recordings(call.data[ATTR_RECORDING_IDS])
 
 
 async def _set_favorite(call: ServiceCall) -> None:
-    await _data(call.hass).async_set_favorite(call.data[ATTR_CHANNEL], call.data[ATTR_FAVORITE])
+    await loaded_data(call.hass).async_set_favorite(
+        call.data[ATTR_CHANNEL], call.data[ATTR_FAVORITE]
+    )
 
 
 @callback

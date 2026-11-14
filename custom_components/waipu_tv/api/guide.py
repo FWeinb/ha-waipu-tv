@@ -128,6 +128,14 @@ class Guide:
         programs = await self.programs([channel_id], now - EPG_WINDOW, now + timedelta(seconds=1))
         return next((p for p in programs[channel_id] if p.start <= now < p.stop), None)
 
+    def status(self) -> dict[str, int]:
+        """Cache size, for diagnostics."""
+        return {
+            "windows": len(self._windows),
+            "failed_windows": sum(w.programs is None for w in self._windows.values()),
+            "loading": len(self._loading),
+        }
+
     async def close(self) -> None:
         """Cancel fetches in flight."""
         tasks = list(self._loading.values())
