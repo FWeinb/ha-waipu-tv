@@ -47,7 +47,7 @@ port is complete and the old package is deleted.
    ```
    custom_components/waipu_tv/
      api/            waipu.tv library: no Home Assistant imports
-     frontend/       built panel bundle (committed)
+     frontend/       built panel bundle (not committed; built by the release workflow)
      ...             integration: config flow, coordinators, entities, actions, views, websocket
    frontend/         panel source (TypeScript, Lit, Vite)
    tests/
@@ -55,6 +55,8 @@ port is complete and the old package is deleted.
      integration/    pytest-homeassistant tests
    scripts/dev       local Home Assistant on http://localhost:8123 with the integration; first start
                      onboards an owner "dev" / "dev"; data in config/ (ignored)
+   scripts/artwork   the README's screenshots, from the real panel with waipu.tv's public guide
+   .github/workflows tests (ruff, pytest, frontend build), validation (hassfest, HACS), release
    requirements_test.txt
    ARCHITECTURE.md
    ```
@@ -68,8 +70,12 @@ port is complete and the old package is deleted.
 
    Nothing is published to PyPI.
 10. **The library is async**, built on asyncio and aiohttp, which Home Assistant already ships.
-11. **The panel is TypeScript with Lit, built with Vite** into one JS file that is committed, so
-    Marketplace users need no build step.
+11. **The panel is TypeScript with Lit, built with Vite**, and the build is not committed. Publishing
+    a GitHub release runs `.github/workflows/release.yml`: it builds the panel into the integration,
+    sets the manifest's version from the tag (`v0.2.0` → `0.2.0`) and attaches the integration as
+    `waipu_tv.zip`, which the Marketplace installs (`zip_release` in `hacs.json`). `scripts/dev`
+    and `scripts/artwork` build it locally; without a build the integration runs without the panel
+    and logs a warning, which is how the tests run in CI.
 12. **Testing:**
     - library: unit tests against saved waipu.tv responses, anonymized;
     - integration: config flow, coordinators, websocket commands and playlist views with
@@ -232,7 +238,7 @@ port is complete and the old package is deleted.
     over `recording_stream`), `license`, `fairplay_certificate`.
 47. **Panel registration:** registered while the account is loaded, removed on unload; the bundle is
     served from `/waipu_tv_static/` with a content hash in the URL. Vite's library mode leaves the
-    committed bundle unminified, which keeps its diffs readable. Shaka Player is a separate,
+    bundle unminified. Shaka Player is a separate,
     hash-named chunk next to it (about 1 MB, 290 KB gzipped), loaded only when the player opens.
 48. **Panel scope v1:** no "watched" column (watch progress isn't loaded), deleting asks with the
     browser's confirm dialog, the program dialog closes on backdrop clicks, the Playlists tab

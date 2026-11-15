@@ -34,7 +34,9 @@ browser or player, which decrypts protected channels itself.
 ## Installation
 
 1. In Home Assistant's **Marketplace**, add this repository as a custom integration repository.
-2. Install **waipu.tv** and restart Home Assistant.
+2. Install **waipu.tv** and restart Home Assistant. The Marketplace installs the latest release,
+   which includes the built panel; a plain copy of the repository has no panel until it's built
+   (`npm ci && npm run build` in `frontend/`).
 3. Go to **Settings → Devices & services → Add integration → waipu.tv** and sign in. The password
    is only used once to get a refresh token; it is not stored.
 

@@ -5,6 +5,9 @@ node_modules/
 .ruff_cache/
 config/
 
+# the panel bundle, built from frontend/ (the release workflow adds it to the zip)
+custom_components/waipu_tv/frontend/
+
 # kept locally for reference, not part of the integration
 mockups/
 

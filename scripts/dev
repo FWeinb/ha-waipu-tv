@@ -5,6 +5,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# the panel bundle isn't committed
+(cd frontend && { [[ -d node_modules ]] || npm ci; } && npm run build >/dev/null)
+
 URL=http://localhost:8123
 CLIENT_ID=$URL/
 
