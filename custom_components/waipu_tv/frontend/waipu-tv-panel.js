@@ -1529,6 +1529,10 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
         flex: none;
         background: var(--wt-card);
         border-right: 1px solid var(--wt-line);
+        /* covers the row's border too: the divider color can be translucent, which let the now-line
+           show through between channels */
+        border-bottom: 1px solid var(--wt-line);
+        margin-bottom: -1px;
         display: flex;
         align-items: center;
         gap: 10px;
