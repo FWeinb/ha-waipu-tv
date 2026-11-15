@@ -194,3 +194,21 @@ async def test_failed_details_are_retried():
 
     assert client.requests == ["a", "b", "a"]
     assert set(guide.details()) == {"a", "b"}
+
+
+@freeze_time(NOW)
+async def test_starting_many_windows_yields_to_the_event_loop():
+    guide = make_guide(FakeClient())
+    started = []
+
+    async def other_work():
+        started.append(len(guide._loading))
+
+    # 100 channels x 6 windows; other work runs before all 600 fetches are started
+    warm = asyncio.create_task(
+        guide.warm([f"ch{i}" for i in range(100)], DAY, DAY + timedelta(days=1))
+    )
+    asyncio.create_task(other_work())
+    await warm
+
+    assert started and started[0] < 600

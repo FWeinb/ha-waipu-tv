@@ -15,6 +15,9 @@ from .models import Program, ProgramDetails, parse_program_details
 _LOGGER = logging.getLogger(__name__)
 
 RETRY_FAILED = timedelta(minutes=5)  # a broken window is retried after this, not on every use
+# a full guide is thousands of windows: their fetch tasks are started in batches, yielding to the
+# event loop in between, so starting them doesn't hold up Home Assistant
+START_BATCH = 200
 
 
 def window_starts(start: datetime, end: datetime) -> list[datetime]:
@@ -70,6 +73,14 @@ class Guide:
             task.add_done_callback(lambda _: self._loading.pop(key, None))
         return task
 
+    async def _load_all(self, keys: Iterable[tuple[str, datetime]]) -> list[asyncio.Task[None]]:
+        tasks = []
+        for i, key in enumerate(keys, start=1):
+            tasks.append(self._load(key))
+            if i % START_BATCH == 0:
+                await asyncio.sleep(0)
+        return tasks
+
     async def warm(
         self, channel_ids: Iterable[str], start: datetime, end: datetime, force: bool = False
     ) -> None:
@@ -79,11 +90,11 @@ class Guide:
         for key in [k for k in self._windows if k[1] + EPG_WINDOW <= start]:
             del self._windows[key]
         keys = [(c, window) for c in channel_ids for window in window_starts(start, end)]
-        tasks = [
-            self._load(key)
+        tasks = await self._load_all(
+            key
             for key in keys
             if force or key not in self._windows or self._stale(self._windows[key], now)
-        ]
+        )
         if tasks:
             await asyncio.gather(*tasks)
 
@@ -94,14 +105,16 @@ class Guide:
         stale windows are served as they are and refreshed in the background."""
         channel_ids = list(channel_ids)
         now = datetime.now(UTC)
-        missing = []
+        missing, stale = [], []
         for channel_id in channel_ids:
             for window in window_starts(start, end):
                 key = (channel_id, window)
                 if (cached := self._windows.get(key)) is None:
-                    missing.append(self._load(key))
+                    missing.append(key)
                 elif self._stale(cached, now):
-                    self._load(key)
+                    stale.append(key)
+        missing = await self._load_all(missing)
+        await self._load_all(stale)
         if missing:
             await asyncio.gather(*missing)
         return self.cached(channel_ids, start, end)
