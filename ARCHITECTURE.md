@@ -267,8 +267,11 @@ port is complete and the old package is deleted.
     decision 39; needs instant restart) only on on-demand channels: tested by hand, it was unreliable
     on live channels, and on on-demand channels worked with HLS (Safari) but not with DASH (Chrome).
     No watch progress in v1.
-55. **Audio:** every stream checked carries AAC next to Dolby AC-3; Chrome picks AAC by itself,
-    Safari can also play AC-3. waipu.tv's CDN sends `Access-Control-Allow-Origin: *`.
+55. **Audio:** every stream checked carries AAC stereo next to Dolby Digital (AC-3) 5.1 in the main
+    language. The player picks 5.1 when the browser can decode it, in the language already playing
+    (so audio description or clear language never win); once per start, so a choice in the audio
+    menu sticks. Chrome can't decode Dolby Digital and stays on AAC; Safari can. waipu.tv's CDN sends
+    `Access-Control-Allow-Origin: *`.
 56. **Deep links:** the player follows the URL: `/waipu-tv/watch/<channel>` (plus `/from-start`) and
     `/waipu-tv/recording/<id>`, set with Home Assistant's own navigation (`pushState` and
     `location-changed`), so links can be bookmarked or shared and Back leaves the player. Switching

@@ -131,6 +131,19 @@ function audioLabel(track: shakaLib.extern.AudioTrack) {
   return [track.label || track.language, `${layout}${codec ? ` (${codec})` : ""}`].filter(Boolean).join(" · ");
 }
 
+/** 5.1 when the stream has it in the language playing and the browser can decode it (Shaka only
+ * lists playable tracks: Chrome can't decode Dolby Digital, Safari can). Applied once per start, so
+ * a choice made in the audio menu sticks. */
+function preferSurround(player: shakaLib.Player) {
+  const tracks = player.getAudioTracks();
+  const active = tracks.find((a) => a.active);
+  if (!active || (active.channelsCount ?? 2) > 2) return;
+  const surround = tracks
+    .filter((a) => a.language === active.language && (a.channelsCount ?? 0) > 2)
+    .sort((a, b) => (b.channelsCount ?? 0) - (a.channelsCount ?? 0))[0];
+  if (surround) player.selectAudioTrack(surround);
+}
+
 const clock = (seconds: number) => {
   const s = Math.max(0, Math.floor(seconds));
   const h = Math.floor(s / 3600);
@@ -332,6 +345,7 @@ class WaipuPlayer extends LitElement {
       };
       for (const event of ["trackschanged", "variantchanged", "textchanged", "adaptation"]) player.addEventListener(event, tracks);
       await player.load(url);
+      preferSurround(player);
       tracks();
     } catch (err) {
       if (playId === this._playId) this._fail(err);
