@@ -1,0 +1,295 @@
+#!/usr/bin/env bash
+# Screenshots of the panel's Guide, Watch and Recordings tabs for the README, in Home Assistant's
+# dark theme.
+#
+# The panel is the committed bundle; its data is today's real guide, read from waipu.tv's public
+# channel and guide APIs (no login, no account, no Home Assistant), for a fixed set of channels
+# with fixed favorites and example recordings picked from that guide. No actual content is shown:
+# program images, shrunk to a few pixels and blurred into their colors, stand in for the video
+# (which loads a generated test stream) and the recordings' thumbnails.
+#
+# Needs ffmpeg, ImageMagick, python3 and Google Chrome (or CHROME=/path/to/chrome). Writes
+# docs/screenshots/guide.png, watch.png and recordings.png.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+# the panel bundle isn't committed
+(cd frontend && { [[ -d node_modules ]] || npm ci; } && npm run build >/dev/null)
+
+CHROME=${CHROME:-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"}
+OUT=docs/screenshots
+PORT=${PORT:-8765}
+SIZE=1280,800
+export TZ=Europe/Berlin  # the guide's own time zone, whoever runs this
+
+WORK=$(mktemp -d)
+SERVER=
+trap '[[ -n $SERVER ]] && kill "$SERVER" 2>/dev/null; rm -rf "$WORK"' EXIT
+
+cp -R custom_components/waipu_tv/frontend "$WORK/frontend"
+mkdir -p "$WORK/sample"
+
+# --- today's guide from waipu.tv's public APIs ---------------------------------------------------
+
+python3 -I - "$WORK" custom_components/waipu_tv/api/hls_allowlist.txt <<'PY'
+import json
+from pathlib import Path
+import sys
+import urllib.request
+from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
+
+work, allowlist = Path(sys.argv[1]), Path(sys.argv[2])
+# the channels and favorites shown; the player plays the first one (no DRM, so no Widevine needed)
+CHANNELS = ["zdf", "ard", "rtl", "sat1", "pro7", "vox", "arte", "3sat", "zdfneo", "kabeleins", "phoenix", "kika"]
+FAVORITES = 7
+
+
+def get(url: str) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": "waipu_tv artwork script"})
+    with urllib.request.urlopen(request, timeout=20) as response:
+        return response.read()
+
+
+config = {s["id"]: s for s in json.loads(get("https://web-proxy.waipu.tv/v2/station-config"))["stations"]}
+hls = {line.strip().upper() for line in allowlist.read_text().splitlines() if line.strip()}
+
+tz = ZoneInfo("Europe/Berlin")
+now = datetime.now(tz)
+today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+days = [today, today + timedelta(days=1)]
+# the grid API serves 4-hour windows aligned to UTC
+window = today.astimezone(UTC).replace(minute=0)
+window -= timedelta(hours=window.hour % 4)
+windows = []
+while window < days[1]:
+    windows.append(window)
+    window += timedelta(hours=4)
+
+channels, programs = [], {}
+for sid in [s for s in CHANNELS if s in config]:
+    station = config[sid]
+    channels.append({
+        "id": sid,
+        "name": station.get("displayName") or sid,
+        "number": len(channels) + 1,
+        "logo": station["logoTemplateUrl"]
+        .replace("${streamQuality}", station["streamQualities"][0])
+        .replace("${shape}", "standard")
+        .replace("${resolution}", "320x180"),
+        "favorite": len(channels) < FAVORITES,
+        "visible": True,
+        "vod": bool(station.get("newTv")),
+        "hls": sid.upper() in hls,
+    })
+    seen = {}
+    for w in windows:
+        stamp = w.strftime("%Y-%m-%dT%H:00:00.000Z")
+        for p in json.loads(get(f"https://epg-cache.waipu.tv/api/grid/{sid}/{stamp}")):
+            if p.get("id") and p.get("startTime") and p.get("stopTime"):
+                seen[p["id"]] = {
+                    "id": p["id"], "channel_id": sid, "title": p.get("title") or "",
+                    "episode_title": p.get("episodeTitle"), "genre": p.get("genre"),
+                    "start": p["startTime"], "stop": p["stopTime"],
+                    "image": None, "series_id": p.get("seriesId"),
+                    "recordable": not p.get("recordingForbidden", False),
+                    "preview": p.get("previewImage"),
+                }
+    programs[sid] = sorted(seen.values(), key=lambda p: p["start"])
+
+
+def at(sid: str, when: datetime) -> dict:
+    t = when.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return next(p for p in programs[sid] if p["start"] <= t < p["stop"])
+
+
+def preview(p: dict, name: str) -> bool:
+    """The program's image, to be turned into a color field; nothing of it is published."""
+    if not p["preview"]:
+        return False
+    (work / f"sample/{name}.jpg").write_bytes(get(p["preview"].replace("${resolution}", "320x180")))
+    return True
+
+
+# the player's program: its description, and its image as a color field
+watched = at(channels[0]["id"], now)
+details = json.loads(get(f"https://epg-cache.waipu.tv/api/programs/{watched['id']}"))
+preview(watched, "preview")
+
+# example recordings: one running, a few finished earlier today and scheduled for tonight, and two
+# series (groups 1 and 2): titles that run several times today on one channel
+stamp = now.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+picks = [
+    ("RECORDING", None, at(channels[1]["id"], now)),
+    ("SCHEDULED", None, at(channels[1]["id"], now + timedelta(hours=3))),
+    ("SCHEDULED", None, at(channels[6]["id"], now + timedelta(hours=4))),
+    ("FINISHED", None, at(channels[2]["id"], today + timedelta(hours=9))),
+    ("FINISHED", None, at(channels[7]["id"], today + timedelta(hours=11))),
+    ("FINISHED", None, at(channels[4]["id"], today + timedelta(hours=14))),
+]
+group = 0
+for c in channels:
+    titles = [p["title"] for p in programs[c["id"]]]
+    for title in dict.fromkeys(t for t in titles if titles.count(t) >= 2):
+        episodes = [p for p in programs[c["id"]] if p["title"] == title]
+        past = [p for p in episodes if p["stop"] <= stamp]
+        if len(past) >= 2 and group < 2:
+            group += 1
+            picks += [("FINISHED", group, p) for p in past[-3:]]
+            break
+
+recordings, recorded = [], 0
+for status, group, p in picks:
+    if any(r["program_id"] == p["id"] for r in recordings):
+        continue
+    start, stop = (datetime.fromisoformat(p[k].replace("Z", "+00:00")) for k in ("start", "stop"))
+    rid = str(1000 + len(recordings))
+    duration = int((stop - start).total_seconds())
+    recorded += duration if status == "FINISHED" else 0
+    recordings.append({
+        "id": rid, "program_id": p["id"], "channel_id": p["channel_id"],
+        "title": p["title"], "episode_title": p["episode_title"], "status": status,
+        "start": p["start"], "duration": duration, "group": group,
+        "image": f"/sample/rec-{rid}.png" if preview(p, f"rec-{rid}") else None,
+        "season": None, "episode": None,
+    })
+
+for ps in programs.values():
+    for p in ps:
+        del p["preview"]
+(work / "data.json").write_text(json.dumps({
+    "days": [d.isoformat() for d in days],
+    "channels": channels,
+    "programs": programs,
+    "recordings": recordings,
+    "recorded_hours": round(recorded / 3600, 1),
+    "details": {watched["id"]: {"textContent": details.get("textContent") or {}}},
+}))
+PY
+
+# --- the player's stand-ins ---------------------------------------------------------------------
+
+# program images reduced to a 4x3 grid of colors, so nothing of them is recognizable
+blur() {
+  magick "$1" -resize '4x3!' -filter Gaussian -resize "$2!" -blur "0x$3" "$4"
+  rm "$1"
+}
+if [[ -f "$WORK/sample/preview.jpg" ]]; then
+  blur "$WORK/sample/preview.jpg" 1280x720 40 "$WORK/sample/poster.png"
+else
+  magick -size 1280x720 gradient:'#26323a-#101e24' "$WORK/sample/poster.png"
+fi
+for image in "$WORK"/sample/rec-*.jpg; do
+  [[ -f $image ]] && blur "$image" 320x180 12 "${image%.jpg}.png"
+done
+# a test stream for the player to load; headless Chrome doesn't draw it in time, the poster shows
+ffmpeg -loglevel error -loop 1 -i "$WORK/sample/poster.png" -f lavfi -i anullsrc=r=48000:cl=stereo \
+  -t 8 -r 25 -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest \
+  -hls_time 4 -hls_playlist_type vod "$WORK/sample/stream.m3u8"
+
+# --- the page: the panel with a fake Home Assistant connection ------------------------------------
+
+cat > "$WORK/index.html" <<'HTML'
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  /* Home Assistant's default dark theme, as far as the panel uses it */
+  html, body { margin: 0; background: #111111; color-scheme: dark; }
+  body {
+    font-family: Roboto, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --primary-color: #009ac7;
+    --rgb-primary-color: 0, 154, 199;
+    --text-primary-color: #ffffff;
+    --primary-background-color: #111111;
+    --secondary-background-color: #282828;
+    --card-background-color: #1c1c1c;
+    --primary-text-color: #e1e1e1;
+    --secondary-text-color: #9b9b9b;
+    --divider-color: rgba(225, 225, 225, 0.12);
+    --app-header-background-color: #101e24;
+    --app-header-text-color: #e1e1e1;
+  }
+</style>
+</head>
+<body>
+<script type="module">
+const data = await (await fetch("/data.json")).json();
+
+const answers = {
+  "waipu_tv/channels": () => ({ subscription: null, instant_restart: true, channels: data.channels, audio_language: null }),
+  "waipu_tv/recordings": () => ({ recordings: data.recordings, recorded_hours: data.recorded_hours, booked_hours: 50 }),
+  "waipu_tv/guide": ({ start, end, channels }) => {
+    const [from, to] = [new Date(start), new Date(end)];
+    const ids = channels ?? data.channels.map((c) => c.id);
+    return {
+      start: data.days[0],
+      end: new Date(new Date(data.days[1]).getTime() + 86_400_000).toISOString(),
+      days: data.days,
+      programs: Object.fromEntries(
+        ids.map((id) => [id, data.programs[id].filter((p) => new Date(p.stop) > from && new Date(p.start) < to)]),
+      ),
+    };
+  },
+  "waipu_tv/program": ({ program_id }) => data.details[program_id] ?? { textContent: {} },
+  "frontend/get_user_data": () => ({ value: null }),
+};
+
+const hass = {
+  language: "en",
+  config: { time_zone: "Europe/Berlin" },
+  user: { is_admin: false }, // no Playlists tab: it would show URLs and the access key
+  callWS: async (msg) => answers[msg.type](msg),
+  callService: async () => null,
+  connection: {
+    subscribeMessage: async (callback) => {
+      setTimeout(() => callback({ url: "/sample/stream.m3u8" }), 0);
+      return async () => undefined;
+    },
+  },
+};
+
+await import("/frontend/waipu-tv-panel.js");
+const panel = document.createElement("waipu-tv-panel");
+const query = new URLSearchParams(location.search);
+panel.route = { prefix: "/waipu-tv", path: query.get("path") ?? "" };
+panel.hass = hass;
+if (query.get("tab")) panel._tab = query.get("tab");
+document.body.append(panel);
+// one series group expanded, the other one collapsed
+const expand = setInterval(() => {
+  const tab = panel.shadowRoot.querySelector("waipu-recordings-tab");
+  if (tab) {
+    tab._open = new Set([1]);
+    clearInterval(expand);
+  }
+}, 50);
+const poster = setInterval(() => {
+  const video = panel.shadowRoot.querySelector("waipu-player")?.shadowRoot.querySelector("video");
+  if (video) {
+    video.poster = "/sample/poster.png";
+    clearInterval(poster);
+  }
+}, 50);
+</script>
+</body>
+</html>
+HTML
+
+python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$WORK" >/dev/null 2>&1 &
+SERVER=$!
+sleep 1
+
+mkdir -p "$OUT"
+shot() {
+  "$CHROME" --headless=new --disable-gpu --hide-scrollbars --mute-audio --force-dark-mode \
+    --autoplay-policy=no-user-gesture-required --window-size=$SIZE \
+    --virtual-time-budget=8000 --screenshot="$PWD/$OUT/$1.png" \
+    "http://127.0.0.1:$PORT/index.html?$2" 2>/dev/null
+  echo "$OUT/$1.png"
+}
+shot guide ""
+shot watch "path=/watch/zdf"
+shot recordings "tab=recordings"

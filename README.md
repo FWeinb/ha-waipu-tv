@@ -11,6 +11,21 @@ browser or player, which decrypts protected channels itself.
 > **Unofficial.** waipu.tv has no public API. This integration is not affiliated with waipu.tv or
 > exaring AG and may break when waipu.tv changes its services.
 
+<div align="center">
+<table>
+  <tr>
+    <th>Guide</th>
+    <th>Watch</th>
+    <th>Recordings</th>
+  </tr>
+  <tr>
+    <td><a href="docs/screenshots/guide.png"><img src="docs/screenshots/guide.png" width="260" alt="The Guide tab: a timeline of favorite channels with the running programs and a now-line"></a></td>
+    <td><a href="docs/screenshots/watch.png"><img src="docs/screenshots/watch.png" width="260" alt="The Watch tab: the player with its controls next to the list of favorite channels"></a></td>
+    <td><a href="docs/screenshots/recordings.png"><img src="docs/screenshots/recordings.png" width="260" alt="The Recordings tab: storage used and recorded series and programs"></a></td>
+  </tr>
+</table>
+</div>
+
 ## Requirements
 
 - Home Assistant 2026.11 or later
