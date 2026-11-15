@@ -7,7 +7,6 @@ node_modules/
 config/
 
 # kept locally for reference, not part of the integration
-README.md
 Dockerfile
 docker-compose.yml
 .env.example
