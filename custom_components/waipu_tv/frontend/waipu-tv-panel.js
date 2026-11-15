@@ -1420,6 +1420,7 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
             <div class="epg-corner">${V(this.hass, "channel")}</div>
             <div class="epg-ticks" style="width:${i}px">
               ${o.map((e) => E`<span style="left:${this._x(e, n)}px">${a.format(e)}</span>`)}
+              ${s ? E`<div class="now-badge" style="left:${this._x(this._now, n)}px">${a.format(this._now)}</div>` : k}
             </div>
           </div>
           ${t.map((e) => E`<div class="epg-row">
@@ -1432,9 +1433,7 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
                 ${(this._guide.programs[e.id] ?? []).map((e) => this._renderProgram(e, n, r, a, c.get(e.id), l))}
               </div>
             </div>`)}
-          ${s ? E`<div class="now-line" style="left:calc(var(--ch) + ${this._x(this._now, n)}px)">
-                <span>${a.format(this._now)}</span>
-              </div>` : k}
+          ${s ? E`<div class="now-line" style="left:calc(var(--ch) + ${this._x(this._now, n)}px)"></div>` : k}
         </div>
       </div>
     `;
@@ -1624,20 +1623,23 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
       .prog.sched .flag {
         color: var(--wt-sched);
       }
+      /* above the programs, below the channel column (z-index 2) and the header (3); the time badge
+         sits in the header, where the corner covers it the same way */
       .now-line {
         position: absolute;
-        top: 0;
+        top: 36px;
         bottom: 0;
         width: 2px;
         background: var(--wt-rec);
-        z-index: 5;
+        z-index: 1;
         pointer-events: none;
       }
-      .now-line span {
+      .now-badge {
         position: absolute;
         top: 8px;
-        left: 1px;
+        margin-left: 1px;
         transform: translateX(-50%);
+        pointer-events: none;
         padding: 0 4px;
         white-space: nowrap;
         font-size: 11px;

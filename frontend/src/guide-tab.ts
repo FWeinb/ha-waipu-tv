@@ -266,6 +266,9 @@ class WaipuGuideTab extends LitElement {
             <div class="epg-corner">${t(this.hass, "channel")}</div>
             <div class="epg-ticks" style="width:${width}px">
               ${ticks.map((tick) => html`<span style="left:${this._x(tick, dayStart)}px">${time.format(tick)}</span>`)}
+              ${showNow
+                ? html`<div class="now-badge" style="left:${this._x(this._now, dayStart)}px">${time.format(this._now)}</div>`
+                : nothing}
             </div>
           </div>
           ${rows.map(
@@ -283,9 +286,7 @@ class WaipuGuideTab extends LitElement {
             </div>`,
           )}
           ${showNow
-            ? html`<div class="now-line" style="left:calc(var(--ch) + ${this._x(this._now, dayStart)}px)">
-                <span>${time.format(this._now)}</span>
-              </div>`
+            ? html`<div class="now-line" style="left:calc(var(--ch) + ${this._x(this._now, dayStart)}px)"></div>`
             : nothing}
         </div>
       </div>
@@ -493,20 +494,23 @@ class WaipuGuideTab extends LitElement {
       .prog.sched .flag {
         color: var(--wt-sched);
       }
+      /* above the programs, below the channel column (z-index 2) and the header (3); the time badge
+         sits in the header, where the corner covers it the same way */
       .now-line {
         position: absolute;
-        top: 0;
+        top: 36px;
         bottom: 0;
         width: 2px;
         background: var(--wt-rec);
-        z-index: 5;
+        z-index: 1;
         pointer-events: none;
       }
-      .now-line span {
+      .now-badge {
         position: absolute;
         top: 8px;
-        left: 1px;
+        margin-left: 1px;
         transform: translateX(-50%);
+        pointer-events: none;
         padding: 0 4px;
         white-space: nowrap;
         font-size: 11px;
