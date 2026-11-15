@@ -11,6 +11,7 @@ import logging
 import time
 from typing import Any
 from urllib.parse import quote
+import uuid
 
 import aiohttp
 
@@ -130,7 +131,8 @@ class WaipuClient:
         self.refresh_token = refresh_token
         self._on_refresh_token = on_refresh_token
         self._access_token = ""
-        self._device_token = ""
+        self._slot_tokens: dict[int, str] = {}  # access tokens of the other slots' devices
+        self._device_tokens: dict[int, str] = {}  # device capabilities token per slot
         self._lock = asyncio.Lock()
         self.errors: deque[tuple[datetime, str]] = deque(maxlen=10)  # for diagnostics
 
@@ -158,8 +160,9 @@ class WaipuClient:
                 )
             return self._access_token
 
-    async def _oauth(self, form: dict[str, str]) -> None:
-        form["waipu_device_id"] = self.device_id
+    async def _oauth(self, form: dict[str, str], device_id: str | None = None) -> dict[str, Any]:
+        """Token request; with device_id, for that device, leaving our own access token alone."""
+        form["waipu_device_id"] = device_id or self.device_id
         try:
             async with self._session.post(
                 URL_TOKEN,
@@ -176,12 +179,14 @@ class WaipuClient:
             raise self._error(WaipuAuthError(f"waipu.tv login rejected (HTTP {status})", status))
         if status != 200 or not isinstance(doc, dict) or "access_token" not in doc:
             raise self._error(WaipuError(f"waipu.tv login failed (HTTP {status})", status))
-        self._access_token = doc["access_token"]
-        self._device_token = ""
+        if device_id is None:
+            self._access_token = doc["access_token"]
+            self._device_tokens.pop(0, None)
         if doc.get("refresh_token") and doc["refresh_token"] != self.refresh_token:
             self.refresh_token = doc["refresh_token"]
             if self._on_refresh_token:
                 self._on_refresh_token(self.refresh_token)
+        return doc
 
     async def account(self) -> Account:
         claims = _jwt_claims(await self.access_token())
@@ -194,18 +199,45 @@ class WaipuClient:
             recording_hours=int(assets.get("hoursRecording") or 0),
         )
 
-    async def _device_capabilities_token(self) -> str:
-        if not _jwt_valid(self._device_token, margin=5 * 60):
-            account = await self.account()
+    def slot_device_id(self, slot: int) -> str:
+        """waipu.tv plays one stream per device: slot 0 is the signed-in device, the other
+        parallel-stream slots are devices with ids derived from it, stable across restarts."""
+        if slot == 0:
+            return self.device_id
+        return str(uuid.uuid5(uuid.NAMESPACE_URL, f"{self.device_id}/{slot}"))
+
+    async def _slot_access_token(self, slot: int) -> str:
+        if slot == 0:
+            return await self.access_token()
+        token = self._slot_tokens.get(slot, "")
+        if not _jwt_valid(token, margin=20 * 60):
+            await self.access_token()  # refresh our own first, so the refresh token is current
+            async with self._lock:
+                doc = await self._oauth(
+                    {"grant_type": "refresh_token", "refresh_token": self.refresh_token},
+                    self.slot_device_id(slot),
+                )
+            token = self._slot_tokens[slot] = doc["access_token"]
+            self._device_tokens.pop(slot, None)
+        return token
+
+    async def _slot_auth(self, slot: int) -> dict[str, str]:
+        """Authorization and device token headers for a stream request from a slot's device."""
+        access = await self._slot_access_token(slot)
+        device = self._device_tokens.get(slot, "")
+        if not _jwt_valid(device, margin=5 * 60):
             doc = await self._json(
                 "POST",
                 URL_DEVICE_CAPS,
                 DEVICE_CAPABILITIES,
                 content_type="application/vnd.dc.device-info-v1+json",
-                headers={"X-USERCONTEXT-USERHANDLE": account.user_handle},
+                headers={
+                    "Authorization": "Bearer " + access,
+                    "X-USERCONTEXT-USERHANDLE": _jwt_claims(access).get("userHandle", ""),
+                },
             )
-            self._device_token = doc["token"]
-        return self._device_token
+            device = self._device_tokens[slot] = doc["token"]
+        return {"Authorization": "Bearer " + access, "X-Device-Token": device}
 
     # --- HTTP -----------------------------------------------------------------------------------
 
@@ -277,11 +309,13 @@ class WaipuClient:
         )
 
     async def stream_url(
-        self, channel_id: str, protocol: str, start: datetime | None = None
+        self, channel_id: str, protocol: str, start: datetime | None = None, slot: int = 0
     ) -> str:
         """A fresh, short-lived stream URL; protocol is "dash" or "hls".
 
         start requests the stream from that time (instant restart, needs Account.instant_restart).
+        slot is the parallel-stream slot whose device asks; a new stream on a device ends the
+        one it was playing.
         """
         stream: dict[str, Any] = {
             "station": channel_id.upper(),
@@ -295,7 +329,7 @@ class WaipuClient:
             URL_STREAM,
             {"stream": stream},
             content_type="application/vnd.streamurlprovider.stream-url-request-v1+json",
-            headers={"X-Device-Token": await self._device_capabilities_token()},
+            headers=await self._slot_auth(slot),
         )
         if not isinstance(doc, dict) or not doc.get("streamUrl"):
             raise WaipuError(f"no stream URL for {channel_id}")
@@ -402,11 +436,12 @@ class WaipuClient:
                 content_type="application/vnd.waipu.recording-ids-v4+json",
             )
 
-    async def recording_url(self, recording_id: str, protocol: str) -> str:
+    async def recording_url(self, recording_id: str, protocol: str, slot: int = 0) -> str:
         doc = await self._json(
             "GET",
             f"{URL_RECORDINGS}/{quote(recording_id)}/streamingdetails",
             accept="application/vnd.waipu.recording-streaming-detail-v4+json",
+            headers={"Authorization": "Bearer " + await self._slot_access_token(slot)},
         )
         wanted = "MPEG_DASH" if protocol == "dash" else "HLS"
         for stream in (doc or {}).get("streams") or []:

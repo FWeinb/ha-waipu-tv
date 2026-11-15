@@ -13,17 +13,17 @@ import {
   fetchGuide,
   fetchLicense,
   fetchProgram,
-  fetchRecordingStream,
-  fetchStream,
   fetchUserSettings,
   record,
   saveUserSettings,
   setFavorite,
+  subscribeStream,
   type Channel,
   type DrmSystem,
   type HomeAssistant,
   type Program,
   type Recording,
+  type StreamTarget,
   type UserSettings,
 } from "./api";
 import { formatter, t } from "./i18n";
@@ -56,6 +56,9 @@ type List = "fav" | "all" | "vod" | "rec";
 const LICENSE_SCHEME = "waipu-license";
 const BEHIND_LIVE = 30_000; // further behind than this, the Live button shows
 const VOLUME_KEY = "waipu-tv.volume"; // remembered per browser
+// after the integration reloads (new options), the player asks again for this long
+const RETRY_MS = 2000;
+const RETRIES = 15;
 // iOS doesn't let pages set the volume (it stays 1): the slider is left out there
 const canSetVolume = (() => {
   const probe = document.createElement("video");
@@ -225,6 +228,8 @@ class WaipuPlayer extends LitElement {
   private _timers: number[] = [];
   private _describedId?: string;
   private _settings?: Promise<UserSettings>;
+  /** The subscription holding this player's parallel-stream slot; resolves to its unsubscribe. */
+  private _lease?: Promise<() => Promise<void>>;
 
   constructor() {
     super();
@@ -256,6 +261,14 @@ class WaipuPlayer extends LitElement {
     this._playId++;
     this._player?.destroy();
     this._player = undefined;
+    this._release();
+  }
+
+  /** Gives the parallel-stream slot back. */
+  private _release() {
+    const lease = this._lease;
+    this._lease = undefined;
+    return lease?.then((unsubscribe) => unsubscribe()).catch(() => undefined);
   }
 
   protected firstUpdated() {
@@ -329,13 +342,16 @@ class WaipuPlayer extends LitElement {
     }
   }
 
-  private async _play() {
+  /** retry counts the attempts after the integration reloaded. */
+  private async _play(retry = 0) {
     const playId = ++this._playId;
     this._error = this._blocked = undefined;
     this._audio = this._text = [];
     const old = this._player;
     this._player = undefined;
     await old?.destroy();
+    // the slot first, so a channel switch never needs a second one
+    await this._release();
 
     const target = this.target;
     const channel = this._channel;
@@ -358,10 +374,31 @@ class WaipuPlayer extends LitElement {
       licenseHass = this.hass;
       this._settings ??= fetchUserSettings(this.hass).catch(() => ({}));
       const settings = await this._settings;
-      const { url } =
-        "recording" in target
-          ? await fetchRecordingStream(this.hass, target.recording.id, protocol)
-          : await fetchStream(this.hass, target.channel, protocol, !!target.fromStart);
+      const request: StreamTarget =
+        "recording" in target ? { recording_id: target.recording.id } : { channel: target.channel, from_start: !!target.fromStart };
+      if (playId !== this._playId) return;
+      let first!: (url: string) => void;
+      const firstUrl = new Promise<string>((resolve) => (first = resolve));
+      let started = false;
+      this._lease = subscribeStream(
+        this.hass,
+        request,
+        protocol,
+        (url) => {
+          if (!started) {
+            started = true;
+            first(url);
+          } else if (playId === this._playId) {
+            // renewed after a reconnect: the new URL replaces the old one on its device
+            this._player?.load(url).catch((err) => this._fail(err));
+          }
+        },
+        () => {
+          if (playId === this._playId) window.setTimeout(() => playId === this._playId && this._play(1), RETRY_MS);
+        },
+      );
+      await this._lease;
+      const url = await firstUrl;
       const certificate = system === "fairplay" ? fromBase64((await fetchFairplayCertificate(this.hass)).certificate) : undefined;
       if (playId !== this._playId) return;
 
@@ -387,7 +424,10 @@ class WaipuPlayer extends LitElement {
       pickAudio(player, settings.audio_language ?? this.audioLanguage);
       tracks();
     } catch (err) {
-      if (playId === this._playId) this._fail(err);
+      if (playId !== this._playId) return;
+      // the integration is still loading again
+      if (retry && retry < RETRIES) window.setTimeout(() => playId === this._playId && this._play(retry + 1), RETRY_MS);
+      else this._fail(err);
     }
   }
 

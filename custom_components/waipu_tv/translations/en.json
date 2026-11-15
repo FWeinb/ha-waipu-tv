@@ -60,13 +60,15 @@
           "access_key": "Access key",
           "timeshift": "Time-shift from program start",
           "hls_proxy": "Serve HLS playlists through Home Assistant",
-          "audio_language": "Preferred audio language (player)"
+          "audio_language": "Preferred audio language (player)",
+          "parallel_streams": "Parallel streams"
         },
         "data_description": {
           "access_key": "Added to every playlist URL as ?key=…. Anyone with the key can watch on your account. Clear the field to generate a new key; it locks out old links.",
           "timeshift": "Live channels open at the start of the running program so you can rewind.",
           "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist.",
-          "audio_language": "For the player in the panel, when a program has it; everyone can pick their own in the player's audio menu. IPTV players choose their own track."
+          "audio_language": "For the player in the panel, when a program has it; everyone can pick their own in the player's audio menu. IPTV players choose their own track.",
+          "parallel_streams": "How many streams can play at once, in the panel and IPTV players together, up to what your waipu.tv package includes. Each one is a device of its own for waipu.tv."
         }
       }
     }
@@ -105,13 +107,15 @@
           "access_key": "Access key",
           "timeshift": "Time-shift from program start",
           "hls_proxy": "Serve HLS playlists through Home Assistant",
-          "audio_language": "Preferred audio language (player)"
+          "audio_language": "Preferred audio language (player)",
+          "parallel_streams": "Parallel streams"
         },
         "data_description": {
           "access_key": "Added to every playlist URL as ?key=…. Anyone with the key can watch on your account. Clear the field to generate a new key; it locks out old links.",
           "timeshift": "Live channels open at the start of the running program so you can rewind.",
           "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist.",
-          "audio_language": "For the player in the panel, when a program has it; everyone can pick their own in the player's audio menu. IPTV players choose their own track."
+          "audio_language": "For the player in the panel, when a program has it; everyone can pick their own in the player's audio menu. IPTV players choose their own track.",
+          "parallel_streams": "How many streams can play at once, in the panel and IPTV players together, up to what your waipu.tv package includes. Each one is a device of its own for waipu.tv."
         }
       }
     }
@@ -169,6 +173,17 @@
       },
       "recordings": {
         "name": "Recordings"
+      },
+      "active_streams": {
+        "name": "Active streams",
+        "state_attributes": {
+          "maximum": {
+            "name": "Maximum"
+          },
+          "streams": {
+            "name": "Streams"
+          }
+        }
       }
     },
     "calendar": {
@@ -245,6 +260,9 @@
     },
     "api_error": {
       "message": "waipu.tv request failed: {error}"
+    },
+    "streams_busy": {
+      "message": "All {maximum} streams are in use: {viewers}."
     }
   }
 }

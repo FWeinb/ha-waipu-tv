@@ -41,7 +41,6 @@ def async_setup_websocket(hass: HomeAssistant) -> None:
         ws_set_favorite,
         ws_playlists,
         ws_stream,
-        ws_recording_stream,
         ws_license,
         ws_fairplay_certificate,
     ):
@@ -232,33 +231,48 @@ PROTOCOL = probatio.In(["dash", "hls"])
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): f"{DOMAIN}/stream",
-        probatio.Required("channel"): cv.string,
+        probatio.Exclusive("channel", "target"): cv.string,
+        probatio.Exclusive("recording_id", "target"): cv.string,
         probatio.Required("protocol"): PROTOCOL,
         probatio.Optional("from_start", default=False): cv.boolean,
     }
 )
 @websocket_api.async_response
 async def ws_stream(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]) -> None:
-    """A fresh stream URL; from_start plays the running program from its start (time-shift)."""
-    url = await loaded_data(hass).async_stream_url(
-        msg["channel"], msg["protocol"], msg["from_start"]
+    """A subscription for as long as the player plays: it holds a parallel-stream slot (see
+    streams.py), and its first event is a fresh URL from that slot's device. from_start plays
+    the running program from its start (time-shift). An "ended" event means the integration
+    unloaded and the slot is gone."""
+    data = loaded_data(hass)
+    recording_id = msg.get("recording_id")
+    if recording_id is None:
+        if "channel" not in msg:
+            connection.send_error(msg["id"], "invalid_format", "channel or recording_id")
+            return
+        channel = data.channel(msg["channel"])
+    holder = f"panel:{id(connection)}:{msg['id']}"
+    slot = data.streams.acquire(
+        holder,
+        connection.user.name or "",
+        "recording" if recording_id else "live",
+        data.recording_title(recording_id) if recording_id else channel.name,
+        on_end=lambda: connection.send_message(
+            websocket_api.event_message(msg["id"], {"ended": True})
+        ),
     )
-    connection.send_result(msg["id"], {"url": url})
-
-
-@websocket_api.websocket_command(
-    {
-        probatio.Required("type"): f"{DOMAIN}/recording_stream",
-        probatio.Required("recording_id"): cv.string,
-        probatio.Required("protocol"): PROTOCOL,
-    }
-)
-@websocket_api.async_response
-async def ws_recording_stream(
-    hass: HomeAssistant, connection: Connection, msg: dict[str, Any]
-) -> None:
-    url = await loaded_data(hass).async_recording_url(msg["recording_id"], msg["protocol"])
-    connection.send_result(msg["id"], {"url": url})
+    # registered first: a connection that closes meanwhile still gives the slot back
+    connection.subscriptions[msg["id"]] = lambda: data.streams.release(holder)
+    try:
+        if recording_id:
+            url = await data.async_recording_url(recording_id, msg["protocol"], slot)
+        else:
+            url = await data.async_stream_url(channel, msg["protocol"], msg["from_start"], slot)
+    except Exception:
+        connection.subscriptions.pop(msg["id"], None)
+        data.streams.release(holder)
+        raise
+    connection.send_result(msg["id"])
+    connection.send_message(websocket_api.event_message(msg["id"], {"url": url}))
 
 
 @websocket_api.websocket_command(

@@ -7,7 +7,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .api import WaipuClient
-from .const import CONF_DEVICE_ID, CONF_REFRESH_TOKEN, DOMAIN
+from .const import (
+    CONF_DEVICE_ID,
+    CONF_PARALLEL_STREAMS,
+    CONF_REFRESH_TOKEN,
+    DEFAULT_OPTIONS,
+    DOMAIN,
+)
 from .coordinator import (
     ChannelsCoordinator,
     GuideCoordinator,
@@ -17,6 +23,7 @@ from .coordinator import (
 )
 from .panel import async_register_panel, async_register_static, async_remove_panel
 from .services import async_setup_services
+from .streams import Streams
 from .views import PlaylistView
 from .websocket import async_setup_websocket
 
@@ -56,6 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> N
         channels,
         RecordingsCoordinator(hass, entry, client),
         GuideCoordinator(hass, entry, client, channels),
+        Streams(
+            hass,
+            entry.options.get(CONF_PARALLEL_STREAMS, DEFAULT_OPTIONS[CONF_PARALLEL_STREAMS]),
+        ),
     )
     # the first refresh signs in (token refresh) once; the second reuses the access token
     await data.channels.async_config_entry_first_refresh()
@@ -64,6 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WaipuTvConfigEntry) -> N
     # the guide takes many requests: load it in the background, the calendar fills in after
     entry.async_create_background_task(hass, data.guide.async_refresh(), "waipu.tv guide")
     entry.async_on_unload(data.guide.guide.close)
+    entry.async_on_unload(data.streams.close)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await async_register_panel(hass)

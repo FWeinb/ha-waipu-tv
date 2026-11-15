@@ -27,6 +27,8 @@ CONF_ACCESS_KEY = "access_key"
 CONF_TIMESHIFT = "timeshift"
 CONF_HLS_PROXY = "hls_proxy"
 CONF_AUDIO_LANGUAGE = "audio_language"
+CONF_PARALLEL_STREAMS = "parallel_streams"
+PARALLEL_STREAMS_MAX = 8
 
 # the player's preferred audio language: waipu.tv's codes as seen in its streams, "qaa" being the
 # original language, "qad" audio description and "qks" clear language; others can be typed in
@@ -48,4 +50,5 @@ DEFAULT_OPTIONS = {
     CONF_TIMESHIFT: False,
     CONF_HLS_PROXY: False,
     CONF_AUDIO_LANGUAGE: AUDIO_DEFAULT,
+    CONF_PARALLEL_STREAMS: 1,
 }

@@ -46,6 +46,7 @@ PLAYLISTS = {
     "timeshift": True,
     "hls_proxy": False,
     "audio_language": "qaa",
+    "parallel_streams": 3.0,
 }
 
 
@@ -86,6 +87,7 @@ async def test_full_flow(hass, mock_token):
         "timeshift": True,
         "hls_proxy": False,
         "audio_language": "qaa",
+        "parallel_streams": 3,
     }
     assert re.fullmatch(r"[a-z2-9]{4}(-[a-z2-9]{4}){3}", entry.options["access_key"])
 

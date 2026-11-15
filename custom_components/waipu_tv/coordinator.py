@@ -29,6 +29,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .streams import Streams
 
 # how often missing and stale guide windows are looked for; they are only fetched again once
 # older than the guide refresh interval
@@ -44,6 +45,7 @@ class WaipuTvData:
     channels: ChannelsCoordinator
     recordings: RecordingsCoordinator
     guide: GuideCoordinator
+    streams: Streams
 
     async def async_record_program(self, program_id: str) -> None:
         await _call(self.client.record_program(program_id))
@@ -96,23 +98,34 @@ class WaipuTvData:
 
     # --- playback, shared by the playlist server and the panel's player ---------------------------
 
-    async def stream_url(self, channel: Channel, protocol: str, from_start: bool = False) -> str:
-        """A fresh stream URL. from_start: time-shift, the running program from its start
-        (pvr.waipu's "timeshift from program start"); falls back to plain live."""
+    async def stream_url(
+        self, channel: Channel, protocol: str, from_start: bool = False, slot: int = 0
+    ) -> str:
+        """A fresh stream URL from the slot's device (see streams.py). from_start: time-shift,
+        the running program from its start (pvr.waipu's "timeshift from program start"); falls
+        back to plain live."""
         if from_start:
             program = await self.guide.guide.current_program(channel.id, dt_util.utcnow())
             if program:
                 try:
-                    return await self.client.stream_url(channel.id, protocol, program.start)
+                    return await self.client.stream_url(channel.id, protocol, program.start, slot)
                 except WaipuError as err:
                     LOGGER.debug("No time-shift for %s (%s), playing live", channel.id, err)
-        return await self.client.stream_url(channel.id, protocol)
+        return await self.client.stream_url(channel.id, protocol, slot=slot)
 
-    async def async_stream_url(self, channel_id: str, protocol: str, from_start: bool) -> str:
-        return await _call(self.stream_url(self.channel(channel_id), protocol, from_start))
+    async def async_stream_url(
+        self, channel: Channel, protocol: str, from_start: bool, slot: int
+    ) -> str:
+        return await _call(self.stream_url(channel, protocol, from_start, slot))
 
-    async def async_recording_url(self, recording_id: str, protocol: str) -> str:
-        return await _call(self.client.recording_url(recording_id, protocol))
+    async def async_recording_url(self, recording_id: str, protocol: str, slot: int) -> str:
+        return await _call(self.client.recording_url(recording_id, protocol, slot))
+
+    def recording_title(self, recording_id: str) -> str:
+        for recording in self.recordings.data.recordings:
+            if recording.id == recording_id:
+                return recording.title
+        return recording_id
 
     async def async_license(self, system: str, challenge: bytes) -> bytes:
         """Widevine (Chrome, Firefox, Android) or FairPlay (Safari, iOS) license for the player."""

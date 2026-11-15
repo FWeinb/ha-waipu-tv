@@ -95,8 +95,9 @@ port is complete and the old package is deleted.
        | Parallel guide requests | 4 | 1–8 |
 
     3. **Playlist server:** on/off, access key (generated, can be replaced), time-shift
-       from program start (off), serve HLS playlists through Home Assistant (off), and the
-       player's preferred audio language (the stream's default).
+       from program start (off), serve HLS playlists through Home Assistant (off), the
+       player's preferred audio language (the stream's default), and parallel streams (1, up to
+       8; decision 58).
 15. **Changes made through the integration reload the affected data immediately**: recording,
     deleting, setting a favorite. The intervals only apply to changes made elsewhere.
 16. **Stream quality is fixed:** the device capabilities sent to waipu.tv are up to 1080p50 H.264
@@ -151,6 +152,7 @@ port is complete and the old package is deleted.
     | `binary_sensor.waipu_tv_recording` | on while a recording runs |
     | `sensor.waipu_tv_recording_storage` | hours used; booked hours as attribute |
     | `sensor.waipu_tv_recordings` | number of finished recordings (no list attribute) |
+    | `sensor.waipu_tv_active_streams` | streams playing now; maximum and one entry per stream as attributes (decision 62) |
     | `calendar.waipu_tv` | see below |
     | `button.waipu_tv_refresh` | reloads channels, favorites, recordings and guide |
 
@@ -171,8 +173,9 @@ port is complete and the old package is deleted.
 
     A calendar trigger can pass `trigger.calendar_event.uid` straight to `program_id`.
 29. **Diagnostics download** includes subscription, channel count, guide cache status, recording
-    counts, playlist settings and the last API errors; refresh token, device id, access key, e-mail
-    and user handle are removed.
+    counts, playlist settings, the stream slots in use (slot, type, panel or IPTV; no titles or
+    viewers) and the last API errors; refresh token, device id, access key, e-mail and user handle
+    are removed.
 
 ## Playlist server
 
@@ -225,8 +228,8 @@ port is complete and the old package is deleted.
 46. **Websocket commands:** `waipu_tv/channels`, `guide` (returns the guide's days as local midnights,
     so the panel needs no time-zone arithmetic), `program`, `recordings`, `record` (`series` flag),
     `cancel_series`, `delete_recordings`, `set_favorite`, `playlists` (admins only; URLs, option
-    defaults, instant restart), and for the player `stream`, `recording_stream`, `license`,
-    `fairplay_certificate`.
+    defaults, instant restart), and for the player `stream` (a subscription, decision 59; it took
+    over `recording_stream`), `license`, `fairplay_certificate`.
 47. **Panel registration:** registered while the account is loaded, removed on unload; the bundle is
     served from `/waipu_tv_static/` with a content hash in the URL. Vite's library mode leaves the
     committed bundle unminified, which keeps its diffs readable. Shaka Player is a separate,
@@ -286,6 +289,47 @@ port is complete and the old package is deleted.
     every channel in its sidebar, which lists favorites, all visible channels or on-demand channels
     (both with a filter) with what's on, or finished recordings. Hidden channels are not listed.
 
+## Parallel streams
+
+58. **One waipu.tv device per parallel stream.** waipu.tv plays one stream per device: a new
+    stream URL for a device ends the stream it was playing (the player gets HTTP errors from the
+    CDN, Shaka #1001). A fresh device-capabilities token per stream didn't help; what counts is the
+    `waipuDeviceId` claim of the access token, set by the `waipu_device_id` sent with each token
+    request. So each stream plays on a **slot**: slot 0 is the signed-in device, slot *n* a device
+    with the id `uuid5(NAMESPACE_URL, "<device id>/<n>")`, stable across restarts and replaced with
+    the device id on a new sign-in. A slot's access token comes from a refresh-token grant with its
+    device id, after refreshing the main token so the refresh token is current; its access and
+    device tokens stay in memory, nothing new is stored. Stream URLs and recording URLs are asked
+    for from the slot's device; everything else (guide, recordings, licenses) stays on slot 0. The
+    number of slots is an option (default 1, the old behavior; 1–8), up to what the package
+    includes. If it's set higher, waipu.tv's own error shows when the extra stream starts.
+59. **Panel players hold their slot through a websocket subscription**, `waipu_tv/stream`, with
+    `channel` (plus `from_start`) or `recording_id`. Its first event is the stream URL from the
+    slot's device; it holds the slot while the player has a stream loaded, paused included, and is
+    released when the player switches channels (released before the next one is asked for, so a
+    switch never needs a second slot), leaves the Watch tab, or the connection drops. The release
+    is registered before the URL is fetched, so a connection closing meanwhile can't leak a slot.
+    When the frontend renews the subscription after a reconnect, the player loads the new URL.
+60. **IPTV clients are known by address and User-Agent** and keep their slot while zapping. Home
+    Assistant only sees the redirect, so an IPTV stream counts as active until a timeout after the
+    client's last request: 30 s when its live HLS playlists go through the proxy (they are
+    refreshed while playing, each refresh extends it), else 4 h. Recordings always get 4 h: their
+    playlist is fetched once. A failed stream request frees the slot.
+61. **When every slot is busy:** if all are held by panel players, the new stream is refused
+    ("All 2 streams are in use: Anna, 192.168.1.20" as a translated error in the panel, HTTP 503
+    for IPTV). Otherwise the IPTV client that has been quiet the longest is taken over: its
+    activity is only a guess, and a TV that was switched off would otherwise block everyone for up
+    to 4 h. Panel players are never taken over.
+62. **`sensor.waipu_tv_active_streams`**, enabled by default: the number of active streams as
+    state, `maximum` and `streams` (per stream: `slot`, `type` live or recording, `title` channel or
+    recording, `viewer` Home Assistant user name or IPTV client address, `since`) as attributes.
+    It updates as streams start, stop or time out.
+63. **Changing the maximum reloads the integration**, which drops all slots. Panel players get an
+    `ended` event and start their stream again (retrying for about 30 s while the integration
+    loads), with a short rebuffer: renewing only the slot would ask for a new URL anyway, and on
+    the same device that would end the stream playing. IPTV streams keep playing and are counted
+    again on their next request.
+
 ## Rejected
 
 - **Separate playlist server port, standalone server, Docker image:** replaced by Home Assistant's
@@ -296,6 +340,11 @@ port is complete and the old package is deleted.
 - **Catch-up attributes in playlists:** waipu.tv can't play ended programs; only time-shift works.
 - **Per-channel calendars or "now playing" sensors:** one calendar covers it.
 - **Favorites order stored only in Home Assistant:** would drift from the waipu.tv apps.
+- **Rotating through the devices per stream request:** zapping would push other viewers off
+  their device; slots are held per player instead (decisions 59 and 60).
+- **Reading the stream limit from the account:** the access token only carries
+  `account.subscriptionProductId` and `account.subscriptionTier`, and no API giving the number is
+  known; the maximum is an option for now.
 
 ## Unverified
 
@@ -307,7 +356,21 @@ stopping a series from the panel. On an LG C9 with
 (DASH + Widevine through the license relay), non-DRM (HLS) and on-demand channels, and time-shift
 worked.
 
+Parallel streams: two streams on two derived devices played at the same time in the panel
+(the experiment behind decision 58; the token for slot 1 carried its own `waipuDeviceId`). With
+the slots built, two panel players in separate browser sessions and an IPTV player on the LG C9
+played at the same time.
+
 Still open:
+
+- whether the refresh-token grants for several devices keep working over days (waipu.tv might tie
+  refresh tokens to a device; the worst case is a re-authentication);
+- whether recordings count toward waipu.tv's stream limit (they take a slot either way);
+- whether waipu.tv counts a stream on a device as active for a while after it was stopped, which
+  would let a quickly switching viewer exceed the package's limit;
+- the package limits per subscription tier, which would let the maximum come from the account;
+- that IPTV client addresses are distinct behind a reverse proxy or Home Assistant Cloud (needs
+  `trusted_proxies`, else every client shares one address and only the User-Agent separates them);
 
 - that HLS segments don't need gzip, only playlists;
 - Kodi and TiviMate (only the LG C9 player was tried);

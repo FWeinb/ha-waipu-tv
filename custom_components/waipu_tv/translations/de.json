@@ -60,13 +60,15 @@
           "access_key": "Zugangsschlüssel",
           "timeshift": "Timeshift ab Sendungsbeginn",
           "hls_proxy": "HLS-Playlists über Home Assistant ausliefern",
-          "audio_language": "Bevorzugte Tonspur (Player)"
+          "audio_language": "Bevorzugte Tonspur (Player)",
+          "parallel_streams": "Parallele Streams"
         },
         "data_description": {
           "access_key": "Wird an jede Playlist-URL als ?key=… angehängt. Jeder mit dem Schlüssel kann über dein Konto schauen. Leere das Feld, um einen neuen Schlüssel zu erzeugen; alte Links funktionieren dann nicht mehr.",
           "timeshift": "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
           "hls_proxy": "Nur für ffmpeg-basierte Player (VLC, Jellyfin) nötig; auch pro Playlist einstellbar.",
-          "audio_language": "Für den Player im Panel, wenn eine Sendung sie hat; jede Person kann im Tonspur-Menü des Players eine eigene wählen. IPTV-Player wählen ihre Tonspur selbst."
+          "audio_language": "Für den Player im Panel, wenn eine Sendung sie hat; jede Person kann im Tonspur-Menü des Players eine eigene wählen. IPTV-Player wählen ihre Tonspur selbst.",
+          "parallel_streams": "Wie viele Streams gleichzeitig laufen können, im Panel und in IPTV-Playern zusammen, höchstens so viele wie dein waipu.tv-Paket enthält. Für waipu.tv ist jeder davon ein eigenes Gerät."
         }
       }
     }
@@ -105,13 +107,15 @@
           "access_key": "Zugangsschlüssel",
           "timeshift": "Timeshift ab Sendungsbeginn",
           "hls_proxy": "HLS-Playlists über Home Assistant ausliefern",
-          "audio_language": "Bevorzugte Tonspur (Player)"
+          "audio_language": "Bevorzugte Tonspur (Player)",
+          "parallel_streams": "Parallele Streams"
         },
         "data_description": {
           "access_key": "Wird an jede Playlist-URL als ?key=… angehängt. Jeder mit dem Schlüssel kann über dein Konto schauen. Leere das Feld, um einen neuen Schlüssel zu erzeugen; alte Links funktionieren dann nicht mehr.",
           "timeshift": "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
           "hls_proxy": "Nur für ffmpeg-basierte Player (VLC, Jellyfin) nötig; auch pro Playlist einstellbar.",
-          "audio_language": "Für den Player im Panel, wenn eine Sendung sie hat; jede Person kann im Tonspur-Menü des Players eine eigene wählen. IPTV-Player wählen ihre Tonspur selbst."
+          "audio_language": "Für den Player im Panel, wenn eine Sendung sie hat; jede Person kann im Tonspur-Menü des Players eine eigene wählen. IPTV-Player wählen ihre Tonspur selbst.",
+          "parallel_streams": "Wie viele Streams gleichzeitig laufen können, im Panel und in IPTV-Playern zusammen, höchstens so viele wie dein waipu.tv-Paket enthält. Für waipu.tv ist jeder davon ein eigenes Gerät."
         }
       }
     }
@@ -169,6 +173,17 @@
       },
       "recordings": {
         "name": "Aufnahmen"
+      },
+      "active_streams": {
+        "name": "Aktive Streams",
+        "state_attributes": {
+          "maximum": {
+            "name": "Maximum"
+          },
+          "streams": {
+            "name": "Streams"
+          }
+        }
       }
     },
     "calendar": {
@@ -245,6 +260,9 @@
     },
     "api_error": {
       "message": "Anfrage an waipu.tv fehlgeschlagen: {error}"
+    },
+    "streams_busy": {
+      "message": "Alle {maximum} Streams sind belegt: {viewers}."
     }
   }
 }

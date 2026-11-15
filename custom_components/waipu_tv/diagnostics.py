@@ -38,5 +38,13 @@ async def async_get_config_entry_diagnostics(
             "range": [t.isoformat() for t in data.guide.range()],
         },
         "recordings": dict(Counter(r.status for r in recordings.recordings)),
+        # without titles and viewers
+        "streams": {
+            "maximum": data.streams.maximum,
+            "active": [
+                {"slot": s.slot, "type": s.kind, "panel": s.expires is None}
+                for s in data.streams.active()
+            ],
+        },
         "last_errors": [{"time": t.isoformat(), "error": e} for t, e in data.client.errors],
     }

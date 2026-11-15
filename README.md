@@ -36,7 +36,24 @@ Setup has three steps; the last two are also the integration's options.
 3. **Playlist server:** on or off, the access key, time-shift from program start, the HLS
    playlist proxy, and the player's preferred audio language (for example original language or
    audio description). Each user can pick their own in the player's audio menu; Home Assistant
-   remembers it for them on every device.
+   remembers it for them on every device. **Parallel streams** sets how many streams can play at
+   once (default 1, up to 8), see below.
+
+### Parallel streams
+
+waipu.tv plays one stream per device, so Home Assistant signs in as one extra waipu.tv device per
+parallel stream. Set **Parallel streams** to the number your package includes (or fewer); the
+panel and IPTV players share them.
+
+- A player in the panel keeps its stream while it's open, paused or switching channels.
+- An IPTV player (told apart by its address and app) counts as watching until 4 hours after its
+  last channel switch, or 30 seconds after it stopped, with the HLS playlist proxy on.
+- When all streams are in use, a new one takes over the IPTV player that has been idle the
+  longest. If every stream is held by a panel player, the new one is refused with a message
+  saying who is watching.
+
+Changing the options restarts streams in the panel with a short rebuffer. Behind a reverse proxy,
+set Home Assistant's `trusted_proxies`, so IPTV players aren't all seen at the proxy's address.
 
 ## Panel
 
@@ -68,6 +85,7 @@ or arte still play.
 | `binary_sensor.waipu_tv_recording` | on while a recording runs |
 | `sensor.waipu_tv_recording_storage` | hours used; booked hours as attribute |
 | `sensor.waipu_tv_recordings` | number of finished recordings |
+| `sensor.waipu_tv_active_streams` | streams playing now; the maximum and, per stream, slot, live or recording, title, viewer and start as attributes |
 | `calendar.waipu_tv` | the favorites' guide plus scheduled and running recordings |
 | `button.waipu_tv_refresh` | reloads channels, favorites, recordings and guide |
 

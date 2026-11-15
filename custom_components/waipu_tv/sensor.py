@@ -1,6 +1,6 @@
-"""Subscription, recording storage and number of finished recordings."""
+"""Subscription, recording storage, number of finished recordings and active streams."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import UnitOfTime
@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ChannelsCoordinator, RecordingsCoordinator, WaipuTvConfigEntry
 from .entity import WaipuTvEntity
+from .streams import Streams
 
 PARALLEL_UPDATES = 0
 
@@ -24,6 +25,7 @@ async def async_setup_entry(
             SubscriptionSensor(data.channels, "subscription"),
             RecordingStorageSensor(data.recordings, "recording_storage"),
             RecordingsSensor(data.recordings, "recordings"),
+            ActiveStreamsSensor(data.channels, "active_streams"),
         ]
     )
 
@@ -59,3 +61,38 @@ class RecordingsSensor(WaipuTvEntity[RecordingsCoordinator], SensorEntity):
     @property
     def native_value(self) -> int:
         return sum(r.status == "FINISHED" for r in self.coordinator.data.recordings)
+
+
+class ActiveStreamsSensor(WaipuTvEntity[ChannelsCoordinator], SensorEntity):
+    """Streams playing now, in the panel and IPTV players; updated as they start and stop."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(self._streams.add_listener(self.async_write_ha_state))
+
+    @property
+    def _streams(self) -> Streams:
+        return self.coordinator.config_entry.runtime_data.streams
+
+    @property
+    def native_value(self) -> int:
+        return len(self._streams.active())
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {
+            "maximum": self._streams.maximum,
+            "streams": [
+                {
+                    "slot": s.slot,
+                    "type": s.kind,
+                    "title": s.title,
+                    "viewer": s.viewer,
+                    "since": s.started.isoformat(),
+                }
+                for s in self._streams.active()
+            ],
+        }

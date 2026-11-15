@@ -3,7 +3,8 @@ Widevine license relay and the optional HLS playlist proxy.
 
 IPTV players can't log in to Home Assistant, so the view bypasses Home Assistant's auth and
 checks the access key (?key=) instead. Streams are never re-encoded or decrypted: each stream
-request resolves a fresh waipu.tv URL and redirects the player to the CDN.
+request resolves a fresh waipu.tv URL and redirects the player to the CDN. Each IPTV client
+(address and User-Agent) plays on a parallel-stream slot of its own, see streams.py.
 """
 
 import gzip
@@ -37,6 +38,7 @@ from .const import (
     LOGGER,
 )
 from .coordinator import WaipuTvConfigEntry
+from .streams import HLS_PROXY_TIMEOUT, IPTV_TIMEOUT, StreamsBusy
 
 M3U = "audio/x-mpegurl"
 HLS = "application/vnd.apple.mpegurl"
@@ -89,6 +91,8 @@ class PlaylistView(HomeAssistantView):
             return await handler.handle(path)
         except BadRequest as err:
             return web.Response(status=400, text=str(err))
+        except StreamsBusy as err:
+            return web.Response(status=503, text=err.text)
         except WaipuError as err:
             LOGGER.error("%s: %s", path, err)
             status = err.status if err.status and 400 <= err.status < 600 else 502
@@ -213,20 +217,49 @@ class _Request:
                 return channel
         raise WaipuError(f"unknown channel {channel_id}", 404)
 
+    @property
+    def _client(self) -> str:
+        """The IPTV client, as the stream slots know it."""
+        return f"iptv:{self.request.remote}|{self.request.headers.get('User-Agent', '')}"
+
+    def _proxied(self, protocol: str) -> bool:
+        return protocol == "hls" and _flag(self.query, "proxy", self.options[CONF_HLS_PROXY])
+
     async def stream(self, channel_id: str, protocol: str) -> web.StreamResponse:
         channel = self._channel(channel_id)
         protocol = channel_protocol(channel, protocol)
         timeshift = self.query.get("timeshift") == "1"
-        upstream = await self.data.stream_url(channel, protocol, from_start=timeshift)
-        LOGGER.debug("Stream %s (%s)", channel.id, protocol)
+        # live playlists through the proxy are refreshed while playing, so a short timeout works
+        timeout = HLS_PROXY_TIMEOUT if self._proxied(protocol) else IPTV_TIMEOUT
+        slot = self.data.streams.acquire(
+            self._client, self.request.remote or "", "live", channel.name, timeout
+        )
+        try:
+            upstream = await self.data.stream_url(channel, protocol, timeshift, slot)
+        except WaipuError:
+            self.data.streams.release(self._client)
+            raise
+        LOGGER.debug("Stream %s (%s) on slot %s", channel.id, protocol, slot)
         return await self._serve(upstream, protocol)
 
     async def recording(self, recording_id: str, protocol: str) -> web.StreamResponse:
-        upstream = await self.data.client.recording_url(recording_id, protocol)
+        # a recording's playlist is fetched once, so it always gets the long timeout
+        slot = self.data.streams.acquire(
+            self._client,
+            self.request.remote or "",
+            "recording",
+            self.data.recording_title(recording_id),
+            IPTV_TIMEOUT,
+        )
+        try:
+            upstream = await self.data.client.recording_url(recording_id, protocol, slot)
+        except WaipuError:
+            self.data.streams.release(self._client)
+            raise
         return await self._serve(upstream, protocol)
 
     async def _serve(self, upstream: str, protocol: str) -> web.StreamResponse:
-        if protocol == "hls" and _flag(self.query, "proxy", self.options[CONF_HLS_PROXY]):
+        if self._proxied(protocol):
             return await self._proxy_hls(upstream)
         return web.Response(status=302, headers={"Location": upstream, "Cache-Control": "no-store"})
 
@@ -242,6 +275,7 @@ class _Request:
             self.query.get("s", ""), self.view._sign(upstream)
         ):
             return web.Response(status=403, text="invalid signature")
+        self.data.streams.touch(self._client, HLS_PROXY_TIMEOUT)
         return await self._proxy_hls(upstream)
 
     async def _proxy_hls(self, upstream: str) -> web.Response:

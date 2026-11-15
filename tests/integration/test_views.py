@@ -209,3 +209,34 @@ async def test_hls_proxy(client, mock_waipu):
     # the proxy only fetches URLs it signed
     resp = await get(client, "hls", u="https://evil.example.com/x.m3u8", s=query["s"][0])
     assert resp.status == 403
+
+
+async def test_iptv_clients_get_a_slot_each(hass, client, config_entry, mock_waipu):
+    mock_waipu.post(URL_STREAM, json={"streamUrl": "https://cdn.example.com/ard.mpd"})
+
+    async def play(user_agent):
+        return await client.get(
+            "/api/waipu_tv/stream/ard.mpd",
+            params={"key": KEY},
+            headers={"User-Agent": user_agent},
+            allow_redirects=False,
+        )
+
+    assert (await play("TiviMate")).status == 302
+    assert (await play("TiviMate")).status == 302  # zapping keeps the slot
+    # the only slot is held by an IPTV client: the next one takes it over
+    assert (await play("Kodi")).status == 302
+
+    sensor = hass.states.get("sensor.waipu_tv_active_streams")
+    assert sensor.state == "1"
+    (stream,) = sensor.attributes["streams"]
+    assert stream["title"] == "Das Erste HD" and stream["viewer"] == "127.0.0.1"
+
+
+async def test_busy_slots_answer_503(hass, client, config_entry, mock_waipu):
+    config_entry.runtime_data.streams.acquire("panel:1", "Ann", "live", "ZDF")
+
+    resp = await get(client, "stream/ard.mpd")
+
+    assert resp.status == 503
+    assert await resp.text() == "all 1 streams are in use: Ann"

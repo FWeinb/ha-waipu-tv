@@ -2,6 +2,9 @@
 
 export interface HomeAssistant {
   callWS<T>(msg: Record<string, unknown>): Promise<T>;
+  connection: {
+    subscribeMessage<T>(callback: (msg: T) => void, msg: Record<string, unknown>): Promise<() => Promise<void>>;
+  };
   callService(domain: string, service: string, data?: Record<string, unknown>): Promise<unknown>;
   language: string;
   config: { time_zone: string };
@@ -118,11 +121,23 @@ export const setFavorite = (hass: HomeAssistant, channel: string, favorite: bool
 export type Protocol = "dash" | "hls";
 export type DrmSystem = "widevine" | "fairplay";
 
-export const fetchStream = (hass: HomeAssistant, channel: string, protocol: Protocol, fromStart: boolean) =>
-  ws<{ url: string }>(hass, "stream", { channel, protocol, from_start: fromStart });
+export type StreamTarget = { channel: string; from_start: boolean } | { recording_id: string };
 
-export const fetchRecordingStream = (hass: HomeAssistant, recordingId: string, protocol: Protocol) =>
-  ws<{ url: string }>(hass, "recording_stream", { recording_id: recordingId, protocol });
+/** Holds one of the parallel-stream slots while subscribed. onUrl gets the stream URL, and a
+ * new one when the subscription is renewed after Home Assistant's connection comes back;
+ * onEnded: the integration unloaded and the slot is gone. Resolves to the unsubscribe. */
+export const subscribeStream = (
+  hass: HomeAssistant,
+  target: StreamTarget,
+  protocol: Protocol,
+  onUrl: (url: string) => void,
+  onEnded: () => void,
+) =>
+  hass.connection.subscribeMessage<{ url?: string; ended?: boolean }>((e) => (e.url ? onUrl(e.url) : onEnded()), {
+    type: "waipu_tv/stream",
+    protocol,
+    ...target,
+  });
 
 /** challenge and license are base64. */
 export const fetchLicense = (hass: HomeAssistant, system: DrmSystem, challenge: string) =>

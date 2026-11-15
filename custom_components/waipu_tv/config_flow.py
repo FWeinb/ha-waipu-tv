@@ -46,6 +46,7 @@ from .const import (
     CONF_GUIDE_INTERVAL,
     CONF_GUIDE_PARALLEL,
     CONF_HLS_PROXY,
+    CONF_PARALLEL_STREAMS,
     CONF_PLAYLISTS,
     CONF_RECORDINGS_INTERVAL,
     CONF_REFRESH_TOKEN,
@@ -55,6 +56,7 @@ from .const import (
     DOMAIN,
     GUIDE_DAYS,
     LOGGER,
+    PARALLEL_STREAMS_MAX,
 )
 
 LOGIN_SCHEMA = probatio.Schema(
@@ -153,6 +155,13 @@ def _playlists_schema(values: Mapping[str, Any]) -> probatio.Schema:
                     custom_value=True,
                 )
             ),
+            probatio.Required(
+                CONF_PARALLEL_STREAMS, default=values[CONF_PARALLEL_STREAMS]
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=1, max=PARALLEL_STREAMS_MAX, step=1, mode=NumberSelectorMode.BOX
+                )
+            ),
         }
     )
 
@@ -160,7 +169,11 @@ def _playlists_schema(values: Mapping[str, Any]) -> probatio.Schema:
 def _playlists_options(user_input: dict[str, Any]) -> dict[str, Any]:
     """An empty access key gets a new one."""
     access_key = user_input.get(CONF_ACCESS_KEY, "").strip() or generate_access_key()
-    return {**user_input, CONF_ACCESS_KEY: access_key}
+    return {
+        **user_input,
+        CONF_ACCESS_KEY: access_key,
+        CONF_PARALLEL_STREAMS: int(user_input[CONF_PARALLEL_STREAMS]),
+    }
 
 
 class WaipuTvConfigFlow(ConfigFlow, domain=DOMAIN):

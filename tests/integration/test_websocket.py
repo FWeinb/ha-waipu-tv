@@ -9,7 +9,7 @@ import pytest
 from pytest_homeassistant.common import CLIENT_ID
 from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
 
-from ..conftest import URL_RECORDINGS, load_json, token_response
+from ..conftest import URL_RECORDINGS, URL_TOKEN, load_json, token_response
 
 GRID = re.compile(r"^https://epg-cache\.waipu\.tv/api/grid/")
 KEY = "aaaa-bbbb-cccc-dddd"
@@ -179,11 +179,26 @@ def stream_requests(mock):
     return [json.loads(c[2])["stream"] for c in mock.mock_calls if str(c[1]) == URL_STREAM]
 
 
-async def test_stream_live_and_from_start(ws, streams):
-    live = await command(ws, "stream", channel="ARD", protocol="dash")
-    shifted = await command(ws, "stream", channel="ard", protocol="hls", from_start=True)
+async def subscribe_stream(ws, **data):
+    """The subscription's result and, when it succeeded, its first event."""
+    await ws.send_json_auto_id({"type": "waipu_tv/stream", **data})
+    result = await ws.receive_json()
+    if not result["success"]:
+        return result, None
+    return result, (await ws.receive_json())["event"]
 
-    assert live["result"] == {"url": "https://cdn.example.com/rtl.mpd"}
+
+async def unsubscribe(ws, subscription):
+    await ws.send_json_auto_id({"type": "unsubscribe_events", "subscription": subscription})
+    assert (await ws.receive_json())["success"]
+
+
+async def test_stream_live_and_from_start(ws, streams):
+    live, event = await subscribe_stream(ws, channel="ARD", protocol="dash")
+    assert event == {"url": "https://cdn.example.com/rtl.mpd"}
+    await unsubscribe(ws, live["id"])
+    shifted, _ = await subscribe_stream(ws, channel="ard", protocol="hls", from_start=True)
+
     assert shifted["success"]
     first, second = stream_requests(streams)
     assert first["protocol"] == "dash" and "startTime" not in first
@@ -193,7 +208,7 @@ async def test_stream_live_and_from_start(ws, streams):
 
 
 async def test_stream_unknown_channel(ws):
-    msg = await command(ws, "stream", channel="nope", protocol="dash")
+    msg, _ = await subscribe_stream(ws, channel="nope", protocol="dash")
 
     assert msg["error"]["translation_key"] == "unknown_channel"
 
@@ -204,9 +219,56 @@ async def test_recording_stream(ws, mock_waipu):
         json=load_json("recording_streamingdetails.json"),
     )
 
-    msg = await command(ws, "recording_stream", recording_id="1000000001", protocol="dash")
+    _, event = await subscribe_stream(ws, recording_id="1000000001", protocol="dash")
 
-    assert msg["result"] == {"url": "https://cdn.example.com/rec/1000000001/manifest.mpd"}
+    assert event == {"url": "https://cdn.example.com/rec/1000000001/manifest.mpd"}
+
+
+async def test_streams_hold_a_slot_until_unsubscribed(hass, ws, streams):
+    first, _ = await subscribe_stream(ws, channel="ard", protocol="dash")
+
+    sensor = hass.states.get("sensor.waipu_tv_active_streams")
+    assert sensor.state == "1"
+    assert sensor.attributes["maximum"] == 1
+    (stream,) = sensor.attributes["streams"]
+    assert stream["slot"] == 0 and stream["type"] == "live"
+    assert stream["title"] == "Das Erste HD" and stream["viewer"] == "Mock User"
+    # the only slot is held by a panel player: no takeover
+    busy, _ = await subscribe_stream(ws, channel="zdf", protocol="dash")
+    assert busy["error"]["translation_key"] == "streams_busy"
+
+    await unsubscribe(ws, first["id"])
+    assert hass.states.get("sensor.waipu_tv_active_streams").state == "0"
+    second, _ = await subscribe_stream(ws, channel="zdf", protocol="dash")
+    assert second["success"]
+
+
+async def test_parallel_streams_come_from_their_own_devices(hass, ws, streams, config_entry):
+    hass.config_entries.async_update_entry(
+        config_entry, options={**config_entry.options, "parallel_streams": 2}
+    )
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    before = len(streams.mock_calls)
+
+    await subscribe_stream(ws, channel="ard", protocol="dash")
+    await subscribe_stream(ws, channel="zdf", protocol="dash")
+
+    # slot 1 signed in as a device of its own
+    (token,) = [c for c in streams.mock_calls[before:] if str(c[1]) == URL_TOKEN]
+    assert token[2]["grant_type"] == "refresh_token"
+    assert token[2]["waipu_device_id"] not in ("device-old", "")
+    slots = hass.states.get("sensor.waipu_tv_active_streams").attributes["streams"]
+    assert [s["slot"] for s in slots] == [0, 1]
+
+
+async def test_unload_ends_the_subscription(hass, ws, streams, config_entry):
+    sub, _ = await subscribe_stream(ws, channel="ard", protocol="dash")
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    msg = await ws.receive_json()
+    assert msg["id"] == sub["id"] and msg["event"] == {"ended": True}
 
 
 async def test_widevine_license(ws, mock_waipu):

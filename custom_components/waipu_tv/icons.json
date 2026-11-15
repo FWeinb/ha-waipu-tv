@@ -19,6 +19,9 @@
       },
       "recordings": {
         "default": "mdi:filmstrip-box-multiple"
+      },
+      "active_streams": {
+        "default": "mdi:play-network"
       }
     },
     "calendar": {
