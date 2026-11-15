@@ -26,7 +26,7 @@ import {
   type StreamTarget,
   type UserSettings,
 } from "./api";
-import { formatter, t } from "./i18n";
+import { formatNumber, formatter, t, type DateFormatter } from "./i18n";
 import {
   backIcon,
   clockIcon,
@@ -775,7 +775,7 @@ class WaipuPlayer extends LitElement {
     program: Program | undefined,
     recording: Recording | undefined,
     span: (p: Program) => string,
-    date: Intl.DateTimeFormat,
+    date: DateFormatter,
   ) {
     const scheduled = program && this.recordings.find((r) => r.program_id === program.id && r.status !== "FINISHED");
     return html`<div class="card info">
@@ -812,8 +812,8 @@ class WaipuPlayer extends LitElement {
   private _renderSidebar(
     channel: Channel | undefined,
     recording: Recording | undefined,
-    time: Intl.DateTimeFormat,
-    date: Intl.DateTimeFormat,
+    time: DateFormatter,
+    date: DateFormatter,
   ) {
     const lists = [
       ["fav", "favorites"],
@@ -836,7 +836,7 @@ class WaipuPlayer extends LitElement {
                 <div class="meta">
                   <div>${r.title}</div>
                   <div>${r.episode_title ?? c?.name ?? ""}</div>
-                  <div>${r.start ? date.format(new Date(r.start)) : ""} · ${Math.round(r.duration / 60)} min</div>
+                  <div>${r.start ? date.format(new Date(r.start)) : ""} · ${formatNumber(this.hass, Math.round(r.duration / 60))} min</div>
                 </div>
               </button>
             </li>`;

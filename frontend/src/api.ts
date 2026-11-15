@@ -7,6 +7,14 @@ export interface HomeAssistant {
   };
   callService(domain: string, service: string, data?: Record<string, unknown>): Promise<unknown>;
   language: string;
+  /** The user's profile settings for formatting (Home Assistant's FrontendLocaleData). */
+  locale?: {
+    language: string;
+    number_format: "language" | "system" | "comma_decimal" | "decimal_comma" | "space_comma" | "none";
+    time_format: "language" | "system" | "am_pm" | "24";
+    date_format: "language" | "system" | "DMY" | "MDY" | "YMD";
+    time_zone: "local" | "server";
+  };
   config: { time_zone: string };
   user?: { is_admin: boolean };
 }

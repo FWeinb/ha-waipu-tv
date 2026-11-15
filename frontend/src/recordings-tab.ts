@@ -11,7 +11,7 @@ import {
   type RecordingStatus,
   type RecordingsResult,
 } from "./api";
-import { formatter, t } from "./i18n";
+import { formatNumber, formatter, t } from "./i18n";
 import { clockIcon, downIcon, playIcon, recIcon, trashIcon } from "./icons";
 import { shared } from "./styles";
 import { attempt, changed, toast, watch } from "./util";
@@ -134,7 +134,7 @@ class WaipuRecordingsTab extends LitElement {
         <div class="card stat">
           <div class="k">${t(this.hass, "storage_used")}</div>
           <div class="v">
-            ${used.toFixed(1)} h
+            ${formatNumber(this.hass, used, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} h
             ${booked ? html`<span class="muted of">${t(this.hass, "of_hours", { hours: booked })}</span>` : nothing}
           </div>
           ${booked
@@ -143,14 +143,14 @@ class WaipuRecordingsTab extends LitElement {
               </div>`
             : nothing}
         </div>
-        <div class="card stat"><div class="k">${t(this.hass, "recorded")}</div><div class="v">${count("FINISHED")}</div></div>
+        <div class="card stat"><div class="k">${t(this.hass, "recorded")}</div><div class="v">${formatNumber(this.hass, count("FINISHED"))}</div></div>
         <div class="card stat">
           <div class="k">${t(this.hass, "recording_now")}</div>
-          <div class="v rec">${count("RECORDING")}</div>
+          <div class="v rec">${formatNumber(this.hass, count("RECORDING"))}</div>
         </div>
         <div class="card stat">
           <div class="k">${t(this.hass, "scheduled")}</div>
-          <div class="v sched">${count("SCHEDULED")}</div>
+          <div class="v sched">${formatNumber(this.hass, count("SCHEDULED"))}</div>
         </div>
       </div>
       <div class="card">
@@ -272,7 +272,7 @@ class WaipuRecordingsTab extends LitElement {
     const channel = this.channels.find((c) => c.id === r.channel_id);
     return html`<td>${channel?.name ?? r.channel_id}</td>
       <td>${r.start ? date.format(new Date(r.start)) : ""}</td>
-      <td>${Math.round(r.duration / 60)} min</td>`;
+      <td>${formatNumber(this.hass, Math.round(r.duration / 60))} min</td>`;
   }
 
   /** child: an episode of the series group above; last: its last one. */

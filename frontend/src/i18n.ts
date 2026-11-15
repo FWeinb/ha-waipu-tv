@@ -271,12 +271,70 @@ const de: Record<Key, string> = {
   no_channels_match: "Keine passenden Sender.",
 };
 
+/** Numbers in vars are formatted like the user's other numbers. */
 export function t(hass: HomeAssistant, key: Key, vars: Record<string, string | number> = {}) {
   const text = (hass.language?.startsWith("de") ? de : en)[key];
-  return text.replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ""));
+  return text.replace(/\{(\w+)\}/g, (_, name) => {
+    const value = vars[name] ?? "";
+    return typeof value === "number" ? formatNumber(hass, value) : value;
+  });
 }
 
-/** Times and dates in Home Assistant's time zone, so "today" matches the server's guide. */
-export function formatter(hass: HomeAssistant, options: Intl.DateTimeFormatOptions) {
-  return new Intl.DateTimeFormat(hass.language, { timeZone: hass.config.time_zone, ...options });
+// the languages Home Assistant formats a fixed number format with
+const NUMBER_LOCALES: Record<string, string[] | undefined> = {
+  comma_decimal: ["en-US", "en"],
+  decimal_comma: ["de", "es", "it"],
+  space_comma: ["fr", "sv", "cs"],
+  system: undefined,
+};
+
+/** A number as the user set it up in their Home Assistant profile, like the rest of Home Assistant:
+ * the language's format, the system's, a fixed decimal and group separator, or none at all. */
+export function formatNumber(hass: HomeAssistant, value: number, options?: Intl.NumberFormatOptions) {
+  const format = hass.locale?.number_format;
+  if (format === "none") return new Intl.NumberFormat("en-US", { ...options, useGrouping: false }).format(value);
+  const locale = format && format in NUMBER_LOCALES ? NUMBER_LOCALES[format] : (hass.locale?.language ?? hass.language);
+  return new Intl.NumberFormat(locale, options).format(value);
+}
+
+export interface DateFormatter {
+  format(date: Date | number): string;
+}
+
+/** 12-hour clock or not, decided like Home Assistant's own frontend does. */
+function amPm(time: string | undefined, language: string) {
+  if (time === "am_pm") return true;
+  if (time === "24") return false;
+  const sample = new Date(2023, 0, 1, 22).toLocaleString(time === "system" ? undefined : language);
+  return sample.includes("10");
+}
+
+/** Times and dates as the user set them up in their Home Assistant profile, like the rest of Home
+ * Assistant: language, 12- or 24-hour clock, the order of numeric dates, and the browser's or the
+ * server's time zone. options may name a time zone of their own. */
+export function formatter(hass: HomeAssistant, options: Intl.DateTimeFormatOptions): DateFormatter {
+  const locale = hass.locale;
+  const language = locale?.language ?? hass.language;
+  const timeZone = locale?.time_zone === "local" ? undefined : hass.config.time_zone;
+  const clock: Intl.DateTimeFormatOptions = options.hour
+    ? { hourCycle: amPm(locale?.time_format, language) ? "h12" : "h23" }
+    : {};
+  const all = { timeZone, ...clock, ...options };
+  const order = locale?.date_format;
+  const numeric = options.month === "numeric" || options.month === "2-digit";
+  if (!numeric || !order || order === "language") return new Intl.DateTimeFormat(language, all);
+  if (order === "system") return new Intl.DateTimeFormat(undefined, all);
+
+  // day, month and year in the chosen order, like Home Assistant: 15/11, 11/15 or 2026/11/15
+  const { hour, minute, ...dateOptions } = all;
+  const date = new Intl.DateTimeFormat(language, { ...dateOptions, hourCycle: undefined });
+  const time = hour ? new Intl.DateTimeFormat(language, { timeZone: all.timeZone, ...clock, hour, minute }) : null;
+  return {
+    format(value) {
+      const parts = Object.fromEntries(date.formatToParts(value).map((p) => [p.type, p.value]));
+      const fields: Record<string, string | undefined> = { D: parts.day, M: parts.month, Y: parts.year };
+      const text = [...order].map((k) => fields[k]).filter(Boolean).join("/");
+      return time ? `${text}, ${time.format(value)}` : text;
+    },
+  };
 }

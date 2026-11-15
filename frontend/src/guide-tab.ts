@@ -10,7 +10,7 @@ import {
   type Program,
   type Recording,
 } from "./api";
-import { formatter, t } from "./i18n";
+import { formatter, t, type DateFormatter } from "./i18n";
 import { clockIcon, recIcon } from "./icons";
 import "./program-dialog";
 import "./search-field";
@@ -178,7 +178,8 @@ class WaipuGuideTab extends LitElement {
   }
 
   protected render() {
-    const day = formatter(this.hass, { weekday: "short", day: "numeric" });
+    // guide days are the server's days, whichever time zone the user picked
+    const day = formatter(this.hass, { weekday: "short", day: "numeric", timeZone: this.hass.config.time_zone });
     return html`
       <div class="content">
         <div class="card">
@@ -293,7 +294,7 @@ class WaipuGuideTab extends LitElement {
     p: Program,
     dayStart: number,
     dayEnd: number,
-    time: Intl.DateTimeFormat,
+    time: DateFormatter,
     recording: Recording | undefined,
     search: string,
   ) {
