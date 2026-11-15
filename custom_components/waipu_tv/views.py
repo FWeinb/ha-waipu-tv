@@ -216,25 +216,10 @@ class _Request:
     async def stream(self, channel_id: str, protocol: str) -> web.StreamResponse:
         channel = self._channel(channel_id)
         protocol = channel_protocol(channel, protocol)
-        client = self.data.client
-        if self.query.get("timeshift") == "1":
-            upstream = await self._timeshift_url(channel, protocol)
-        else:
-            upstream = await client.stream_url(channel.id, protocol)
+        timeshift = self.query.get("timeshift") == "1"
+        upstream = await self.data.stream_url(channel, protocol, from_start=timeshift)
         LOGGER.debug("Stream %s (%s)", channel.id, protocol)
         return await self._serve(upstream, protocol)
-
-    async def _timeshift_url(self, channel: Channel, protocol: str) -> str:
-        """Live, starting at the running program's start so players can rewind (pvr.waipu's
-        "timeshift from program start"); falls back to plain live."""
-        client = self.data.client
-        program = await self.data.guide.guide.current_program(channel.id, dt_util.utcnow())
-        if program:
-            try:
-                return await client.stream_url(channel.id, protocol, program.start)
-            except WaipuError as err:
-                LOGGER.debug("Time-shift for %s not available (%s), playing live", channel.id, err)
-        return await client.stream_url(channel.id, protocol)
 
     async def recording(self, recording_id: str, protocol: str) -> web.StreamResponse:
         upstream = await self.data.client.recording_url(recording_id, protocol)

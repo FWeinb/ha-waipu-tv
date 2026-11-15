@@ -1,15 +1,20 @@
 """Websocket commands for the panel, and the diagnostics download."""
 
+import base64
+from datetime import UTC, datetime
+import json
 import re
 
 import pytest
 from pytest_homeassistant.common import CLIENT_ID
 from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
 
-from ..conftest import URL_RECORDINGS, load_json
+from ..conftest import URL_RECORDINGS, load_json, token_response
 
 GRID = re.compile(r"^https://epg-cache\.waipu\.tv/api/grid/")
 KEY = "aaaa-bbbb-cccc-dddd"
+URL_STREAM = "https://stream-url-provider.waipu.tv/api/stream-url"
+URL_DEVICE_CAPS = "https://device-capabilities.waipu.tv/api/device-capabilities"
 
 
 @pytest.fixture(autouse=True)
@@ -160,3 +165,84 @@ async def test_diagnostics(hass, hass_client, config_entry, mock_waipu):
     assert diagnostics["recordings"] == {"FINISHED": 2, "SCHEDULED": 1}
     (error,) = diagnostics["last_errors"]
     assert "HTTP 500" in error["error"]
+
+
+@pytest.fixture
+def streams(mock_waipu):
+    mock_waipu.post(URL_DEVICE_CAPS, json={"token": token_response()["access_token"]})
+    mock_waipu.post(URL_STREAM, json={"streamUrl": "https://cdn.example.com/rtl.mpd"})
+    return mock_waipu
+
+
+def stream_requests(mock):
+    return [json.loads(c[2])["stream"] for c in mock.mock_calls if str(c[1]) == URL_STREAM]
+
+
+async def test_stream_live_and_from_start(ws, streams):
+    live = await command(ws, "stream", channel="ARD", protocol="dash")
+    shifted = await command(ws, "stream", channel="ard", protocol="hls", from_start=True)
+
+    assert live["result"] == {"url": "https://cdn.example.com/rtl.mpd"}
+    assert shifted["success"]
+    first, second = stream_requests(streams)
+    assert first["protocol"] == "dash" and "startTime" not in first
+    # the program running at 12:30 UTC started at 12:00 UTC
+    assert second["protocol"] == "hls"
+    assert second["startTime"] == int(datetime(2026, 11, 14, 12, tzinfo=UTC).timestamp())
+
+
+async def test_stream_unknown_channel(ws):
+    msg = await command(ws, "stream", channel="nope", protocol="dash")
+
+    assert msg["error"]["translation_key"] == "unknown_channel"
+
+
+async def test_recording_stream(ws, mock_waipu):
+    mock_waipu.get(
+        f"{URL_RECORDINGS}/1000000001/streamingdetails",
+        json=load_json("recording_streamingdetails.json"),
+    )
+
+    msg = await command(ws, "recording_stream", recording_id="1000000001", protocol="dash")
+
+    assert msg["result"] == {"url": "https://cdn.example.com/rec/1000000001/manifest.mpd"}
+
+
+async def test_widevine_license(ws, mock_waipu):
+    mock_waipu.post(
+        "https://drm.wpstr.tv/license-proxy-widevine/cenc/",
+        json={"license": base64.b64encode(b"LICENSE").decode()},
+    )
+
+    msg = await command(
+        ws, "license", system="widevine", challenge=base64.b64encode(b"CHALLENGE").decode()
+    )
+
+    assert base64.b64decode(msg["result"]["license"]) == b"LICENSE"
+    (call,) = [c for c in mock_waipu.mock_calls if "widevine" in str(c[1])]
+    assert call[2] == b"CHALLENGE"
+
+
+async def test_fairplay_certificate_and_license(ws, mock_waipu):
+    mock_waipu.get("https://drm.wpstr.tv/license-server-fairplay/cert/exaring", content=b"CERT")
+    mock_waipu.post(
+        "https://drm.wpstr.tv/license-server-fairplay", text=base64.b64encode(b"CKC").decode()
+    )
+
+    cert = await command(ws, "fairplay_certificate")
+    msg = await command(
+        ws, "license", system="fairplay", challenge=base64.b64encode(b"SPC").decode()
+    )
+
+    assert base64.b64decode(cert["result"]["certificate"]) == b"CERT"
+    assert base64.b64decode(msg["result"]["license"]) == b"CKC"
+
+
+async def test_license_error(ws, mock_waipu):
+    mock_waipu.post("https://drm.wpstr.tv/license-server-fairplay", status=403, text="no")
+
+    msg = await command(
+        ws, "license", system="fairplay", challenge=base64.b64encode(b"SPC").decode()
+    )
+
+    assert msg["error"]["translation_key"] == "api_error"

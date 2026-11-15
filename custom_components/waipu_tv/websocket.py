@@ -1,5 +1,6 @@
 """Websocket commands for the panel; Home Assistant handles login and permissions."""
 
+import base64
 from dataclasses import asdict
 from datetime import datetime
 from typing import Any
@@ -37,6 +38,10 @@ def async_setup_websocket(hass: HomeAssistant) -> None:
         ws_delete_recordings,
         ws_set_favorite,
         ws_playlists,
+        ws_stream,
+        ws_recording_stream,
+        ws_license,
+        ws_fairplay_certificate,
     ):
         websocket_api.async_register_command(hass, command)
 
@@ -211,3 +216,65 @@ def ws_playlists(hass: HomeAssistant, connection: Connection, msg: dict[str, Any
             "instant_restart": data.channels.data.account.instant_restart,
         },
     )
+
+
+# --- player: stream URLs and DRM licenses, for every user who can open the panel ---------------
+
+PROTOCOL = probatio.In(["dash", "hls"])
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/stream",
+        probatio.Required("channel"): cv.string,
+        probatio.Required("protocol"): PROTOCOL,
+        probatio.Optional("from_start", default=False): cv.boolean,
+    }
+)
+@websocket_api.async_response
+async def ws_stream(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]) -> None:
+    """A fresh stream URL; from_start plays the running program from its start (time-shift)."""
+    url = await loaded_data(hass).async_stream_url(
+        msg["channel"], msg["protocol"], msg["from_start"]
+    )
+    connection.send_result(msg["id"], {"url": url})
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/recording_stream",
+        probatio.Required("recording_id"): cv.string,
+        probatio.Required("protocol"): PROTOCOL,
+    }
+)
+@websocket_api.async_response
+async def ws_recording_stream(
+    hass: HomeAssistant, connection: Connection, msg: dict[str, Any]
+) -> None:
+    url = await loaded_data(hass).async_recording_url(msg["recording_id"], msg["protocol"])
+    connection.send_result(msg["id"], {"url": url})
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/license",
+        probatio.Required("system"): probatio.In(["widevine", "fairplay"]),
+        probatio.Required("challenge"): cv.string,
+    }
+)
+@websocket_api.async_response
+async def ws_license(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]) -> None:
+    """Relays the player's license request; binary data travels as base64."""
+    license_ = await loaded_data(hass).async_license(
+        msg["system"], base64.b64decode(msg["challenge"])
+    )
+    connection.send_result(msg["id"], {"license": base64.b64encode(license_).decode()})
+
+
+@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/fairplay_certificate"})
+@websocket_api.async_response
+async def ws_fairplay_certificate(
+    hass: HomeAssistant, connection: Connection, msg: dict[str, Any]
+) -> None:
+    certificate = await loaded_data(hass).async_fairplay_certificate()
+    connection.send_result(msg["id"], {"certificate": base64.b64encode(certificate).decode()})

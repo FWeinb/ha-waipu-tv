@@ -76,18 +76,52 @@ class WaipuTvData:
         await _call(self.client.delete_recordings(recording_ids))
         await self.recordings.async_refresh()
 
-    async def async_set_favorite(self, channel_id: str, favorite: bool) -> None:
+    def channel(self, channel_id: str) -> Channel:
         channel_id = channel_id.lower()
-        if all(c.id != channel_id for c in self.channels.data.channels):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="unknown_channel",
-                translation_placeholders={"channel": channel_id},
-            )
+        for channel in self.channels.data.channels:
+            if channel.id == channel_id:
+                return channel
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_channel",
+            translation_placeholders={"channel": channel_id},
+        )
+
+    async def async_set_favorite(self, channel_id: str, favorite: bool) -> None:
+        channel_id = self.channel(channel_id).id
         await _call(self.client.set_favorite(channel_id, favorite))
         await self.channels.async_refresh()
         # with "favorites only", the guide needs the new channel's windows
         await self.guide.async_request_refresh()
+
+    # --- playback, shared by the playlist server and the panel's player ---------------------------
+
+    async def stream_url(self, channel: Channel, protocol: str, from_start: bool = False) -> str:
+        """A fresh stream URL. from_start: time-shift, the running program from its start
+        (pvr.waipu's "timeshift from program start"); falls back to plain live."""
+        if from_start:
+            program = await self.guide.guide.current_program(channel.id, dt_util.utcnow())
+            if program:
+                try:
+                    return await self.client.stream_url(channel.id, protocol, program.start)
+                except WaipuError as err:
+                    LOGGER.debug("No time-shift for %s (%s), playing live", channel.id, err)
+        return await self.client.stream_url(channel.id, protocol)
+
+    async def async_stream_url(self, channel_id: str, protocol: str, from_start: bool) -> str:
+        return await _call(self.stream_url(self.channel(channel_id), protocol, from_start))
+
+    async def async_recording_url(self, recording_id: str, protocol: str) -> str:
+        return await _call(self.client.recording_url(recording_id, protocol))
+
+    async def async_license(self, system: str, challenge: bytes) -> bytes:
+        """Widevine (Chrome, Firefox, Android) or FairPlay (Safari, iOS) license for the player."""
+        if system == "fairplay":
+            return await _call(self.client.fairplay_license(challenge))
+        return await _call(self.client.widevine_license(challenge))
+
+    async def async_fairplay_certificate(self) -> bytes:
+        return await _call(self.client.fairplay_certificate())
 
 
 def loaded_data(hass: HomeAssistant) -> WaipuTvData:
@@ -98,9 +132,9 @@ def loaded_data(hass: HomeAssistant) -> WaipuTvData:
     return entries[0].runtime_data
 
 
-async def _call(request: Awaitable[None]) -> None:
+async def _call[T](request: Awaitable[T]) -> T:
     try:
-        await request
+        return await request
     except WaipuError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
