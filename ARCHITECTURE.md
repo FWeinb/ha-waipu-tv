@@ -24,7 +24,7 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 
 1. **A Home Assistant integration named `waipu_tv`**, display name "waipu.tv". `waipu` is taken by
    ha-waipu, and custom integrations with the same name can't be installed side by side.
-2. **Distributed through HACS only.** Home Assistant core is out of scope: core integrations can't
+2. **Distributed through Home Assistant's Marketplace only** (HACS until 2026.11). Home Assistant core is out of scope: core integrations can't
    ship their own sidebar panel, and the API is reverse engineered.
 3. **Requires Home Assistant 2026.11** or later; no compatibility code for older versions.
 4. **No standalone server and no Docker image.** The playlist server only exists inside Home
@@ -66,8 +66,8 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 
    Nothing is published to PyPI.
 10. **The library is async**, built on asyncio and aiohttp, which Home Assistant already ships.
-11. **The panel is TypeScript with Lit, built with Vite** into one JS file that is committed, so HACS
-    users need no build step.
+11. **The panel is TypeScript with Lit, built with Vite** into one JS file that is committed, so
+    Marketplace users need no build step.
 12. **Testing:**
     - library: unit tests against saved waipu.tv responses, anonymized;
     - integration: config flow, coordinators, websocket commands and playlist views with

@@ -14,13 +14,11 @@ re-encoded or decrypted: streams go directly from waipu.tv to the player.
 ## Requirements
 
 - Home Assistant 2026.11 or later
-- [HACS](https://hacs.xyz)
 - A waipu.tv account with an e-mail login (O2 and other provider logins are not supported)
 
 ## Installation
 
-1. In HACS, open the menu, choose **Custom repositories** and add this repository as an
-   **Integration**.
+1. In Home Assistant's **Marketplace**, add this repository as a custom integration repository.
 2. Install **waipu.tv** and restart Home Assistant.
 3. Go to **Settings → Devices & services → Add integration → waipu.tv** and sign in. The password
    is only used once to get a refresh token; it is not stored.

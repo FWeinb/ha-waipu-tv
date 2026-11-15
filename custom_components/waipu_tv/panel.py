@@ -1,4 +1,4 @@
-"""The sidebar panel: a Lit bundle built from frontend/ and committed, so HACS users need no
+"""The sidebar panel: a Lit bundle built from frontend/ and committed, so Marketplace users need no
 build step."""
 
 import hashlib

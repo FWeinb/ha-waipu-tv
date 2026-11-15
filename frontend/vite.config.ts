@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 
-// One ES module, committed to custom_components/waipu_tv/frontend so HACS users need no build.
+// One ES module, committed to custom_components/waipu_tv/frontend so Marketplace users need no build.
 export default defineConfig({
   build: {
     lib: {
