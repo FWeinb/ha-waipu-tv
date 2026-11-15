@@ -249,12 +249,12 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 
 ## Unverified
 
-Run against a real account so far: sign-in, channels, recordings and the full background guide load
-(about 19 s) in the dev instance. The manual release checklist still covers:
+Run against a real account so far: sign-in, channels, recordings, the full background guide load
+(about 19 s; 30 s with guide details) and the panel in headless Chrome (light, dark, narrow) in the
+dev instance. The manual release checklist still covers:
 
 - stream URLs, the license relay, recording and deleting, favorites and instant restart (ported or
   captured, not tested end to end);
-- the panel against real data (built and type-checked, not yet looked at in a browser);
 - the series-recording and cancel calls (ported from pvr.waipu, not tested);
 - the delete body: pvr.waipu sends `{"ids": [...]}`, ha-waipu `{"recordingIds": [...]}`; we follow
   pvr.waipu;
