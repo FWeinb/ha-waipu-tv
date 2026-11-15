@@ -24,8 +24,9 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 
 1. **A Home Assistant integration named `waipu_tv`**, display name "waipu.tv". `waipu` is taken by
    ha-waipu, and custom integrations with the same name can't be installed side by side.
-2. **Distributed through Home Assistant's Marketplace only** (HACS until 2026.11). Home Assistant core is out of scope: core integrations can't
-   ship their own sidebar panel, and the API is reverse engineered.
+2. **Distributed through Home Assistant's Marketplace only** (HACS until 2026.11). Home Assistant
+   core is out of scope: core integrations can't ship their own sidebar panel, and the API is
+   reverse engineered.
 3. **Requires Home Assistant 2026.11** or later; no compatibility code for older versions.
 4. **No standalone server and no Docker image.** The playlist server only exists inside Home
    Assistant.
