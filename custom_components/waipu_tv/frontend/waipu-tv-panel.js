@@ -1276,8 +1276,12 @@ var ut = 4, X = 6e4, dt = class extends P {
 			_now: { state: !0 }
 		};
 	}
+	_onScroll(e) {
+		let t = e.currentTarget;
+		cancelAnimationFrame(this._scrollFrame), this._scrollFrame = requestAnimationFrame(() => t.querySelector(".epg")?.style.setProperty("--scroll", `${t.scrollLeft}px`));
+	}
 	constructor() {
-		super(), this._days = [], this._scrollToNow = !0, this._day = 0, this._all = !1, this._search = "", this._now = Date.now();
+		super(), this._days = [], this._scrollToNow = !0, this._scrollFrame = 0, this._day = 0, this._all = !1, this._search = "", this._now = Date.now();
 	}
 	connectedCallback() {
 		super.connectedCallback(), this._clock = window.setInterval(() => this._now = Date.now(), X);
@@ -1397,7 +1401,7 @@ var ut = 4, X = 6e4, dt = class extends P {
 		for (let e = n; e < r; e += 30 * X) o.push(e);
 		let s = this._now >= n && this._now < r, c = this._recordingsByProgram(), l = this._search.trim().toLowerCase();
 		return w`
-      <div class="epg-box">
+      <div class="epg-box" @scroll=${this._onScroll}>
         <div class="epg" style="--track:${i}px">
           <div class="epg-head">
             <div class="epg-corner">${z(this.hass, "channel")}</div>
@@ -1432,7 +1436,7 @@ var ut = 4, X = 6e4, dt = class extends P {
 			i?.status === "RECORDING" ? "rec" : i ? "sched" : "",
 			a && !`${e.title} ${e.episode_title ?? ""}`.toLowerCase().includes(a) ? "dim" : ""
 		].join(" ")}
-      style="left:${c}px;width:${Math.max(l - c - 2, 2)}px"
+      style="left:${c}px;width:${Math.max(l - c - 2, 2)}px;--end:${l}px"
       title="${r.format(o)}–${r.format(s)} ${e.title}"
       @click=${() => this._selected = e}
     >
@@ -1544,12 +1548,23 @@ var ut = 4, X = 6e4, dt = class extends P {
         padding: 6px 10px;
         text-align: left;
         cursor: pointer;
-        overflow: hidden;
+        /* clip, not hidden: hidden would make the box a scroll container and stop the sticky text */
+        overflow: clip;
         display: flex;
         flex-direction: column;
         justify-content: center;
         gap: 2px;
         min-width: 0;
+      }
+      /* title and time stay readable next to the channel column while a long program scrolls out
+         to the left; they only move within their program */
+      .prog .t,
+      .prog .s {
+        position: sticky;
+        left: calc(var(--ch) + 10px);
+        align-self: flex-start;
+        /* no wider than what's still visible of the program, so long titles can move too */
+        max-width: min(100%, max(0px, calc(var(--end) - var(--scroll, 0px) - 24px)));
       }
       .prog:hover {
         border-color: var(--wt-primary);

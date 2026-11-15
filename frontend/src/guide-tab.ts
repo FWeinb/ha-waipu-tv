@@ -44,6 +44,16 @@ class WaipuGuideTab extends LitElement {
   private _days: string[] = [];
   private _scrollToNow = true;
   private _loadedKey?: string;
+  private _scrollFrame = 0;
+
+  /** Hands the scroll position to CSS, once per frame, so sticky titles fit what's visible. */
+  private _onScroll(e: Event) {
+    const box = e.currentTarget as HTMLElement;
+    cancelAnimationFrame(this._scrollFrame);
+    this._scrollFrame = requestAnimationFrame(() =>
+      box.querySelector<HTMLElement>(".epg")?.style.setProperty("--scroll", `${box.scrollLeft}px`),
+    );
+  }
   private _clock?: number;
 
   constructor() {
@@ -217,7 +227,7 @@ class WaipuGuideTab extends LitElement {
     const search = this._search.trim().toLowerCase();
 
     return html`
-      <div class="epg-box">
+      <div class="epg-box" @scroll=${this._onScroll}>
         <div class="epg" style="--track:${width}px">
           <div class="epg-head">
             <div class="epg-corner">${t(this.hass, "channel")}</div>
@@ -271,7 +281,7 @@ class WaipuGuideTab extends LitElement {
     ].join(" ");
     return html`<button
       class=${classes}
-      style="left:${left}px;width:${Math.max(right - left - 2, 2)}px"
+      style="left:${left}px;width:${Math.max(right - left - 2, 2)}px;--end:${right}px"
       title="${time.format(start)}–${time.format(stop)} ${p.title}"
       @click=${() => (this._selected = p)}
     >
@@ -387,12 +397,23 @@ class WaipuGuideTab extends LitElement {
         padding: 6px 10px;
         text-align: left;
         cursor: pointer;
-        overflow: hidden;
+        /* clip, not hidden: hidden would make the box a scroll container and stop the sticky text */
+        overflow: clip;
         display: flex;
         flex-direction: column;
         justify-content: center;
         gap: 2px;
         min-width: 0;
+      }
+      /* title and time stay readable next to the channel column while a long program scrolls out
+         to the left; they only move within their program */
+      .prog .t,
+      .prog .s {
+        position: sticky;
+        left: calc(var(--ch) + 10px);
+        align-self: flex-start;
+        /* no wider than what's still visible of the program, so long titles can move too */
+        max-width: min(100%, max(0px, calc(var(--end) - var(--scroll, 0px) - 24px)));
       }
       .prog:hover {
         border-color: var(--wt-primary);
