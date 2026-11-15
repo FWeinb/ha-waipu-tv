@@ -238,8 +238,14 @@ port is complete and the old package is deleted.
 
 ## Rejected
 
-- **Browser playback** in the panel: built with Shaka Player and removed. Dolby audio, FairPlay and
-  non-secure origins made it a dead end; playback is the IPTV player's job.
+- **Browser playback** in the panel: a first attempt with Shaka Player was removed. Being reconsidered
+  (mockup has a player view); measured on 2026-11-15:
+  - every stream checked carries AAC next to Dolby AC-3, so the player can prefer AAC;
+  - waipu.tv's CDN sends `Access-Control-Allow-Origin: *`;
+  - asked for HLS, DRM channels come as FairPlay (`SAMPLE-AES`, `skd://drmtoday…`), so Safari and
+    iOS are possible; the FairPlay certificate and license calls still need a capture;
+  - DRM needs a secure origin in every browser: over plain HTTP only channels without DRM play;
+  - untested: whether waipu.tv licenses desktop Widevine (Chrome's software CDM).
 - **Separate playlist server port, standalone server, Docker image:** replaced by Home Assistant's
   web server.
 - **Playlist-server switch entity:** configuration only.
