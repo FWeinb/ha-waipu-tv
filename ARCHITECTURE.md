@@ -240,14 +240,15 @@ port is complete and the old package is deleted.
 ## Rejected
 
 - **Browser playback** in the panel: a first attempt with Shaka Player was removed. Being reconsidered
-  (mockup has a player view); measured on 2026-11-15:
-  - every stream checked carries AAC next to Dolby AC-3, so the player can prefer AAC;
-  - waipu.tv's CDN sends `Access-Control-Allow-Origin: *`;
-  - asked for HLS, DRM channels come as FairPlay (`SAMPLE-AES`, `skd://drmtoday?assetId=…`), so
-    Safari and iOS are possible; the certificate and license calls are captured and in the API
-    client (`fairplay_certificate`, `fairplay_license`), not yet served to a player;
-  - DRM needs a secure origin in every browser: over plain HTTP only channels without DRM play;
-  - untested: whether waipu.tv licenses desktop Widevine (Chrome's software CDM).
+  (the mockup has a player view). A spike on 2026-11-15 (branch `prototype/drm-spike`, never
+  merged) settled the main question, with a real account and localhost as the secure origin:
+  - waipu.tv licenses browser DRM: Chrome's Widevine (DASH) played RTL at 1080p; Safari's FairPlay
+    (HLS, via `fairplay_certificate` / `fairplay_license`) started at 360p and reached 1080p after
+    about 12 s through Safari's own quality switching;
+  - every stream checked carries AAC next to Dolby AC-3; Chrome picks AAC by itself;
+  - waipu.tv's CDN sends `Access-Control-Allow-Origin: *`; the FairPlay license server only allows
+    play.waipu.tv, so licenses go through Home Assistant;
+  - DRM needs a secure origin in every browser: over plain HTTP only channels without DRM play.
 - **Separate playlist server port, standalone server, Docker image:** replaced by Home Assistant's
   web server.
 - **Playlist-server switch entity:** configuration only.
