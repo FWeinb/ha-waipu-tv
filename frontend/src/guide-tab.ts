@@ -16,6 +16,9 @@ import "./program-dialog";
 import { shared } from "./styles";
 import { toast } from "./util";
 
+// heights of a guide row and the time header, as in the styles below
+const ROW_HEIGHT = 68;
+const HEAD_HEIGHT = 36;
 const PX_PER_MINUTE = 4;
 const MINUTE = 60_000;
 
@@ -45,14 +48,42 @@ class WaipuGuideTab extends LitElement {
   private _scrollToNow = true;
   private _loadedKey?: string;
   private _scrollFrame = 0;
+  private _pinned = new Set<HTMLElement>();
 
-  /** Hands the scroll position to CSS, once per frame, so sticky titles fit what's visible. */
-  private _onScroll(e: Event) {
-    const box = e.currentTarget as HTMLElement;
+  private _onScroll() {
     cancelAnimationFrame(this._scrollFrame);
-    this._scrollFrame = requestAnimationFrame(() =>
-      box.querySelector<HTMLElement>(".epg")?.style.setProperty("--scroll", `${box.scrollLeft}px`),
-    );
+    this._scrollFrame = requestAnimationFrame(() => this._pinTitles());
+  }
+
+  /** Keeps title and time readable next to the channel column while a program scrolls out to the
+   * left, narrowed to the program's visible part. Only the program crossing the edge in each row
+   * on screen is moved: sticky positioning on every program made Safari slow. */
+  private _pinTitles() {
+    const box = this.renderRoot.querySelector<HTMLElement>(".epg-box");
+    if (!box) return;
+    const x = box.scrollLeft;
+    const rows = box.querySelectorAll<HTMLElement>(".epg-row");
+    const first = Math.max(0, Math.floor((box.scrollTop - HEAD_HEIGHT) / ROW_HEIGHT));
+    const last = Math.min(rows.length, first + Math.ceil(box.clientHeight / ROW_HEIGHT) + 1);
+    const pinned = new Set<HTMLElement>();
+    for (let i = first; i < last; i++) {
+      for (const prog of rows[i].querySelectorAll<HTMLElement>(".prog")) {
+        const left = Number(prog.dataset.left);
+        const end = Number(prog.dataset.end);
+        // crossing the edge, with enough left to show some text
+        if (left >= x || end <= x + 40) continue;
+        for (const text of prog.querySelectorAll<HTMLElement>(".t, .s")) {
+          text.style.transform = `translateX(${x - left}px)`;
+          text.style.maxWidth = `${end - x - 24}px`;
+          pinned.add(text);
+        }
+        break;
+      }
+    }
+    for (const text of this._pinned) {
+      if (!pinned.has(text)) text.style.transform = text.style.maxWidth = "";
+    }
+    this._pinned = pinned;
   }
   private _clock?: number;
 
@@ -113,6 +144,8 @@ class WaipuGuideTab extends LitElement {
       this._scrollToNow = false;
       this._jumpToNow();
     }
+    // a render may reuse program elements for other programs
+    this._pinTitles();
   }
 
   private _dayRange(): [number, number] {
@@ -281,7 +314,9 @@ class WaipuGuideTab extends LitElement {
     ].join(" ");
     return html`<button
       class=${classes}
-      style="left:${left}px;width:${Math.max(right - left - 2, 2)}px;--end:${right}px"
+      style="left:${left}px;width:${Math.max(right - left - 2, 2)}px"
+      data-left=${left}
+      data-end=${right}
       title="${time.format(start)}–${time.format(stop)} ${p.title}"
       @click=${() => (this._selected = p)}
     >
@@ -397,23 +432,12 @@ class WaipuGuideTab extends LitElement {
         padding: 6px 10px;
         text-align: left;
         cursor: pointer;
-        /* clip, not hidden: hidden would make the box a scroll container and stop the sticky text */
-        overflow: clip;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
         justify-content: center;
         gap: 2px;
         min-width: 0;
-      }
-      /* title and time stay readable next to the channel column while a long program scrolls out
-         to the left; they only move within their program */
-      .prog .t,
-      .prog .s {
-        position: sticky;
-        left: calc(var(--ch) + 10px);
-        align-self: flex-start;
-        /* no wider than what's still visible of the program, so long titles can move too */
-        max-width: min(100%, max(0px, calc(var(--end) - var(--scroll, 0px) - 24px)));
       }
       .prog:hover {
         border-color: var(--wt-primary);
