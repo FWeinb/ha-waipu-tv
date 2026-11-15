@@ -251,18 +251,17 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 
 ## Unverified
 
-Run against a real account so far: sign-in, channels, recordings, the full background guide load
-(about 19 s; 30 s with guide details) and the panel in headless Chrome (light, dark, narrow) in the
-dev instance. On an LG C9 with [webos-iptv-player](https://github.com/lennylxx/webos-iptv-player),
-`favorites.m3u` played DRM (DASH + Widevine through the license relay) and non-DRM (HLS)
-channels, and time-shift worked. The manual release checklist still covers:
+Run against a real account: sign-in, channels, recordings, the full background guide load (about
+19 s; 30 s with guide details) and the panel in headless Chrome (light, dark, narrow) in the dev
+instance; recording, deleting (pvr.waipu's `{"ids": [...]}` body), favorites, recording and
+stopping a series from the panel. On an LG C9 with
+[webos-iptv-player](https://github.com/lennylxx/webos-iptv-player), `favorites.m3u` played DRM
+(DASH + Widevine through the license relay), non-DRM (HLS) and on-demand channels, and time-shift
+worked.
 
-- recording and deleting, favorites (ported or captured, not tested end to end);
-- the series-recording and cancel calls (ported from pvr.waipu, not tested);
-- the delete body: pvr.waipu sends `{"ids": [...]}`, ha-waipu `{"recordingIds": [...]}`; we follow
-  pvr.waipu;
+Still open:
+
 - that HLS segments don't need gzip, only playlists;
-- that on-demand channels play via DASH in Kodi and TiviMate, not only in the player you tried
-  (they do on the LG C9);
+- Kodi and TiviMate (only the LG C9 player was tried);
 - what the cast `role` of the program API holds (character or job); XMLTV writes it as the actor's
   role.
