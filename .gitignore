@@ -1,5 +1,3 @@
-data/
-.env
 __pycache__/
 node_modules/
 .venv/
@@ -7,10 +5,4 @@ node_modules/
 config/
 
 # kept locally for reference, not part of the integration
-Dockerfile
-docker-compose.yml
-.env.example
-waipu2m3u/
 mockups/
-tests/test_guide.py
-tests/test_playlist.py

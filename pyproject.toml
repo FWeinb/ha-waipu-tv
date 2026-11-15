@@ -1,5 +1,4 @@
 [tool.pytest.ini_options]
-# tests/test_*.py cover the old waipu2m3u reference package (unittest, removed after the port)
 testpaths = ["tests/api", "tests/integration"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

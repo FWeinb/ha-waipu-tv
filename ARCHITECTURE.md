@@ -17,8 +17,8 @@ The waipu.tv API is undocumented. Only port calls from these sources, never gues
 | [ha-waipu](https://github.com/GB-1972/ha-waipu) (Home Assistant, GPL-3.0) | cross-check of recording fields (`stationId`, `stationDisplay`, …); no code copied |
 | play.waipu.tv network capture | setting favorites: `PATCH user-stations.waipu.tv/api/stations/user-settings/<id>` with `{"favorite": true\|false}` |
 
-The existing `waipu2m3u` package in this repo is a working reference implementation of the API
-client, guide cache and playlist endpoints. It is ported into the integration and then deleted.
+The integration started as a port of `waipu2m3u`, a standalone playlist server in this repo; the
+port is complete and the old package is deleted.
 
 ## Product
 
@@ -63,7 +63,7 @@ client, guide cache and playlist endpoints. It is ported into the integration an
    `coordinator.py` (runtime data and the shared changes used by actions and panel),
    `views.py` (playlist server), `websocket.py`, `services.py`, `panel.py`, `diagnostics.py`.
 
-   `mockups/`, the `waipu2m3u` reference package and its old files stay local, outside git.
+   `mockups/` stays local, outside git.
 
    Nothing is published to PyPI.
 10. **The library is async**, built on asyncio and aiohttp, which Home Assistant already ships.
