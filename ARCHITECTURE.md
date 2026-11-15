@@ -261,8 +261,9 @@ port is complete and the old package is deleted.
     server only allows play.waipu.tv as origin, so relaying is required anyway.
 54. **Controls from the mockup, not the browser's:** a timeline of the running program (or the
     recording) showing how far back the stream reaches and where live is, play/pause, channel up/down
-    through the sidebar list shown, audio track (when there is more than one), subtitles, mute,
-    picture in picture and full screen (of the player, controls included); space pauses, ↑/↓ switch
+    through the sidebar list shown, audio track (when there is more than one), subtitles, volume (a
+    vertical slider on hover or focus, remembered per browser; mute on click; iOS has no slider, it
+    doesn't let pages set the volume), picture in picture and full screen (of the player, controls included); space pauses, ↑/↓ switch
     channels. Live shows when playback is more than 30 s behind live. From start (time-shift,
     decision 39; needs instant restart) only on on-demand channels: tested by hand, it was unreliable
     on live channels, and on on-demand channels worked with HLS (Safari) but not with DASH (Chrome).

@@ -52,6 +52,13 @@ type List = "fav" | "all" | "vod" | "rec";
 
 const LICENSE_SCHEME = "waipu-license";
 const BEHIND_LIVE = 30_000; // further behind than this, the Live button shows
+const VOLUME_KEY = "waipu-tv.volume"; // remembered per browser
+// iOS doesn't let pages set the volume (it stays 1): the slider is left out there
+const canSetVolume = (() => {
+  const probe = document.createElement("video");
+  probe.volume = 0.5;
+  return probe.volume === 0.5;
+})();
 let shakaLoading: Promise<Shaka> | undefined;
 let licenseHass: HomeAssistant | undefined; // the connection the license scheme asks through
 
@@ -178,6 +185,7 @@ class WaipuPlayer extends LitElement {
     _search: { state: true },
     _playing: { state: true },
     _muted: { state: true },
+    _volume: { state: true },
     _audio: { state: true },
     _text: { state: true },
     _tick: { state: true },
@@ -199,6 +207,7 @@ class WaipuPlayer extends LitElement {
   declare _search: string;
   declare _playing: boolean;
   declare _muted: boolean;
+  declare _volume: number;
   declare _audio: shakaLib.extern.AudioTrack[];
   declare _text: shakaLib.extern.TextTrack[];
   declare _tick: number;
@@ -216,6 +225,7 @@ class WaipuPlayer extends LitElement {
     this._search = "";
     this._playing = false;
     this._muted = false;
+    this._volume = 1;
     this._audio = [];
     this._text = [];
     this._tick = 0;
@@ -238,6 +248,25 @@ class WaipuPlayer extends LitElement {
     this._playId++;
     this._player?.destroy();
     this._player = undefined;
+  }
+
+  protected firstUpdated() {
+    try {
+      const saved = Number(localStorage.getItem(VOLUME_KEY));
+      if (canSetVolume && saved > 0 && saved <= 1) this._video.volume = saved;
+    } catch {
+      // storage blocked: full volume
+    }
+  }
+
+  private _volumeChanged(video: HTMLVideoElement) {
+    this._muted = video.muted;
+    this._volume = video.volume;
+    try {
+      if (video.volume > 0) localStorage.setItem(VOLUME_KEY, String(video.volume));
+    } catch {
+      // only a convenience
+    }
   }
 
   protected updated(changed: PropertyValues<this>) {
@@ -515,7 +544,7 @@ class WaipuPlayer extends LitElement {
                 @click=${this._togglePlay}
                 @play=${() => (this._playing = true)}
                 @pause=${() => (this._playing = false)}
-                @volumechange=${(e: Event) => (this._muted = (e.target as HTMLVideoElement).muted)}
+                @volumechange=${(e: Event) => this._volumeChanged(e.target as HTMLVideoElement)}
               ></video>
               <div class="top">
                 <button class="icon-btn" title=${t(this.hass, "back")} aria-label=${t(this.hass, "back")} @click=${() => watch(this, null)}>
@@ -637,14 +666,33 @@ class WaipuPlayer extends LitElement {
                     ${subtitlesIcon()}
                   </button>`
                 : nothing}
-              <button
-                class="icon-btn"
-                title=${t(this.hass, this._muted ? "unmute" : "mute")}
-                aria-label=${t(this.hass, this._muted ? "unmute" : "mute")}
-                @click=${() => (this._video.muted = !this._video.muted)}
-              >
-                ${this._muted ? mutedIcon() : volumeIcon()}
-              </button>
+              <div class="volume">
+                ${canSetVolume
+                  ? html`<div class="volume-pop">
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        aria-label=${t(this.hass, "volume")}
+                        .value=${String(this._muted ? 0 : this._volume)}
+                        @input=${(e: Event) => {
+                          const level = Number((e.target as HTMLInputElement).value);
+                          this._video.volume = level;
+                          this._video.muted = level === 0;
+                        }}
+                      />
+                    </div>`
+                  : nothing}
+                <button
+                  class="icon-btn"
+                  title=${t(this.hass, this._muted ? "unmute" : "mute")}
+                  aria-label=${t(this.hass, this._muted ? "unmute" : "mute")}
+                  @click=${() => (this._video.muted = !this._video.muted)}
+                >
+                  ${this._muted || this._volume === 0 ? mutedIcon() : volumeIcon()}
+                </button>
+              </div>
             </div>
           </div>
           ${this._error ? html`<div class="card error">${this._error}</div>` : nothing}
@@ -996,6 +1044,36 @@ class WaipuPlayer extends LitElement {
       }
       .grow {
         flex: 1;
+      }
+      /* vertical slider above the speaker, shown on hover or keyboard focus */
+      .volume {
+        position: relative;
+        display: inline-flex;
+      }
+      .volume-pop {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 128px;
+        border-radius: 20px;
+        background: rgba(20, 20, 20, 0.92);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+      }
+      .volume:hover .volume-pop,
+      .volume:focus-within .volume-pop {
+        display: flex;
+      }
+      .volume-pop input {
+        width: 104px;
+        margin: 0;
+        transform: rotate(-90deg);
+        accent-color: #4fc3f7;
+        cursor: pointer;
       }
       .pill {
         height: 32px;
