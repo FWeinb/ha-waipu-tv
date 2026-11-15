@@ -21,5 +21,16 @@ export const upIcon = () => icon(svg`<path d="M6 15l6-6 6 6"/>`);
 export const downIcon = () => icon(svg`<path d="M6 9l6 6 6-6"/>`);
 export const restartIcon = (size = 16) =>
   icon(svg`<path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/>`, size);
+export const pauseIcon = () =>
+  svg`<svg class="i" viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;stroke:none" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>`;
+export const pipIcon = () =>
+  icon(svg`<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1" fill="currentColor"/>`);
+export const fullscreenIcon = () => icon(svg`<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>`);
+export const subtitlesIcon = () =>
+  icon(svg`<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 10.5a2 2 0 1 0 0 3M16 10.5a2 2 0 1 0 0 3"/>`);
+export const volumeIcon = () => icon(svg`<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/>`);
+export const mutedIcon = () => icon(svg`<path d="M4 10v4h4l5 4V6L8 10z"/><path d="m17 10 4 4M21 10l-4 4"/>`);
+export const lockIcon = () =>
+  icon(svg`<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>`, 14);
 export const recIcon = (size = 14) =>
   svg`<svg class="i" viewBox="0 0 24 24" style="width:${size}px;height:${size}px;fill:currentColor;stroke:none" aria-hidden="true"><circle cx="12" cy="12" r="7"/></svg>`;

@@ -40,17 +40,18 @@ Setup has three steps; the last two are also the integration's options.
 
 A **waipu.tv** entry in the sidebar, for all users:
 
-- **Guide:** a timeline of your favorites or all channels. Open a program to record it or its
-  series, cancel a recording or add the channel to your favorites.
-- **Favorites:** star channels; favorites are stored in your waipu.tv account, so the waipu.tv apps
-  see them too.
-- **Recordings:** finished, running and scheduled recordings grouped by series, storage used,
+- **Guide:** a timeline of your favorites or all channels. Open a program to watch it, record it or
+  its series, cancel a recording or add the channel to your favorites.
+- **Watch:** the player, starting with the channel you watched last. Its sidebar lists your
+  favorites, all channels, on-demand channels or finished recordings; star channels there or in the
+  player to add them to your favorites, which are stored in your waipu.tv account, so the waipu.tv
+  apps see them too. Rewind within what the stream offers, switch channels with ↑/↓, pick the audio
+  track or subtitles, and go full screen or picture in picture. On-demand channels can also start
+  from the beginning of the running program. Each channel has its own link, such as
+  `/waipu-tv/watch/ard`, to bookmark or share.
+- **Recordings:** finished, running and scheduled recordings grouped by series, storage used, play,
   delete (single or several at once) and stop series recordings.
 - **Playlists** (admins only): the playlist and guide URLs to copy into your IPTV player.
-- **Player:** Watch a channel from the program dialog or the favorites, or play a finished
-  recording, and switch through your favorites. On-demand channels can also start from the
-  beginning of the running program. Each channel has its own link, such as
-  `/waipu-tv/watch/ard`, to bookmark or share.
 
 Channels protected with DRM (most private channels) play in Chrome, Edge, Firefox and Android
 (Widevine) and in Safari and on iOS (FairPlay), but browsers only allow this over **HTTPS**, for

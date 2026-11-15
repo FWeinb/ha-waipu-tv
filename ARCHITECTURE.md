@@ -126,11 +126,12 @@ port is complete and the old package is deleted.
 
 ## Panel
 
-23. **A sidebar panel visible to all users**, with four tabs and the player (decisions 51–56):
+23. **A sidebar panel visible to all users**, with four tabs:
     - **Guide:** timeline grid (favorites or all channels), live/recording/scheduled markers, program
       dialog with Watch (running programs), Record, Record series, Cancel and
       add-channel-to-favorites;
-    - **Favorites:** favorites list and all channels with filters, star toggles, Watch buttons;
+    - **Watch:** the player (decisions 51–57), which is also where favorites are managed; there is no
+      Favorites tab;
     - **Recordings:** status filters, series groups, bulk delete, storage meter, Play on finished
       recordings;
     - **Playlists (admins only):** playlist and guide URLs with Copy buttons, link to the options.
@@ -243,8 +244,8 @@ port is complete and the old package is deleted.
 
 ## Player
 
-51. **Playback in the panel with Shaka Player 5.3.2**, opened with Watch from the program dialog
-    (running programs), the favorites and finished recordings; any tab leaves it. Revisited after a
+51. **Playback in the panel with Shaka Player 5.3.2**, in the Watch tab, also opened with Watch from
+    the program dialog (running programs) and Play on finished recordings; other tabs leave it. Revisited after a
     first attempt was dropped: a spike on 2026-11-15 (branch `prototype/drm-spike`, never merged)
     showed with a real account that waipu.tv licenses browser DRM. Chrome's Widevine played RTL at
     1080p; Safari's FairPlay started at 360p and reached 1080p after about 12 s through Safari's own
@@ -258,17 +259,24 @@ port is complete and the old package is deleted.
     the panel. Licenses travel as base64; Shaka reaches them through a `waipu-license:` URL scheme,
     so Home Assistant's login covers playback without extra HTTP endpoints. The FairPlay license
     server only allows play.waipu.tv as origin, so relaying is required anyway.
-54. **Controls:** the browser's own video controls (pause, volume, full screen, picture in picture,
-    seeking), plus channel up/down through the favorites and the favorites with what's on now. From
-    start (time-shift, decision 39; needs instant restart) and Live only on on-demand channels:
-    tested by hand, From start was unreliable on live channels; on on-demand channels it worked with
-    HLS (Safari) but not with DASH (Chrome). No custom seek bar and no watch progress in v1.
+54. **Controls from the mockup, not the browser's:** a timeline of the running program (or the
+    recording) showing how far back the stream reaches and where live is, play/pause, channel up/down
+    through the sidebar list shown, audio track (when there is more than one), subtitles, mute,
+    picture in picture and full screen (of the player, controls included); space pauses, ↑/↓ switch
+    channels. Live shows when playback is more than 30 s behind live. From start (time-shift,
+    decision 39; needs instant restart) only on on-demand channels: tested by hand, it was unreliable
+    on live channels, and on on-demand channels worked with HLS (Safari) but not with DASH (Chrome).
+    No watch progress in v1.
+55. **Audio:** every stream checked carries AAC next to Dolby AC-3; Chrome picks AAC by itself,
+    Safari can also play AC-3. waipu.tv's CDN sends `Access-Control-Allow-Origin: *`.
 56. **Deep links:** the player follows the URL: `/waipu-tv/watch/<channel>` (plus `/from-start`) and
     `/waipu-tv/recording/<id>`, set with Home Assistant's own navigation (`pushState` and
     `location-changed`), so links can be bookmarked or shared and Back leaves the player. Switching
-    channels inside the player replaces the history entry.
-55. **Audio:** every stream checked carries AAC next to Dolby AC-3; Chrome picks AAC by itself,
-    Safari can also play AC-3. waipu.tv's CDN sends `Access-Control-Allow-Origin: *`.
+    channels inside the player replaces the history entry. The Watch tab is `/waipu-tv/watch`: it
+    resumes what this browser watched last (local storage), else the first favorite.
+57. **Favorites live in the player:** a star in the player's top bar for the current channel and on
+    every channel in its sidebar, which lists favorites, all visible channels or on-demand channels
+    (both with a filter) with what's on, or finished recordings. Hidden channels are not listed.
 
 ## Rejected
 

@@ -1,4 +1,5 @@
-// The waipu.tv sidebar panel: guide, favorites, recordings, (for admins) playlists, and the player.
+// The waipu.tv sidebar panel: guide, watch (the player, also for favorites), recordings and (for
+// admins) playlists.
 
 import { LitElement, css, html, nothing } from "lit";
 
@@ -13,13 +14,14 @@ import { t } from "./i18n";
 import { refreshIcon } from "./icons";
 import { shared } from "./styles";
 import type { WatchTarget } from "./util";
-import "./favorites-tab";
 import "./guide-tab";
 import "./playlists-tab";
 import "./player-view";
 import "./recordings-tab";
 
-type Tab = "guide" | "favorites" | "recordings" | "playlists";
+type Tab = "guide" | "watch" | "recordings" | "playlists";
+
+const LAST_WATCHED = "waipu-tv.last-watched";
 
 class WaipuTvPanel extends LitElement {
   static properties = {
@@ -73,9 +75,22 @@ class WaipuTvPanel extends LitElement {
     this._followRoute();
   }
 
-  /** Deep links: /waipu-tv/watch/<channel>[/from-start] and /waipu-tv/recording/<id>. */
+  /** Deep links: /waipu-tv/watch/<channel>[/from-start] and /waipu-tv/recording/<id>; the Watch
+   * tab's /waipu-tv/watch resumes what this browser watched last, else the first favorite. */
   private _followRoute() {
     const path = this.route?.path ?? "";
+    if (path === "/watch") {
+      if (!this._channels) return;
+      let last: string | null = null;
+      try {
+        last = localStorage.getItem(LAST_WATCHED);
+      } catch {
+        // storage blocked: start with a favorite
+      }
+      const first = this._channels.channels.find((c) => c.favorite) ?? this._channels.channels[0];
+      this._navigate(last ?? (first ? `/watch/${encodeURIComponent(first.id)}` : ""), true);
+      return;
+    }
     const match = path.match(/^\/(watch|recording)\/([^/]+)(\/from-start)?$/);
     if (!match) {
       this._watch = this._watchPath = undefined;
@@ -85,6 +100,11 @@ class WaipuTvPanel extends LitElement {
     const [, kind, id, fromStart] = match;
     if (path === this._watchPath || !(kind === "watch" ? this._channels : this._recordings)) return;
     this._watchPath = path;
+    try {
+      localStorage.setItem(LAST_WATCHED, path);
+    } catch {
+      // only a convenience
+    }
     if (kind === "watch") this._watch = { channel: decodeURIComponent(id), fromStart: !!fromStart };
     else {
       const recording = this._recordings!.recordings.find((r) => r.id === decodeURIComponent(id));
@@ -95,7 +115,7 @@ class WaipuTvPanel extends LitElement {
   /** A deep link whose data is still loading. */
   private _linkPending() {
     const path = this.route?.path ?? "";
-    return /^\/(watch|recording)\//.test(path) && path !== this._watchPath;
+    return (path === "/watch" || /^\/(watch|recording)\//.test(path)) && path !== this._watchPath;
   }
 
   /** Like Home Assistant's own navigation, so the URL, Back and bookmarks work. */
@@ -129,7 +149,7 @@ class WaipuTvPanel extends LitElement {
 
   protected render() {
     if (!this.hass) return nothing;
-    const tabs: Tab[] = ["guide", "favorites", "recordings"];
+    const tabs: Tab[] = ["guide", "watch", "recordings"];
     if (this.hass.user?.is_admin) tabs.push("playlists");
     return html`
       <header>
@@ -147,8 +167,12 @@ class WaipuTvPanel extends LitElement {
           ${tabs.map(
             (tab) => html`<button
               role="tab"
-              aria-selected=${!this._watch && tab === this._tab}
+              aria-selected=${tab === "watch" ? !!this._watch : !this._watch && tab === this._tab}
               @click=${() => {
+                if (tab === "watch") {
+                  if (!this._watch) this._navigate("/watch");
+                  return;
+                }
                 this._tab = tab;
                 if (this._watch) this._navigate("");
               }}
@@ -162,6 +186,7 @@ class WaipuTvPanel extends LitElement {
         ? html`<waipu-player
             .hass=${this.hass}
             .channels=${this._channels?.channels ?? []}
+            .recordings=${this._recordings?.recordings ?? []}
             .instantRestart=${this._channels?.instant_restart ?? false}
             .target=${this._watch}
           ></waipu-player>`
@@ -178,8 +203,6 @@ class WaipuTvPanel extends LitElement {
     switch (this._tab) {
       case "guide":
         return html`<waipu-guide-tab .hass=${this.hass} .channels=${channels} .recordings=${recordings}></waipu-guide-tab>`;
-      case "favorites":
-        return html`<waipu-favorites-tab .hass=${this.hass} .channels=${channels}></waipu-favorites-tab>`;
       case "recordings":
         return html`<waipu-recordings-tab .hass=${this.hass} .channels=${channels} .data=${this._recordings}></waipu-recordings-tab>`;
       case "playlists":
