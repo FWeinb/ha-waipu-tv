@@ -12,7 +12,7 @@ import {
   type RecordingsResult,
 } from "./api";
 import { formatNumber, formatter, t } from "./i18n";
-import { clockIcon, downIcon, playIcon, recIcon, trashIcon } from "./icons";
+import { clockIcon, downIcon, playIcon, recIcon, stopIcon, trashIcon } from "./icons";
 import { shared } from "./styles";
 import { attempt, changed, toast, watch } from "./util";
 import "./search-field";
@@ -185,10 +185,10 @@ class WaipuRecordingsTab extends LitElement {
                     </th>
                     <th class="thumb-col"></th>
                     <th>${t(this.hass, "title")}</th>
-                    <th>${t(this.hass, "channel")}</th>
-                    <th>${t(this.hass, "date")}</th>
-                    <th>${t(this.hass, "length")}</th>
-                    ${this._showStatus ? html`<th>${t(this.hass, "status")}</th>` : nothing}
+                    <th class="wide">${t(this.hass, "channel")}</th>
+                    <th class="wide">${t(this.hass, "date")}</th>
+                    <th class="wide">${t(this.hass, "length")}</th>
+                    ${this._showStatus ? html`<th class="wide">${t(this.hass, "status")}</th>` : nothing}
                     <th>${t(this.hass, "actions")}</th>
                   </tr>
                 </thead>
@@ -233,17 +233,24 @@ class WaipuRecordingsTab extends LitElement {
           />
         </td>
         <td><div class="stack">${this._thumb(group.find((r) => r.image) ?? group[0])}</div></td>
-        <td class="title" colspan=${open ? (this._showStatus ? 5 : 4) : 1}>
+        <td class="title">
           <button class="expander" aria-expanded=${open} @click=${() => this._toggleGroup(key)}>
             <span>${group[0].title}${downIcon(18)}</span>
             <span>${[t(this.hass, "episodes", { count: group.length }), open && channel?.name].filter(Boolean).join(" · ")}</span>
           </button>
         </td>
-        ${open ? nothing : html`${this._details(latest)}${this._showStatus ? html`<td></td>` : nothing}`}
+        ${open ? html`<td class="wide"></td><td class="wide"></td><td class="wide"></td>` : this._details(latest)}
+        ${this._showStatus ? html`<td class="wide"></td>` : nothing}
         <td class="actions">
           ${programId
-            ? html`<button class="btn small" ?disabled=${this._busy} @click=${() => this._stopSeries(programId, group[0].title)}>
-                ${t(this.hass, "stop_series")}
+            ? html`<button
+                class="btn small stop"
+                title=${t(this.hass, "stop_series")}
+                aria-label=${t(this.hass, "stop_series")}
+                ?disabled=${this._busy}
+                @click=${() => this._stopSeries(programId, group[0].title)}
+              >
+                ${stopIcon()}<span>${t(this.hass, "stop_series")}</span>
               </button>`
             : nothing}
         </td>
@@ -266,13 +273,19 @@ class WaipuRecordingsTab extends LitElement {
     return r.image ? html`<img class="thumb" src=${r.image} alt="" loading="lazy" />` : html`<div class="thumb"></div>`;
   }
 
-  /** The channel, date and length cells. */
-  private _details(r: Recording) {
+  /** Channel, date and length: their own columns, or one line under the title on narrow screens. */
+  private _detailTexts(r: Recording) {
     const date = formatter(this.hass, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
     const channel = this.channels.find((c) => c.id === r.channel_id);
-    return html`<td>${channel?.name ?? r.channel_id}</td>
-      <td>${r.start ? date.format(new Date(r.start)) : ""}</td>
-      <td>${formatNumber(this.hass, Math.round(r.duration / 60))} min</td>`;
+    return [
+      channel?.name ?? r.channel_id,
+      r.start ? date.format(new Date(r.start)) : "",
+      `${formatNumber(this.hass, Math.round(r.duration / 60))} min`,
+    ];
+  }
+
+  private _details(r: Recording) {
+    return this._detailTexts(r).map((text) => html`<td class="wide">${text}</td>`);
   }
 
   /** child: an episode of the series group above; last: its last one. */
@@ -292,9 +305,13 @@ class WaipuRecordingsTab extends LitElement {
       <td class="title">
         <div>${child && episode ? episode : r.title}</div>
         ${!child && episode ? html`<div>${episode}</div>` : nothing}
+        <p class="narrow">
+          ${this._showStatus ? this._status(r.status) : nothing}
+          ${this._detailTexts(r).filter(Boolean).join(" · ")}
+        </p>
       </td>
       ${this._details(r)}
-      ${this._showStatus ? html`<td>${this._status(r.status)}</td>` : nothing}
+      ${this._showStatus ? html`<td class="wide">${this._status(r.status)}</td>` : nothing}
       <td class="actions">
         ${r.status === "FINISHED"
           ? html`<button
@@ -540,6 +557,72 @@ class WaipuRecordingsTab extends LitElement {
       .icon-btn:hover {
         background: var(--wt-chip);
         color: var(--wt-rec);
+      }
+      .narrow,
+      .stop svg {
+        display: none;
+      }
+      /* narrow: channel, date, length and status move under the title, two cards per row */
+      @media (max-width: 720px) {
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+        table {
+          min-width: 0;
+        }
+        th,
+        td {
+          padding: 6px 4px;
+        }
+        .check {
+          width: 28px;
+          padding-left: 8px;
+        }
+        /* Stop series as an icon, like the other actions */
+        .stop {
+          width: 36px;
+          height: 36px;
+          padding: 0;
+          justify-content: center;
+        }
+        .stop svg {
+          display: block;
+        }
+        .stop span {
+          display: none;
+        }
+        th.wide,
+        td.wide {
+          display: none;
+        }
+        .narrow {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin: 2px 0 0;
+          font-size: 12.5px;
+          color: var(--wt-muted);
+        }
+        .thumb-col {
+          width: 56px;
+        }
+        .thumb,
+        .stack {
+          width: 48px;
+          height: 27px;
+        }
+        tr.child .thumb {
+          width: 40px;
+          height: 23px;
+        }
+        tr.child td.thumb-cell {
+          padding-left: 22px;
+        }
+        tr.child td.thumb-cell::before {
+          left: 14px;
+        }
       }
     `,
   ];

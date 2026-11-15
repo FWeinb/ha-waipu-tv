@@ -89,14 +89,32 @@ export const shared = css`
     justify-content: flex-end;
     flex-wrap: nowrap;
   }
+  /* narrow: the title and the search on top, all switches side by side below, a bit tighter */
   @media (max-width: 720px) {
     .card-h.bar {
-      grid-template-columns: 1fr auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      row-gap: 4px;
     }
-    .card-h.bar .center {
-      grid-row: 2;
-      grid-column: 1 / -1;
-      justify-self: center;
+    .card-h.bar h2 {
+      flex: 1;
+      min-width: 0;
+    }
+    .card-h.bar .toolbar {
+      display: contents;
+    }
+    .card-h.bar::after {
+      content: "";
+      order: 1;
+      flex-basis: 100%;
+    }
+    .card-h.bar .seg {
+      order: 2;
+    }
+    .card-h.bar .seg button {
+      padding: 0 10px;
+      font-size: 14px;
     }
   }
   .card-b {

@@ -262,13 +262,19 @@ document.body.append(panel);
 const expand = setInterval(() => {
   const tab = panel.shadowRoot.querySelector("waipu-recordings-tab");
   if (tab) {
+    // no transitions: headless Chrome's virtual clock would catch the chevron half turned
+    const still = new CSSStyleSheet();
+    still.replaceSync("* { transition: none !important; }");
+    tab.shadowRoot.adoptedStyleSheets = [...tab.shadowRoot.adoptedStyleSheets, still];
     tab._open = new Set([1]);
     clearInterval(expand);
   }
 }, 50);
 const poster = setInterval(() => {
-  const video = panel.shadowRoot.querySelector("waipu-player")?.shadowRoot.querySelector("video");
+  const player = panel.shadowRoot.querySelector("waipu-player");
+  const video = player?.shadowRoot.querySelector("video");
   if (video) {
+    player._fade = () => undefined; // the bars over the picture stay for the screenshot
     video.poster = "/sample/poster.png";
     clearInterval(poster);
   }

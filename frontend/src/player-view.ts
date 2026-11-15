@@ -28,7 +28,6 @@ import {
 } from "./api";
 import { formatNumber, formatter, t, type DateFormatter } from "./i18n";
 import {
-  backIcon,
   clockIcon,
   downIcon,
   fullscreenIcon,
@@ -55,6 +54,7 @@ type List = "fav" | "all" | "vod" | "rec";
 
 const LICENSE_SCHEME = "waipu-license";
 const BEHIND_LIVE = 30_000; // further behind than this, the Live button shows
+const IDLE_MS = 3000; // the bar over the video fades out this long after the last mouse move or tap
 const VOLUME_KEY = "waipu-tv.volume"; // remembered per browser
 // after the integration reloads (new options), the player asks again for this long
 const RETRY_MS = 2000;
@@ -199,6 +199,8 @@ class WaipuPlayer extends LitElement {
     _tick: { state: true },
     _dialog: { state: true },
     _busy: { state: true },
+    _idle: { state: true },
+    _autoMuted: { state: true },
   };
 
   declare hass: HomeAssistant;
@@ -223,9 +225,15 @@ class WaipuPlayer extends LitElement {
   declare _tick: number;
   declare _dialog?: Program;
   declare _busy: boolean;
+  /** The bar over the video is faded out: playing, and no mouse or touch for a while. */
+  declare _idle: boolean;
+  /** The browser only allowed playback without sound; a button offers to turn it on. */
+  declare _autoMuted: boolean;
   private _player?: shakaLib.Player;
   private _playId = 0;
   private _timers: number[] = [];
+  private _idleTimer?: number;
+  private _pointer = "mouse"; // of the last press on the video
   private _describedId?: string;
   private _settings?: Promise<UserSettings>;
   /** The subscription holding this player's parallel-stream slot; resolves to its unsubscribe. */
@@ -243,6 +251,8 @@ class WaipuPlayer extends LitElement {
     this._text = [];
     this._tick = 0;
     this._busy = false;
+    this._idle = false;
+    this._autoMuted = false;
   }
 
   connectedCallback() {
@@ -257,6 +267,7 @@ class WaipuPlayer extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._timers.forEach((id) => window.clearInterval(id));
+    window.clearTimeout(this._idleTimer);
     document.removeEventListener("keydown", this._onKey);
     this._playId++;
     this._player?.destroy();
@@ -390,7 +401,7 @@ class WaipuPlayer extends LitElement {
             first(url);
           } else if (playId === this._playId) {
             // renewed after a reconnect: the new URL replaces the old one on its device
-            this._player?.load(url).catch((err) => this._fail(err));
+            this._player?.load(url).then(() => this._start(), (err) => this._fail(err));
           }
         },
         () => {
@@ -421,6 +432,7 @@ class WaipuPlayer extends LitElement {
       };
       for (const event of ["trackschanged", "variantchanged", "textchanged", "adaptation"]) player.addEventListener(event, tracks);
       await player.load(url);
+      await this._start();
       pickAudio(player, settings.audio_language ?? this.audioLanguage);
       tracks();
     } catch (err) {
@@ -440,6 +452,55 @@ class WaipuPlayer extends LitElement {
   }
 
   // --- controls -------------------------------------------------------------------------------
+
+  /** Shows the bar over the video, and fades it out again after a while if the video plays. */
+  private _wake() {
+    this._idle = false;
+    window.clearTimeout(this._idleTimer);
+    if (this._playing) this._idleTimer = window.setTimeout(() => this._fade(), IDLE_MS);
+  }
+
+  /** Fades the bars out, unless the mouse rests on one of them or the audio menu is open. */
+  private _fade() {
+    if (this.renderRoot.querySelector(".top:hover, .bottom:hover, select:focus")) this._wake();
+    else this._idle = true;
+  }
+
+  /** The mouse left the video: fade out right away while playing. */
+  private _leave() {
+    window.clearTimeout(this._idleTimer);
+    if (this._playing && !document.fullscreenElement) this._idle = true;
+  }
+
+  /** A tap on a touch screen only brings the bar back; a click or a tap with the bar showing
+   * plays or pauses. */
+  private _videoClick() {
+    if (this._pointer === "touch" && this._idle) {
+      this._wake();
+      return;
+    }
+    this._togglePlay();
+    this._wake();
+  }
+
+  /** Starts playback; a browser that blocks sound without a tap or click first gets it muted, which
+   * every browser allows, and the Unmute button. */
+  private async _start() {
+    const video = this._video;
+    try {
+      await video.play();
+    } catch (err) {
+      if ((err as DOMException).name !== "NotAllowedError") return; // e.g. replaced by the next load
+      video.muted = true;
+      this._autoMuted = true;
+      await video.play().catch(() => undefined);
+    }
+  }
+
+  private _unmute() {
+    this._video.muted = false;
+    this._autoMuted = false;
+  }
 
   private _togglePlay() {
     const video = this._video;
@@ -595,19 +656,27 @@ class WaipuPlayer extends LitElement {
       <div class="layout">
         <div class="main">
           <div class="player">
-            <div class="video">
+            <div
+              class=${this._idle ? "video idle" : "video"}
+              @pointermove=${(e: PointerEvent) => e.pointerType === "mouse" && this._wake()}
+              @pointerdown=${(e: PointerEvent) => (this._pointer = e.pointerType)}
+              @pointerleave=${(e: PointerEvent) => e.pointerType === "mouse" && this._leave()}
+            >
               <video
                 autoplay
                 playsinline
-                @click=${this._togglePlay}
-                @play=${() => (this._playing = true)}
-                @pause=${() => (this._playing = false)}
+                @click=${this._videoClick}
+                @play=${() => {
+                  this._playing = true;
+                  this._wake();
+                }}
+                @pause=${() => {
+                  this._playing = false;
+                  this._wake();
+                }}
                 @volumechange=${(e: Event) => this._volumeChanged(e.target as HTMLVideoElement)}
               ></video>
               <div class="top">
-                <button class="icon-btn" title=${t(this.hass, "back")} aria-label=${t(this.hass, "back")} @click=${() => watch(this, null)}>
-                  ${backIcon()}
-                </button>
                 ${channel ? html`<img class="logo" src=${channel.logo} alt="" />` : nothing}
                 <div class="meta">
                   <div>${channel ? `${channel.number} · ${channel.name}` : recording?.channel_id}</div>
@@ -630,6 +699,122 @@ class WaipuPlayer extends LitElement {
                   ${fullscreenIcon()}
                 </button>
               </div>
+              <div class="bottom">
+              ${line
+                ? html`<div
+                      class="scrub"
+                      role="slider"
+                      aria-label=${t(this.hass, "position")}
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-valuenow=${Math.round(parseFloat(pct(line.pos)))}
+                      @click=${(e: MouseEvent) => this._scrub(e, line)}
+                    >
+                      <div class="track"></div>
+                      <div class="avail" style="left:${pct(line.avail[0])};width:calc(${pct(line.avail[1])} - ${pct(line.avail[0])})"></div>
+                      <div class="played" style="width:${pct(line.pos)}"></div>
+                      ${line.live !== undefined ? html`<div class="edge" style="left:${pct(line.live)}"></div>` : nothing}
+                      <div class="knob" style="left:${pct(line.pos)}"></div>
+                    </div>
+                    <div class="scrub-times"><span>${line.label[0]}</span><span>${line.label[1]}</span></div>`
+                : nothing}
+              <div class="controls">
+                <button
+                  class="icon-btn"
+                  title=${t(this.hass, this._playing ? "pause" : "play")}
+                  aria-label=${t(this.hass, this._playing ? "pause" : "play")}
+                  @click=${this._togglePlay}
+                >
+                  ${this._playing ? pauseIcon() : playIcon()}
+                </button>
+                ${recording
+                  ? nothing
+                  : html`<button class="icon-btn" title=${t(this.hass, "prev_channel")} aria-label=${t(this.hass, "prev_channel")} @click=${() => this._zap(-1)}>
+                        ${upIcon()}
+                      </button>
+                      <button class="icon-btn" title=${t(this.hass, "next_channel")} aria-label=${t(this.hass, "next_channel")} @click=${() => this._zap(1)}>
+                        ${downIcon()}
+                      </button>`}
+                ${channel?.vod && !recording
+                  ? html`<button
+                      class="pill"
+                      aria-pressed=${fromStart}
+                      ?disabled=${!this.instantRestart}
+                      @click=${() => watch(this, { channel: channel.id, fromStart: true })}
+                    >
+                      ${restartIcon()}${t(this.hass, "from_start")}
+                    </button>`
+                  : nothing}
+                ${!recording && (channel?.vod || behind > BEHIND_LIVE || fromStart)
+                  ? html`<button class="pill live" aria-pressed=${!fromStart && behind <= BEHIND_LIVE} @click=${this._goLive}>
+                      ${t(this.hass, "live")}
+                    </button>`
+                  : nothing}
+                <span class="time">
+                  ${recording && line
+                    ? `${clock(line.pos)} / ${clock(line.end)}`
+                    : behind > BEHIND_LIVE
+                      ? t(this.hass, "behind_live", { minutes: Math.max(1, Math.round(behind / 60_000)) })
+                      : nothing}
+                </span>
+                <span class="grow"></span>
+                ${this._audio.length > 1
+                  ? html`<select
+                      aria-label=${t(this.hass, "audio_track")}
+                      @change=${(e: Event) => {
+                        const track = this._audio[Number((e.target as HTMLSelectElement).value)];
+                        if (track) this._chooseAudio(track);
+                      }}
+                    >
+                      ${this._audio.map((a, i) => html`<option value=${i} ?selected=${a.active}>${audioLabel(a)}</option>`)}
+                    </select>`
+                  : nothing}
+                ${this._text.length
+                  ? html`<button
+                      class="icon-btn"
+                      aria-pressed=${!!activeText}
+                      title=${t(this.hass, "subtitles")}
+                      aria-label=${t(this.hass, "subtitles")}
+                      @click=${this._toggleText}
+                    >
+                      ${subtitlesIcon()}
+                    </button>`
+                  : nothing}
+                <div class="volume">
+                  ${canSetVolume
+                    ? html`<div class="volume-pop">
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          aria-label=${t(this.hass, "volume")}
+                          .value=${String(this._muted ? 0 : this._volume)}
+                          @input=${(e: Event) => {
+                            const level = Number((e.target as HTMLInputElement).value);
+                            this._video.volume = level;
+                            this._video.muted = level === 0;
+                          }}
+                        />
+                      </div>`
+                    : nothing}
+                  <button
+                    class="icon-btn"
+                    title=${t(this.hass, this._muted ? "unmute" : "mute")}
+                    aria-label=${t(this.hass, this._muted ? "unmute" : "mute")}
+                    @click=${() => {
+                    this._video.muted = !this._video.muted;
+                    this._autoMuted = false;
+                  }}
+                  >
+                    ${this._muted || this._volume === 0 ? mutedIcon() : volumeIcon()}
+                  </button>
+                </div>
+              </div>
+              </div>
+              ${this._autoMuted
+                ? html`<button class="pill unmute" @click=${this._unmute}>${mutedIcon()}${t(this.hass, "unmute")}</button>`
+                : nothing}
               ${this._blocked
                 ? html`<div class="msg">
                     <div>
@@ -643,114 +828,6 @@ class WaipuPlayer extends LitElement {
                     </div>
                   </div>`
                 : nothing}
-            </div>
-            ${line
-              ? html`<div
-                    class="scrub"
-                    role="slider"
-                    aria-label=${t(this.hass, "position")}
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                    aria-valuenow=${Math.round(parseFloat(pct(line.pos)))}
-                    @click=${(e: MouseEvent) => this._scrub(e, line)}
-                  >
-                    <div class="track"></div>
-                    <div class="avail" style="left:${pct(line.avail[0])};width:calc(${pct(line.avail[1])} - ${pct(line.avail[0])})"></div>
-                    <div class="played" style="width:${pct(line.pos)}"></div>
-                    ${line.live !== undefined ? html`<div class="edge" style="left:${pct(line.live)}"></div>` : nothing}
-                    <div class="knob" style="left:${pct(line.pos)}"></div>
-                  </div>
-                  <div class="scrub-times"><span>${line.label[0]}</span><span>${line.label[1]}</span></div>`
-              : nothing}
-            <div class="controls">
-              <button
-                class="icon-btn"
-                title=${t(this.hass, this._playing ? "pause" : "play")}
-                aria-label=${t(this.hass, this._playing ? "pause" : "play")}
-                @click=${this._togglePlay}
-              >
-                ${this._playing ? pauseIcon() : playIcon()}
-              </button>
-              ${recording
-                ? nothing
-                : html`<button class="icon-btn" title=${t(this.hass, "prev_channel")} aria-label=${t(this.hass, "prev_channel")} @click=${() => this._zap(-1)}>
-                      ${upIcon()}
-                    </button>
-                    <button class="icon-btn" title=${t(this.hass, "next_channel")} aria-label=${t(this.hass, "next_channel")} @click=${() => this._zap(1)}>
-                      ${downIcon()}
-                    </button>`}
-              ${channel?.vod && !recording
-                ? html`<button
-                    class="pill"
-                    aria-pressed=${fromStart}
-                    ?disabled=${!this.instantRestart}
-                    @click=${() => watch(this, { channel: channel.id, fromStart: true })}
-                  >
-                    ${restartIcon()}${t(this.hass, "from_start")}
-                  </button>`
-                : nothing}
-              ${!recording && (channel?.vod || behind > BEHIND_LIVE || fromStart)
-                ? html`<button class="pill live" aria-pressed=${!fromStart && behind <= BEHIND_LIVE} @click=${this._goLive}>
-                    ${t(this.hass, "live")}
-                  </button>`
-                : nothing}
-              <span class="time">
-                ${recording && line
-                  ? `${clock(line.pos)} / ${clock(line.end)}`
-                  : behind > BEHIND_LIVE
-                    ? t(this.hass, "behind_live", { minutes: Math.max(1, Math.round(behind / 60_000)) })
-                    : nothing}
-              </span>
-              <span class="grow"></span>
-              ${this._audio.length > 1
-                ? html`<select
-                    aria-label=${t(this.hass, "audio_track")}
-                    @change=${(e: Event) => {
-                      const track = this._audio[Number((e.target as HTMLSelectElement).value)];
-                      if (track) this._chooseAudio(track);
-                    }}
-                  >
-                    ${this._audio.map((a, i) => html`<option value=${i} ?selected=${a.active}>${audioLabel(a)}</option>`)}
-                  </select>`
-                : nothing}
-              ${this._text.length
-                ? html`<button
-                    class="icon-btn"
-                    aria-pressed=${!!activeText}
-                    title=${t(this.hass, "subtitles")}
-                    aria-label=${t(this.hass, "subtitles")}
-                    @click=${this._toggleText}
-                  >
-                    ${subtitlesIcon()}
-                  </button>`
-                : nothing}
-              <div class="volume">
-                ${canSetVolume
-                  ? html`<div class="volume-pop">
-                      <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.05"
-                        aria-label=${t(this.hass, "volume")}
-                        .value=${String(this._muted ? 0 : this._volume)}
-                        @input=${(e: Event) => {
-                          const level = Number((e.target as HTMLInputElement).value);
-                          this._video.volume = level;
-                          this._video.muted = level === 0;
-                        }}
-                      />
-                    </div>`
-                  : nothing}
-                <button
-                  class="icon-btn"
-                  title=${t(this.hass, this._muted ? "unmute" : "mute")}
-                  aria-label=${t(this.hass, this._muted ? "unmute" : "mute")}
-                  @click=${() => (this._video.muted = !this._video.muted)}
-                >
-                  ${this._muted || this._volume === 0 ? mutedIcon() : volumeIcon()}
-                </button>
-              </div>
             </div>
           </div>
           ${this._error ? html`<div class="card error">${this._error}</div>` : nothing}
@@ -952,8 +1029,26 @@ class WaipuPlayer extends LitElement {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 8px 8px 28px 4px;
+        padding: 8px 8px 28px 12px;
         background: linear-gradient(rgba(0, 0, 0, 0.7), transparent);
+        transition: opacity 0.3s;
+      }
+      /* the timeline and buttons over the bottom of the picture */
+      .bottom {
+        position: absolute;
+        inset: auto 0 0 0;
+        padding-top: 32px;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+        transition: opacity 0.3s;
+      }
+      /* playing and left alone: both bars fade out, and with them the mouse pointer */
+      .video.idle .top,
+      .video.idle .bottom {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .video.idle video {
+        cursor: none;
       }
       .top .meta {
         flex: 1;
@@ -1014,6 +1109,13 @@ class WaipuPlayer extends LitElement {
         display: inline-flex;
         align-items: center;
         white-space: nowrap;
+      }
+      .pill.unmute {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.6);
       }
       .msg {
         position: absolute;
