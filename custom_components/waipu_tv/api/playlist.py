@@ -1,12 +1,12 @@
 """M3U, XMLTV and HLS playlist rendering for IPTV players."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from datetime import UTC, datetime
 import re
 from urllib.parse import quote, urljoin
 from xml.sax.saxutils import escape, quoteattr
 
-from .models import Channel, Program, Recording
+from .models import Channel, Program, ProgramDetails, Recording
 
 FILTERS = ("all", "favorites", "live", "vod")
 
@@ -161,8 +161,24 @@ def _xmltv_time(value: datetime) -> str:
     return value.astimezone(UTC).strftime("%Y%m%d%H%M%S +0000")
 
 
-def render_xmltv(channel_programs: Iterable[tuple[Channel, list[Program]]]) -> str:
+def _episode_num(details: ProgramDetails) -> str | None:
+    """xmltv_ns counts from zero; either part may be missing."""
+    parts = [details.season, details.episode]
+    if not any(parts):
+        return None
+    try:
+        season, episode = (str(int(v) - 1) if v else "" for v in parts)
+    except ValueError:
+        return None
+    return f"{season}.{episode}."
+
+
+def render_xmltv(
+    channel_programs: Iterable[tuple[Channel, list[Program]]],
+    details: Mapping[str, ProgramDetails] | None = None,
+) -> str:
     channel_programs = list(channel_programs)
+    details = details or {}
     out = ['<?xml version="1.0" encoding="UTF-8"?>', '<tv generator-info-name="waipu.tv">']
     for ch, _ in channel_programs:
         icon = f"<icon src={quoteattr(ch.logo)}/>" if ch.logo else ""
@@ -181,10 +197,24 @@ def render_xmltv(channel_programs: Iterable[tuple[Channel, list[Program]]]) -> s
             out.append(f"    <title>{escape(p.title)}</title>")
             if p.episode_title:
                 out.append(f"    <sub-title>{escape(p.episode_title)}</sub-title>")
+            # the order of the elements is fixed by the XMLTV DTD
+            d = details.get(p.id)
+            if d and d.description:
+                out.append(f"    <desc>{escape(d.description)}</desc>")
+            if d and d.cast:
+                actors = "".join(
+                    f"<actor{f' role={quoteattr(role)}' if role else ''}>{escape(name)}</actor>"
+                    for name, role in d.cast
+                )
+                out.append(f"    <credits>{actors}</credits>")
+            if d and d.year:
+                out.append(f"    <date>{escape(d.year)}</date>")
             if p.genre:
                 out.append(f"    <category>{escape(p.genre)}</category>")
             if p.image:
                 out.append(f"    <icon src={quoteattr(p.image)}/>")
+            if d and (episode_num := _episode_num(d)):
+                out.append(f'    <episode-num system="xmltv_ns">{episode_num}</episode-num>')
             out.append("  </programme>")
     out.append("</tv>")
     return "\n".join(out) + "\n"

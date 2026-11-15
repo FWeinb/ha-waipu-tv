@@ -1,6 +1,22 @@
 {
   "id": "11111111-2222-3333-4444-555555555555",
   "stationId": "zdf",
-  "series": {"id": "4711"},
-  "textContent": {"title": "heute-show", "descLong": "Satire mit Oliver Welke."}
+  "series": {
+    "id": "4711",
+    "seasonNumber": "28",
+    "episodeNumber": "12"
+  },
+  "textContent": {
+    "title": "heute-show",
+    "descLong": "Satire mit Oliver Welke."
+  },
+  "production": {
+    "year": "2026",
+    "castMembers": [
+      {
+        "name": "Oliver Welke",
+        "role": "Moderation"
+      }
+    ]
+  }
 }

@@ -195,8 +195,9 @@ class _Request:
     async def epg(self) -> web.Response:
         channels = self._channels()
         start, end = self.data.guide.range()
-        programs = await self.data.guide.guide.programs([c.id for c in channels], start, end)
-        xml = render_xmltv((c, programs[c.id]) for c in channels).encode()
+        guide = self.data.guide.guide
+        programs = await guide.programs([c.id for c in channels], start, end)
+        xml = render_xmltv(((c, programs[c.id]) for c in channels), guide.details()).encode()
         headers = {"Vary": "Accept-Encoding"}
         if "gzip" in self.request.headers.get("Accept-Encoding", ""):
             xml = await self.hass.async_add_executor_job(gzip.compress, xml, 6)

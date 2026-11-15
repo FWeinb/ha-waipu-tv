@@ -2,7 +2,7 @@
 
 from .client import EPG_WINDOW, Account, WaipuAuthError, WaipuClient, WaipuError
 from .guide import Guide
-from .models import Channel, Program, Recording
+from .models import Channel, Program, ProgramDetails, Recording
 
 __all__ = [
     "EPG_WINDOW",
@@ -10,6 +10,7 @@ __all__ = [
     "Account",
     "Channel",
     "Program",
+    "ProgramDetails",
     "Recording",
     "WaipuAuthError",
     "WaipuClient",

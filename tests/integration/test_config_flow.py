@@ -17,6 +17,16 @@ from custom_components.waipu_tv.const import (
 
 from ..conftest import URL_TOKEN, make_jwt, token_response
 
+GRID = re.compile(r"^https://epg-cache\.waipu\.tv/api/grid/")
+
+
+async def unload(hass, config_entry):
+    """Wait for the reload the options change starts, then unload so the calendar's timer
+    doesn't outlive the test."""
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
 LOGIN = {CONF_EMAIL: "user@example.com", CONF_PASSWORD: "secret"}
 USER_HANDLE = "00000000-0000-0000-0000-000000000001"
 GUIDE = {
@@ -123,8 +133,9 @@ async def test_single_account(hass, config_entry):
 
 
 async def test_options_flow_keeps_access_key(hass, config_entry, mock_waipu):
+    mock_waipu.get(GRID, json=[])
     await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["step_id"] == "init"
@@ -138,17 +149,20 @@ async def test_options_flow_keeps_access_key(hass, config_entry, mock_waipu):
     assert config_entry.options["guide_days"] == 3
     assert config_entry.options["guide_parallel"] == 2
     assert config_entry.options[CONF_ACCESS_KEY] == "aaaa-bbbb-cccc-dddd"
+    await unload(hass, config_entry)
 
 
 async def test_options_flow_cleared_key_gets_new_one(hass, config_entry, mock_waipu):
+    mock_waipu.get(GRID, json=[])
     await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(result["flow_id"], GUIDE)
     result = await hass.config_entries.options.async_configure(result["flow_id"], PLAYLISTS)
 
     assert config_entry.options[CONF_ACCESS_KEY] not in ("", "aaaa-bbbb-cccc-dddd")
+    await unload(hass, config_entry)
 
 
 async def test_reauth(hass, config_entry, mock_token):

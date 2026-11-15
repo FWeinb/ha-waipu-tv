@@ -224,9 +224,13 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 48. **Panel scope v1:** no "watched" column (watch progress isn't loaded), deleting asks with the
     browser's confirm dialog, the program dialog closes on backdrop clicks, the Playlists tab
     explains the per-playlist query parameters.
-49. **Not built yet:** "Guide details for favorites" is a stored option, but descriptions and cast are
-    not fetched for XMLTV; the panel loads details on demand through `waipu_tv/program`. Cancelling a
-    whole series rule (pvr.waipu's `recording-scheduler` delete request) isn't ported.
+49. **Not built yet:** cancelling a whole series rule (pvr.waipu's `recording-scheduler` delete
+    request) isn't ported.
+50. **Guide details for favorites**, like pvr.waipu: after each guide check, the program API is asked
+    once per program of a favorite (among the imported channels) in the guide range, within the
+    parallel-request limit. Details don't change, so they are kept until the program leaves the
+    guide; failed requests are retried on the next check. XMLTV gets `desc`, `credits`, `date` and
+    `episode-num` (xmltv_ns) from them. The panel still loads details on demand.
 
 ## Rejected
 
@@ -254,3 +258,5 @@ Run against a real account so far: sign-in, channels, recordings and the full ba
 - that HLS segments don't need gzip, only playlists;
 - that on-demand channels play via DASH in Kodi and TiviMate, not only in the player you tried;
 - TiviMate's support for the `{utc}` catch-up placeholder.
+- what the cast `role` of the program API holds (character or job); XMLTV writes it as the actor's
+  role.

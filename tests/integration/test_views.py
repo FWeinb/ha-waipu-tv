@@ -175,6 +175,8 @@ async def test_epg(client):
     assert xml.count("<channel ") == 1
     assert xml.count("<programme ") == 6
     assert "<title>Tagesschau</title>" in xml
+    # details of the favorite (ard) from the background guide load
+    assert xml.count("<desc>Satire mit Oliver Welke.</desc>") == 6
 
     resp = await client.get(
         "/api/waipu_tv/epg.xml",

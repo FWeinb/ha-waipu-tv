@@ -4,7 +4,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from custom_components.waipu_tv.api import Channel, Program, Recording
+from custom_components.waipu_tv.api import Channel, Program, ProgramDetails, Recording
+from custom_components.waipu_tv.api.models import parse_program_details
 from custom_components.waipu_tv.api.playlist import (
     render_m3u,
     render_recordings_m3u,
@@ -186,3 +187,55 @@ def test_xmltv():
     assert "<sub-title>Spezial</sub-title>" in xml
     assert "<category>Nachrichten</category>" in xml
     assert '<icon src="http://img/1.jpg"/>' in xml
+    assert "<desc>" not in xml
+
+
+def test_xmltv_details():
+    start = datetime(2026, 11, 14, 22, tzinfo=UTC)
+    program = Program(
+        id="p1",
+        channel_id="zdf",
+        title="heute-show",
+        episode_title=None,
+        genre="Comedy",
+        start=start,
+        stop=start + timedelta(minutes=30),
+        image="http://img/1.jpg",
+        series_id="4711",
+        recordable=True,
+    )
+    details = ProgramDetails(
+        description="Satire & mehr",
+        year="2026",
+        season="28",
+        episode="12",
+        cast=(("Oliver Welke", "Moderation"), ("Gast", None)),
+    )
+
+    xml = render_xmltv([(ch("zdf"), [program])], {"p1": details})
+
+    assert (
+        "    <title>heute-show</title>\n"
+        "    <desc>Satire &amp; mehr</desc>\n"
+        '    <credits><actor role="Moderation">Oliver Welke</actor><actor>Gast</actor></credits>\n'
+        "    <date>2026</date>\n"
+        "    <category>Comedy</category>\n"
+        '    <icon src="http://img/1.jpg"/>\n'
+        '    <episode-num system="xmltv_ns">27.11.</episode-num>\n'
+    ) in xml
+
+
+def test_parse_program_details():
+    details = parse_program_details(
+        {
+            "textContent": {"descShort": "Kurz"},
+            "production": {
+                "year": 1999,
+                "castMembers": [{"name": "A", "role": "B"}, {"role": "no name"}, "junk"],
+            },
+            "series": {"id": "1", "episodeNumber": "3"},
+        }
+    )
+
+    assert details == ProgramDetails("Kurz", "1999", None, "3", (("A", "B"),))
+    assert parse_program_details({}) == ProgramDetails(None, None, None, None, ())

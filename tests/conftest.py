@@ -3,6 +3,7 @@
 import base64
 import json
 from pathlib import Path
+import re
 import time
 
 import pytest
@@ -69,6 +70,12 @@ def mock_waipu(mock_token):
     mock_token.get(f"{URL_RECORDINGS}?recordingGroup=7", json=load_json("recordings_group_7.json"))
     mock_token.get(f"{URL_RECORDINGS}/summary", json={"finishedRecordingsSeconds": 9000})
     mock_token.get(URL_RECORDINGS, json=load_json("recordings.json"))
+    # guide details: one document for every program (the first matching mock wins, so tests
+    # needing another register theirs after clear_requests())
+    mock_token.get(
+        re.compile(r"^https://epg-cache\.waipu\.tv/api/programs/"),
+        json=load_json("program_details.json"),
+    )
     return mock_token
 
 

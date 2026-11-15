@@ -1,15 +1,16 @@
 """Guide cache: the grid API serves 4 h windows per channel, and a full guide takes thousands of
 requests, so windows are cached, shared by all users of the guide, fetched with a bounded number
-of parallel requests and refreshed in the background while the previous data is still served."""
+of parallel requests and refreshed in the background while the previous data is still served.
+Program details (description, cast) take one request per program and are cached separately."""
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 import logging
 
 from .client import EPG_WINDOW, WaipuClient, WaipuError
-from .models import Program
+from .models import Program, ProgramDetails, parse_program_details
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class Guide:
         self._limit = asyncio.Semaphore(parallel)
         self._windows: dict[tuple[str, datetime], _Window] = {}
         self._loading: dict[tuple[str, datetime], asyncio.Task[None]] = {}
+        self._details: dict[str, ProgramDetails] = {}
 
     async def _fetch(self, key: tuple[str, datetime]) -> None:
         channel_id, start = key
@@ -122,6 +124,31 @@ class Guide:
             result[channel_id] = sorted(programs, key=lambda p: p.start)
         return result
 
+    async def warm_details(self, program_ids: Iterable[str]) -> None:
+        """Fetch details of these programs once, they don't change; forget all others. A failed
+        request is retried on the next call."""
+        wanted = dict.fromkeys(program_ids)
+        self._details = {k: v for k, v in self._details.items() if k in wanted}
+        results = await asyncio.gather(
+            *(self._fetch_details(i) for i in wanted if i not in self._details)
+        )
+        if failed := results.count(False):
+            _LOGGER.warning("Details of %d guide programs skipped, retried later", failed)
+
+    async def _fetch_details(self, program_id: str) -> bool:
+        async with self._limit:
+            try:
+                doc = await self._client.program_details(program_id)
+            except WaipuError as err:
+                _LOGGER.debug("Details of %s skipped: %s", program_id, err)
+                return False
+        self._details[program_id] = parse_program_details(doc)
+        return True
+
+    def details(self) -> Mapping[str, ProgramDetails]:
+        """Cached program details by program id."""
+        return self._details
+
     async def current_program(self, channel_id: str, now: datetime) -> Program | None:
         """The program running now, e.g. for time-shift from program start."""
         # a program that started in the previous window may only be listed there
@@ -134,6 +161,7 @@ class Guide:
             "windows": len(self._windows),
             "failed_windows": sum(w.programs is None for w in self._windows.values()),
             "loading": len(self._loading),
+            "program_details": len(self._details),
         }
 
     async def close(self) -> None:

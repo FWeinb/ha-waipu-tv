@@ -119,6 +119,36 @@ def parse_program(data: dict[str, Any], channel_id: str) -> Program | None:
 
 
 @dataclass(frozen=True)
+class ProgramDetails:
+    """What the program API adds to a guide entry, as pvr.waipu reads it."""
+
+    description: str | None
+    year: str | None
+    season: str | None
+    episode: str | None
+    cast: tuple[tuple[str, str | None], ...]  # (name, role)
+
+
+def parse_program_details(data: dict[str, Any]) -> ProgramDetails:
+    text = data.get("textContent") or {}
+    production = data.get("production") or {}
+    series = data.get("series") or {}
+    members = production.get("castMembers")
+    cast = tuple(
+        (str(m["name"]), _str(m.get("role")))
+        for m in (members if isinstance(members, list) else [])
+        if isinstance(m, dict) and m.get("name")
+    )
+    return ProgramDetails(
+        description=_str(text.get("descLong")) or _str(text.get("descShort")),
+        year=_str(production.get("year")),
+        season=_str(series.get("seasonNumber")),
+        episode=_str(series.get("episodeNumber")),
+        cast=cast,
+    )
+
+
+@dataclass(frozen=True)
 class Recording:
     id: str
     program_id: str | None

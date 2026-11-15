@@ -22,6 +22,7 @@ from .const import (
     CONF_CHANNELS,
     CONF_CHANNELS_INTERVAL,
     CONF_GUIDE_DAYS,
+    CONF_GUIDE_DETAILS,
     CONF_GUIDE_INTERVAL,
     CONF_GUIDE_PARALLEL,
     CONF_RECORDINGS_INTERVAL,
@@ -218,8 +219,19 @@ class GuideCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         # broken windows are skipped and logged by the guide, never fail the whole update
         await self.guide.warm([c.id for c in self.channels()], *self.range())
+        await self._warm_details()
 
     async def async_reload(self) -> None:
         """Fetch the whole guide again, e.g. from the refresh button."""
         await self.guide.warm([c.id for c in self.channels()], *self.range(), force=True)
+        await self._warm_details()
         self.async_update_listeners()
+
+    async def _warm_details(self) -> None:
+        """Details for the favorites' programs, like pvr.waipu: one request per program is too
+        many for all channels."""
+        favorites = []
+        if self.config_entry.options[CONF_GUIDE_DETAILS]:
+            favorites = [c.id for c in self.channels() if c.favorite]
+        programs = self.guide.cached(favorites, *self.range())
+        await self.guide.warm_details(p.id for ps in programs.values() for p in ps)

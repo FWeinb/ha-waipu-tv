@@ -47,6 +47,16 @@ class FakeClient:
             raise WaipuError("HTTP 500")
         return [program(channel_id, start + timedelta(hours=h), title=self.title) for h in range(4)]
 
+    async def program_details(self, program_id):
+        self.requests.append(program_id)
+        self.running += 1
+        self.max_running = max(self.max_running, self.running)
+        await asyncio.sleep(0)
+        self.running -= 1
+        if program_id in self.fail:
+            raise WaipuError("HTTP 500")
+        return {"id": program_id, "textContent": {"descLong": f"About {program_id}"}}
+
 
 def make_guide(client, parallel=4):
     return Guide(client, ttl=timedelta(hours=2), parallel=parallel)
@@ -157,3 +167,30 @@ async def test_current_program():
     current = await guide.current_program("ard", NOW)
 
     assert current.start == datetime(2026, 11, 14, 13, tzinfo=UTC)
+
+
+async def test_details_are_fetched_once_and_forgotten_when_not_wanted():
+    client = FakeClient()
+    guide = make_guide(client, parallel=2)
+
+    await guide.warm_details(["a", "b", "c", "a"])
+    await guide.warm_details(["b", "c", "d"])
+
+    assert client.requests == ["a", "b", "c", "d"]
+    assert client.max_running == 2
+    assert set(guide.details()) == {"b", "c", "d"}
+    assert guide.details()["b"].description == "About b"
+
+
+async def test_failed_details_are_retried():
+    client = FakeClient()
+    client.fail = {"a"}
+    guide = make_guide(client)
+
+    await guide.warm_details(["a", "b"])
+    assert set(guide.details()) == {"b"}
+    client.fail = set()
+    await guide.warm_details(["a", "b"])
+
+    assert client.requests == ["a", "b", "a"]
+    assert set(guide.details()) == {"a", "b"}
