@@ -9,8 +9,10 @@
     "panel_custom",
     "websocket_api"
   ],
+  "documentation": "https://github.com/FWeinb/ha-waipu-tv",
   "integration_type": "service",
   "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/FWeinb/ha-waipu-tv/issues",
   "requirements": [],
   "single_config_entry": true,
   "version": "0.1.0"
