@@ -59,12 +59,14 @@
           "playlists": "M3U-Playlists & XMLTV-Programm",
           "access_key": "Zugangsschlüssel",
           "timeshift": "Timeshift ab Sendungsbeginn",
-          "hls_proxy": "HLS-Playlists über Home Assistant ausliefern"
+          "hls_proxy": "HLS-Playlists über Home Assistant ausliefern",
+          "audio_language": "Bevorzugte Tonspur (Player)"
         },
         "data_description": {
           "access_key": "Wird an jede Playlist-URL als ?key=… angehängt. Jeder mit dem Schlüssel kann über dein Konto schauen. Leere das Feld, um einen neuen Schlüssel zu erzeugen; alte Links funktionieren dann nicht mehr.",
           "timeshift": "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
-          "hls_proxy": "Nur für ffmpeg-basierte Player (VLC, Jellyfin) nötig; auch pro Playlist einstellbar."
+          "hls_proxy": "Nur für ffmpeg-basierte Player (VLC, Jellyfin) nötig; auch pro Playlist einstellbar.",
+          "audio_language": "Für den Player im Panel, wenn eine Sendung sie hat; jede Person kann im Tonspur-Menü des Players eine eigene wählen. IPTV-Player wählen ihre Tonspur selbst."
         }
       }
     }
@@ -102,12 +104,14 @@
           "playlists": "M3U-Playlists & XMLTV-Programm",
           "access_key": "Zugangsschlüssel",
           "timeshift": "Timeshift ab Sendungsbeginn",
-          "hls_proxy": "HLS-Playlists über Home Assistant ausliefern"
+          "hls_proxy": "HLS-Playlists über Home Assistant ausliefern",
+          "audio_language": "Bevorzugte Tonspur (Player)"
         },
         "data_description": {
           "access_key": "Wird an jede Playlist-URL als ?key=… angehängt. Jeder mit dem Schlüssel kann über dein Konto schauen. Leere das Feld, um einen neuen Schlüssel zu erzeugen; alte Links funktionieren dann nicht mehr.",
           "timeshift": "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
-          "hls_proxy": "Nur für ffmpeg-basierte Player (VLC, Jellyfin) nötig; auch pro Playlist einstellbar."
+          "hls_proxy": "Nur für ffmpeg-basierte Player (VLC, Jellyfin) nötig; auch pro Playlist einstellbar.",
+          "audio_language": "Für den Player im Panel, wenn eine Sendung sie hat; jede Person kann im Tonspur-Menü des Players eine eigene wählen. IPTV-Player wählen ihre Tonspur selbst."
         }
       }
     }
@@ -126,6 +130,17 @@
         "2": "2 Tage",
         "3": "3 Tage",
         "7": "7 Tage"
+      }
+    },
+    "audio_language": {
+      "options": {
+        "default": "Wie im Stream vorgegeben",
+        "de": "Deutsch",
+        "en": "Englisch",
+        "fr": "Französisch",
+        "qaa": "Originalton",
+        "qad": "Audiodeskription",
+        "qks": "Klare Sprache"
       }
     }
   },

@@ -59,12 +59,14 @@
           "playlists": "M3U playlists & XMLTV guide",
           "access_key": "Access key",
           "timeshift": "Time-shift from program start",
-          "hls_proxy": "Serve HLS playlists through Home Assistant"
+          "hls_proxy": "Serve HLS playlists through Home Assistant",
+          "audio_language": "Preferred audio language (player)"
         },
         "data_description": {
           "access_key": "Added to every playlist URL as ?key=…. Anyone with the key can watch on your account. Clear the field to generate a new key; it locks out old links.",
           "timeshift": "Live channels open at the start of the running program so you can rewind.",
-          "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist."
+          "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist.",
+          "audio_language": "For the player in the panel, when a program has it; everyone can pick their own in the player's audio menu. IPTV players choose their own track."
         }
       }
     }
@@ -102,12 +104,14 @@
           "playlists": "M3U playlists & XMLTV guide",
           "access_key": "Access key",
           "timeshift": "Time-shift from program start",
-          "hls_proxy": "Serve HLS playlists through Home Assistant"
+          "hls_proxy": "Serve HLS playlists through Home Assistant",
+          "audio_language": "Preferred audio language (player)"
         },
         "data_description": {
           "access_key": "Added to every playlist URL as ?key=…. Anyone with the key can watch on your account. Clear the field to generate a new key; it locks out old links.",
           "timeshift": "Live channels open at the start of the running program so you can rewind.",
-          "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist."
+          "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist.",
+          "audio_language": "For the player in the panel, when a program has it; everyone can pick their own in the player's audio menu. IPTV players choose their own track."
         }
       }
     }
@@ -126,6 +130,17 @@
         "2": "2 days",
         "3": "3 days",
         "7": "7 days"
+      }
+    },
+    "audio_language": {
+      "options": {
+        "default": "As the stream marks it",
+        "de": "German",
+        "en": "English",
+        "fr": "French",
+        "qaa": "Original language",
+        "qad": "Audio description",
+        "qks": "Clear language"
       }
     }
   },

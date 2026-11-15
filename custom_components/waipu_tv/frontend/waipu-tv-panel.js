@@ -290,7 +290,7 @@ var Ce = (e, t) => {
 						index: a,
 						name: r[2],
 						strings: n,
-						ctor: r[1] === "." ? Te : r[1] === "?" ? Ee : r[1] === "@" ? De : P
+						ctor: r[1] === "." ? Ee : r[1] === "?" ? De : r[1] === "@" ? Oe : N
 					}), i.removeAttribute(e);
 				} else e.startsWith(v) && (c.push({
 					type: 6,
@@ -350,7 +350,7 @@ var we = class {
 		for (; s !== void 0;) {
 			if (a === s.index) {
 				let t;
-				s.type === 2 ? t = new N(i, i.nextSibling, this, e) : s.type === 1 ? t = new s.ctor(i, s.name, s.strings, this, e) : s.type === 6 && (t = new Oe(i, this, e)), this._$AV.push(t), s = n[++o];
+				s.type === 2 ? t = new Te(i, i.nextSibling, this, e) : s.type === 1 ? t = new s.ctor(i, s.name, s.strings, this, e) : s.type === 6 && (t = new ke(i, this, e)), this._$AV.push(t), s = n[++o];
 			}
 			a !== s?.index && (i = A.nextNode(), a++);
 		}
@@ -360,7 +360,7 @@ var we = class {
 		let t = 0;
 		for (let n of this._$AV) n !== void 0 && (n.strings === void 0 ? n._$AI(e[t]) : (n._$AI(e, n, t), t += n.strings.length - 2)), t++;
 	}
-}, N = class e {
+}, Te = class e {
 	get _$AU() {
 		return this._$AM?._$AU ?? this._$Cv;
 	}
@@ -416,7 +416,7 @@ var we = class {
 	setConnected(e) {
 		this._$AM === void 0 && (this._$Cv = e, this._$AP?.(e));
 	}
-}, P = class {
+}, N = class {
 	get tagName() {
 		return this.element.tagName;
 	}
@@ -438,21 +438,21 @@ var we = class {
 	j(e) {
 		e === k ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
 	}
-}, Te = class extends P {
+}, Ee = class extends N {
 	constructor() {
 		super(...arguments), this.type = 3;
 	}
 	j(e) {
 		this.element[this.name] = e === k ? void 0 : e;
 	}
-}, Ee = class extends P {
+}, De = class extends N {
 	constructor() {
 		super(...arguments), this.type = 4;
 	}
 	j(e) {
 		this.element.toggleAttribute(this.name, !!e && e !== k);
 	}
-}, De = class extends P {
+}, Oe = class extends N {
 	constructor(e, t, n, r, i) {
 		super(e, t, n, r, i), this.type = 5;
 	}
@@ -464,7 +464,7 @@ var we = class {
 	handleEvent(e) {
 		typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, e) : this._$AH.handleEvent(e);
 	}
-}, Oe = class {
+}, ke = class {
 	constructor(e, t, n) {
 		this.element = e, this.type = 6, this._$AN = void 0, this._$AM = t, this.options = n;
 	}
@@ -474,16 +474,16 @@ var we = class {
 	_$AI(e) {
 		M(this, e);
 	}
-}, ke = g.litHtmlPolyfillSupport;
-ke?.(j, N), (g.litHtmlVersions ??= []).push("3.3.3");
-var Ae = (e, t, n) => {
+}, Ae = g.litHtmlPolyfillSupport;
+Ae?.(j, Te), (g.litHtmlVersions ??= []).push("3.3.3");
+var je = (e, t, n) => {
 	let r = n?.renderBefore ?? t, i = r._$litPart$;
 	if (i === void 0) {
 		let e = n?.renderBefore ?? null;
-		r._$litPart$ = i = new N(t.insertBefore(b(), e), e, void 0, n ?? {});
+		r._$litPart$ = i = new Te(t.insertBefore(b(), e), e, void 0, n ?? {});
 	}
 	return i._$AI(e), i;
-}, F = globalThis, I = class extends h {
+}, Me = globalThis, P = class extends h {
 	constructor() {
 		super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
 	}
@@ -493,7 +493,7 @@ var Ae = (e, t, n) => {
 	}
 	update(e) {
 		let t = this.render();
-		this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = Ae(t, this.renderRoot, this.renderOptions);
+		this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = je(t, this.renderRoot, this.renderOptions);
 	}
 	connectedCallback() {
 		super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -505,34 +505,41 @@ var Ae = (e, t, n) => {
 		return O;
 	}
 };
-I._$litElement$ = !0, I.finalized = !0, F.litElementHydrateSupport?.({ LitElement: I });
-var je = F.litElementPolyfillSupport;
-je?.({ LitElement: I }), (F.litElementVersions ??= []).push("4.2.2");
+P._$litElement$ = !0, P.finalized = !0, Me.litElementHydrateSupport?.({ LitElement: P });
+var Ne = Me.litElementPolyfillSupport;
+Ne?.({ LitElement: P }), (Me.litElementVersions ??= []).push("4.2.2");
 // src/api.ts
-var L = (e, t, n = {}) => e.callWS({
+var F = (e, t, n = {}) => e.callWS({
 	type: `waipu_tv/${t}`,
 	...n
-}), Me = (e) => L(e, "channels"), R = (e, t, n, r) => L(e, "guide", {
+}), Pe = (e) => F(e, "channels"), I = (e, t, n, r) => F(e, "guide", {
 	start: t.toISOString(),
 	end: n.toISOString(),
 	...r ? { channels: r } : {}
-}), Ne = (e, t) => L(e, "program", { program_id: t }), Pe = (e) => L(e, "recordings"), Fe = (e) => L(e, "playlists"), z = (e, t, n = !1) => L(e, "record", {
+}), Fe = (e, t) => F(e, "program", { program_id: t }), Ie = (e) => F(e, "recordings"), Le = (e) => F(e, "playlists"), L = (e, t, n = !1) => F(e, "record", {
 	program_id: t,
 	series: n
-}), Ie = (e, t) => L(e, "cancel_series", { program_id: t }), B = (e, t) => L(e, "delete_recordings", { recording_ids: t }), Le = (e, t, n) => L(e, "set_favorite", {
+}), Re = (e, t) => F(e, "cancel_series", { program_id: t }), R = (e, t) => F(e, "delete_recordings", { recording_ids: t }), ze = (e, t, n) => F(e, "set_favorite", {
 	channel: t,
 	favorite: n
-}), Re = (e, t, n, r) => L(e, "stream", {
+}), Be = (e, t, n, r) => F(e, "stream", {
 	channel: t,
 	protocol: n,
 	from_start: r
-}), ze = (e, t, n) => L(e, "recording_stream", {
+}), Ve = (e, t, n) => F(e, "recording_stream", {
 	recording_id: t,
 	protocol: n
-}), Be = (e, t, n) => L(e, "license", {
+}), He = (e, t, n) => F(e, "license", {
 	system: t,
 	challenge: n
-}), Ve = (e) => L(e, "fairplay_certificate"), He = {
+}), Ue = (e) => F(e, "fairplay_certificate"), We = "waipu_tv", Ge = (e) => e.callWS({
+	type: "frontend/get_user_data",
+	key: We
+}).then((e) => e.value ?? {}), Ke = (e, t) => e.callWS({
+	type: "frontend/set_user_data",
+	key: We,
+	value: t
+}), qe = {
 	guide: "Guide",
 	favorites: "Favorites",
 	recordings: "Recordings",
@@ -658,7 +665,7 @@ var L = (e, t, n = {}) => e.callWS({
 	needs_https: "Needs HTTPS",
 	no_favorites_watch: "No favorites yet: star channels under All or VOD, or the one you're watching.",
 	no_channels_match: "No channels match."
-}, Ue = {
+}, Je = {
 	guide: "Programm",
 	favorites: "Favoriten",
 	recordings: "Aufnahmen",
@@ -785,17 +792,17 @@ var L = (e, t, n = {}) => e.callWS({
 	no_favorites_watch: "Noch keine Favoriten: markiere Sender unter Alle oder VOD mit dem Stern, oder den, den du gerade siehst.",
 	no_channels_match: "Keine passenden Sender."
 };
-function V(e, t, n = {}) {
-	return (e.language?.startsWith("de") ? Ue : He)[t].replace(/\{(\w+)\}/g, (e, t) => String(n[t] ?? ""));
+function z(e, t, n = {}) {
+	return (e.language?.startsWith("de") ? Je : qe)[t].replace(/\{(\w+)\}/g, (e, t) => String(n[t] ?? ""));
 }
-function H(e, t) {
+function B(e, t) {
 	return new Intl.DateTimeFormat(e.language, {
 		timeZone: e.config.time_zone,
 		...t
 	});
 }
 // src/icons.ts
-var U = (e, t = 20) => D`<svg class="i" viewBox="0 0 24 24" style="width:${t}px;height:${t}px" aria-hidden="true">${e}</svg>`, We = () => U(D`<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>`), W = (e = 20) => U(D`<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>`, e), Ge = () => U(D`<circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/>`), Ke = () => U(D`<path d="M6 6l12 12M18 6 6 18"/>`), qe = () => U(D`<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>`), Je = () => U(D`<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>`), Ye = () => U(D`<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/>`), Xe = () => D`<svg class="i" viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;stroke:none" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>`, Ze = () => U(D`<path d="M15 6l-6 6 6 6"/>`), Qe = () => U(D`<path d="M6 15l6-6 6 6"/>`), $e = () => U(D`<path d="M6 9l6 6 6-6"/>`), et = (e = 16) => U(D`<path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/>`, e), tt = () => D`<svg class="i" viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;stroke:none" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>`, nt = () => U(D`<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1" fill="currentColor"/>`), rt = () => U(D`<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>`), it = () => U(D`<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 10.5a2 2 0 1 0 0 3M16 10.5a2 2 0 1 0 0 3"/>`), at = () => U(D`<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/>`), ot = () => U(D`<path d="M4 10v4h4l5 4V6L8 10z"/><path d="m17 10 4 4M21 10l-4 4"/>`), st = () => U(D`<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>`, 14), G = (e = 14) => D`<svg class="i" viewBox="0 0 24 24" style="width:${e}px;height:${e}px;fill:currentColor;stroke:none" aria-hidden="true"><circle cx="12" cy="12" r="7"/></svg>`, K = s`
+var V = (e, t = 20) => D`<svg class="i" viewBox="0 0 24 24" style="width:${t}px;height:${t}px" aria-hidden="true">${e}</svg>`, Ye = () => V(D`<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>`), H = (e = 20) => V(D`<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>`, e), U = () => V(D`<circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/>`), Xe = () => V(D`<path d="M6 6l12 12M18 6 6 18"/>`), W = () => V(D`<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>`), Ze = () => V(D`<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>`), Qe = () => V(D`<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/>`), $e = () => D`<svg class="i" viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;stroke:none" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>`, et = () => V(D`<path d="M15 6l-6 6 6 6"/>`), tt = () => V(D`<path d="M6 15l6-6 6 6"/>`), nt = () => V(D`<path d="M6 9l6 6 6-6"/>`), rt = (e = 16) => V(D`<path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/>`, e), it = () => D`<svg class="i" viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;stroke:none" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>`, at = () => V(D`<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1" fill="currentColor"/>`), ot = () => V(D`<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>`), st = () => V(D`<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 10.5a2 2 0 1 0 0 3M16 10.5a2 2 0 1 0 0 3"/>`), ct = () => V(D`<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/>`), lt = () => V(D`<path d="M4 10v4h4l5 4V6L8 10z"/><path d="m17 10 4 4M21 10l-4 4"/>`), ut = () => V(D`<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>`, 14), G = (e = 14) => D`<svg class="i" viewBox="0 0 24 24" style="width:${e}px;height:${e}px;fill:currentColor;stroke:none" aria-hidden="true"><circle cx="12" cy="12" r="7"/></svg>`, K = s`
   :host {
     --wt-card: var(--card-background-color, #fff);
     --wt-fg: var(--primary-text-color, #212121);
@@ -1058,7 +1065,7 @@ async function Y(e, t, n) {
 	try {
 		return await n(), !0;
 	} catch (n) {
-		return J(e, V(t, "error", { message: n?.message ?? String(n) })), !1;
+		return J(e, z(t, "error", { message: n?.message ?? String(n) })), !1;
 	}
 }
 function X(e, t) {
@@ -1069,7 +1076,7 @@ function X(e, t) {
 	}));
 }
 // src/program-dialog.ts
-var ct = class extends I {
+var dt = class extends P {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -1084,7 +1091,7 @@ var ct = class extends I {
 		super(), this._busy = !1;
 	}
 	firstUpdated() {
-		this.renderRoot.querySelector("dialog").showModal(), Ne(this.hass, this.program.id).then((e) => this._description = e.textContent?.descLong || e.textContent?.descShort || "").catch(() => this._description = "");
+		this.renderRoot.querySelector("dialog").showModal(), Fe(this.hass, this.program.id).then((e) => this._description = e.textContent?.descLong || e.textContent?.descShort || "").catch(() => this._description = "");
 	}
 	_backdropClick(e) {
 		e.target === e.currentTarget && this._close();
@@ -1098,10 +1105,10 @@ var ct = class extends I {
 		this._busy = !1, r && (q(this, n), J(this, t), n === "recordings" && this._close());
 	}
 	render() {
-		let e = this.program, t = new Date(e.start).getTime(), n = new Date(e.stop).getTime(), r = Date.now(), i = H(this.hass, {
+		let e = this.program, t = new Date(e.start).getTime(), n = new Date(e.stop).getTime(), r = Date.now(), i = B(this.hass, {
 			hour: "2-digit",
 			minute: "2-digit"
-		}), a = H(this.hass, {
+		}), a = B(this.hass, {
 			weekday: "long",
 			day: "numeric",
 			month: "long"
@@ -1123,27 +1130,27 @@ var ct = class extends I {
         ${this.channel ? E`<button
               class="star-btn"
               aria-pressed=${l}
-              title=${V(this.hass, l ? "remove_favorite" : "add_favorite")}
-              aria-label=${V(this.hass, l ? "remove_favorite" : "add_favorite")}
+              title=${z(this.hass, l ? "remove_favorite" : "add_favorite")}
+              aria-label=${z(this.hass, l ? "remove_favorite" : "add_favorite")}
               ?disabled=${this._busy}
-              @click=${() => this._run(() => Le(this.hass, this.channel.id, !l), V(this.hass, l ? "favorite_removed" : "favorite_added", { name: this.channel.name }), "channels")}
+              @click=${() => this._run(() => ze(this.hass, this.channel.id, !l), z(this.hass, l ? "favorite_removed" : "favorite_added", { name: this.channel.name }), "channels")}
             >
-              ${Ye()}
+              ${Qe()}
             </button>` : k}
-        <button class="icon-btn" aria-label=${V(this.hass, "close")} @click=${this._close}>${Ke()}</button>
+        <button class="icon-btn" aria-label=${z(this.hass, "close")} @click=${this._close}>${Xe()}</button>
       </div>
       <div class="dlg-b">
         <div class="toolbar">
-          ${o ? E`<span class="chip live"><span class="dot"></span>${V(this.hass, "live")}</span>` : k}
-          ${s ? E`<span class="chip">${V(this.hass, "ended")}</span>` : k}
-          ${c?.status === "RECORDING" ? E`<span class="chip rec">${G()}${V(this.hass, "rec")}</span>` : k}
-          ${c?.status === "SCHEDULED" ? E`<span class="chip sched">${W(14)}${V(this.hass, "scheduled")}</span>` : k}
+          ${o ? E`<span class="chip live"><span class="dot"></span>${z(this.hass, "live")}</span>` : k}
+          ${s ? E`<span class="chip">${z(this.hass, "ended")}</span>` : k}
+          ${c?.status === "RECORDING" ? E`<span class="chip rec">${G()}${z(this.hass, "rec")}</span>` : k}
+          ${c?.status === "SCHEDULED" ? E`<span class="chip sched">${H(14)}${z(this.hass, "scheduled")}</span>` : k}
           ${e.genre ? E`<span class="chip">${e.genre}</span>` : k}
         </div>
         ${o ? E`<div class="progress"><div style="width:${(r - t) / (n - t) * 100}%"></div></div>` : k}
         ${e.image ? E`<img class="still" src=${e.image} alt="" />` : k}
-        <p>${this._description ?? V(this.hass, "loading")}</p>
-        ${e.recordable ? k : E`<p class="muted small">${V(this.hass, "not_recordable")}</p>`}
+        <p>${this._description ?? z(this.hass, "loading")}</p>
+        ${e.recordable ? k : E`<p class="muted small">${z(this.hass, "not_recordable")}</p>`}
       </div>
       <div class="dlg-a">
         ${o && this.channel ? E`<button
@@ -1152,28 +1159,28 @@ var ct = class extends I {
 			this._close(), X(this, { channel: this.channel.id });
 		}}
             >
-              ${Xe()}${V(this.hass, "watch")}
+              ${$e()}${z(this.hass, "watch")}
             </button>` : k}
         ${c ? E`<button
               class="btn danger"
               ?disabled=${this._busy}
-              @click=${() => this._run(() => B(this.hass, [c.id]), V(this.hass, "recording_cancelled"), "recordings")}
+              @click=${() => this._run(() => R(this.hass, [c.id]), z(this.hass, "recording_cancelled"), "recordings")}
             >
-              ${V(this.hass, "cancel_recording")}
+              ${z(this.hass, "cancel_recording")}
             </button>` : k}
         ${!c && !s && e.recordable && e.series_id ? E`<button
               class="btn"
               ?disabled=${this._busy}
-              @click=${() => this._run(() => z(this.hass, e.id, !0), V(this.hass, "series_started", { title: e.title }), "recordings")}
+              @click=${() => this._run(() => L(this.hass, e.id, !0), z(this.hass, "series_started", { title: e.title }), "recordings")}
             >
-              ${V(this.hass, "record_series")}
+              ${z(this.hass, "record_series")}
             </button>` : k}
         ${!c && !s && e.recordable ? E`<button
               class="btn primary"
               ?disabled=${this._busy}
-              @click=${() => this._run(() => z(this.hass, e.id), V(this.hass, "recording_started", { title: e.title }), "recordings")}
+              @click=${() => this._run(() => L(this.hass, e.id), z(this.hass, "recording_started", { title: e.title }), "recordings")}
             >
-              ${G()}${V(this.hass, "record")}
+              ${G()}${z(this.hass, "record")}
             </button>` : k}
       </div>
     </dialog>`;
@@ -1260,9 +1267,9 @@ var ct = class extends I {
     `];
 	}
 };
-customElements.define("waipu-program-dialog", ct);
+customElements.define("waipu-program-dialog", dt);
 // src/guide-tab.ts
-var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
+var ft = 68, pt = 36, mt = 4, Z = 6e4, ht = class extends P {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -1282,7 +1289,7 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
 	_pinTitles() {
 		let e = this.renderRoot.querySelector(".epg-box");
 		if (!e) return;
-		let t = e.scrollLeft, n = e.querySelectorAll(".epg-row"), r = Math.max(0, Math.floor((e.scrollTop - ut) / lt)), i = Math.min(n.length, r + Math.ceil(e.clientHeight / lt) + 1), a = /* @__PURE__ */ new Set();
+		let t = e.scrollLeft, n = e.querySelectorAll(".epg-row"), r = Math.max(0, Math.floor((e.scrollTop - pt) / ft)), i = Math.min(n.length, r + Math.ceil(e.clientHeight / ft) + 1), a = /* @__PURE__ */ new Set();
 		for (let e = r; e < i; e++) for (let r of n[e].querySelectorAll(".prog")) {
 			let e = Number(r.dataset.left), n = Number(r.dataset.end);
 			if (!(e >= t || n <= t + 40)) {
@@ -1314,12 +1321,12 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
 		try {
 			if (!this._days.length) {
 				let e = /* @__PURE__ */ new Date();
-				this._days = (await R(this.hass, e, e)).days;
+				this._days = (await I(this.hass, e, e)).days;
 			}
 			let e = new Date(this._days[this._day]), t = this._day + 1 < this._days.length ? new Date(this._days[this._day + 1]) : null;
-			this._guide = await R(this.hass, e, t ?? new Date(e.getTime() + 1440 * Z), this._all ? void 0 : this._favoriteIds);
+			this._guide = await I(this.hass, e, t ?? new Date(e.getTime() + 1440 * Z), this._all ? void 0 : this._favoriteIds);
 		} catch (e) {
-			J(this, V(this.hass, "error", { message: e.message ?? String(e) }));
+			J(this, z(this.hass, "error", { message: e.message ?? String(e) }));
 		}
 	}
 	updated() {
@@ -1330,7 +1337,7 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
 		return [e, t ? new Date(t).getTime() : e + 1440 * Z];
 	}
 	_x(e, t) {
-		return (e - t) / Z * dt;
+		return (e - t) / Z * mt;
 	}
 	_jumpToNow() {
 		let e = this.renderRoot.querySelector(".epg-box");
@@ -1344,7 +1351,7 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
 		return e;
 	}
 	render() {
-		let e = H(this.hass, {
+		let e = B(this.hass, {
 			weekday: "short",
 			day: "numeric"
 		});
@@ -1352,27 +1359,27 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
       <div class="content">
         <div class="card">
           <div class="card-h">
-            <h2>${V(this.hass, "tv_guide")}</h2>
+            <h2>${z(this.hass, "tv_guide")}</h2>
             <div class="toolbar">
               <div class="seg" role="group">
                 ${this._days.map((t, n) => E`<button aria-pressed=${n === this._day} @click=${() => this._selectDay(n)}>
-                    ${n === 0 ? V(this.hass, "today") : e.format(new Date(t))}
+                    ${n === 0 ? z(this.hass, "today") : e.format(new Date(t))}
                   </button>`)}
               </div>
               <div class="seg" role="group">
                 <button aria-pressed=${!this._all} @click=${() => this._all = !1}>
-                  ${V(this.hass, "favorites")}
+                  ${z(this.hass, "favorites")}
                 </button>
                 <button aria-pressed=${this._all} @click=${() => this._all = !0}>
-                  ${V(this.hass, "all_channels")}
+                  ${z(this.hass, "all_channels")}
                 </button>
               </div>
-              <button class="btn" @click=${this._now_clicked}>${W()}${V(this.hass, "now")}</button>
+              <button class="btn" @click=${this._now_clicked}>${H()}${z(this.hass, "now")}</button>
               <label class="search">
-                ${Ge()}
+                ${U()}
                 <input
                   type="search"
-                  placeholder=${V(this.hass, "search_programs")}
+                  placeholder=${z(this.hass, "search_programs")}
                   .value=${this._search}
                   @input=${(e) => this._search = e.target.value}
                 />
@@ -1381,10 +1388,10 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
           </div>
           ${this._renderGrid()}
           <div class="legend">
-            <span><span class="chip live"><span class="dot"></span>${V(this.hass, "live")}</span>${V(this.hass, "legend_live")}</span>
-            <span><span class="chip rec">${G()}${V(this.hass, "rec")}</span>${V(this.hass, "legend_rec")}</span>
-            <span><span class="chip sched">${W(14)}${V(this.hass, "scheduled")}</span>${V(this.hass, "legend_sched")}</span>
-            <span>${V(this.hass, "legend_hint")}</span>
+            <span><span class="chip live"><span class="dot"></span>${z(this.hass, "live")}</span>${z(this.hass, "legend_live")}</span>
+            <span><span class="chip rec">${G()}${z(this.hass, "rec")}</span>${z(this.hass, "legend_rec")}</span>
+            <span><span class="chip sched">${H(14)}${z(this.hass, "scheduled")}</span>${z(this.hass, "legend_sched")}</span>
+            <span>${z(this.hass, "legend_hint")}</span>
           </div>
         </div>
       </div>
@@ -1404,10 +1411,10 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
 		this._day === 0 ? this._jumpToNow() : this._selectDay(0);
 	}
 	_renderGrid() {
-		if (!this._guide || !this._days.length) return E`<p class="card-b muted">${V(this.hass, "loading")}</p>`;
+		if (!this._guide || !this._days.length) return E`<p class="card-b muted">${z(this.hass, "loading")}</p>`;
 		let e = this._all ? Object.keys(this._guide.programs) : this._favoriteIds, t = this.channels.filter((t) => e.includes(t.id));
-		if (!t.length) return E`<p class="card-b muted">${V(this.hass, "no_favorites")}</p>`;
-		let [n, r] = this._dayRange(), i = this._x(r, n), a = H(this.hass, {
+		if (!t.length) return E`<p class="card-b muted">${z(this.hass, "no_favorites")}</p>`;
+		let [n, r] = this._dayRange(), i = this._x(r, n), a = B(this.hass, {
 			hour: "2-digit",
 			minute: "2-digit"
 		}), o = [];
@@ -1417,7 +1424,7 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
       <div class="epg-box" @scroll=${this._onScroll}>
         <div class="epg" style="--track:${i}px">
           <div class="epg-head">
-            <div class="epg-corner">${V(this.hass, "channel")}</div>
+            <div class="epg-corner">${z(this.hass, "channel")}</div>
             <div class="epg-ticks" style="width:${i}px">
               ${o.map((e) => E`<span style="left:${this._x(e, n)}px">${a.format(e)}</span>`)}
               ${s ? E`<div class="now-badge" style="left:${this._x(this._now, n)}px">${a.format(this._now)}</div>` : k}
@@ -1456,7 +1463,7 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
     >
       <span class="t">
         ${i?.status === "RECORDING" ? E`<span class="flag">${G()}</span>` : k}
-        ${i?.status === "SCHEDULED" ? E`<span class="flag">${W(14)}</span>` : k}
+        ${i?.status === "SCHEDULED" ? E`<span class="flag">${H(14)}</span>` : k}
         <span>${e.title}</span>
       </span>
       <span class="s">${r.format(o)}${e.episode_title ? ` · ${e.episode_title}` : ""}</span>
@@ -1676,16 +1683,16 @@ var lt = 68, ut = 36, dt = 4, Z = 6e4, ft = class extends I {
     `];
 	}
 };
-customElements.define("waipu-guide-tab", ft);
+customElements.define("waipu-guide-tab", ht);
 // src/playlists-tab.ts
-var pt = [
+var gt = [
 	"favorites",
 	"all",
 	"live",
 	"vod",
 	"recordings",
 	"epg"
-], mt = class extends I {
+], _t = class extends P {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -1693,13 +1700,13 @@ var pt = [
 		};
 	}
 	firstUpdated() {
-		Fe(this.hass).then((e) => this._data = e).catch((e) => J(this, V(this.hass, "error", { message: e.message ?? String(e) })));
+		Le(this.hass).then((e) => this._data = e).catch((e) => J(this, z(this.hass, "error", { message: e.message ?? String(e) })));
 	}
 	async _copy(e) {
 		try {
-			await navigator.clipboard.writeText(e), J(this, V(this.hass, "copied"));
+			await navigator.clipboard.writeText(e), J(this, z(this.hass, "copied"));
 		} catch {
-			J(this, V(this.hass, "copy_failed"));
+			J(this, z(this.hass, "copy_failed"));
 		}
 	}
 	render() {
@@ -1707,92 +1714,92 @@ var pt = [
 		return E`<div class="content">
       <div class="card">
         <div class="card-h">
-          <h2>${V(this.hass, "playlist_server")}</h2>
-          <span class="chip">${V(this.hass, "admins_only")}</span>
-          ${e ? e.enabled ? E`<span class="chip live"><span class="dot"></span>${V(this.hass, "running")}</span>` : E`<span class="chip">${V(this.hass, "off")}</span>` : k}
+          <h2>${z(this.hass, "playlist_server")}</h2>
+          <span class="chip">${z(this.hass, "admins_only")}</span>
+          ${e ? e.enabled ? E`<span class="chip live"><span class="dot"></span>${z(this.hass, "running")}</span>` : E`<span class="chip">${z(this.hass, "off")}</span>` : k}
         </div>
         <div class="card-b">
           ${e ? e.enabled ? E`<ul class="urls">
-                  ${pt.map((t) => {
+                  ${gt.map((t) => {
 			let n = location.origin + e.urls[t];
 			return E`<li>
                       <div class="meta">
-                        <div>${V(this.hass, `url_${t}`)}</div>
+                        <div>${z(this.hass, `url_${t}`)}</div>
                         <div class="mono">${n}</div>
                       </div>
                       <button class="btn" @click=${() => this._copy(n)}>
-                        ${Je()}${V(this.hass, "copy")}
+                        ${Ze()}${z(this.hass, "copy")}
                       </button>
                     </li>`;
 		})}
-                </ul>` : E`<p>${V(this.hass, "playlists_off")}</p>` : E`<p class="muted">${V(this.hass, "loading")}</p>`}
+                </ul>` : E`<p>${z(this.hass, "playlists_off")}</p>` : E`<p class="muted">${z(this.hass, "loading")}</p>`}
         </div>
         ${e ? E`<div class="card-b actions">
-              <a class="btn" href="/config/integrations/integration/waipu_tv">${V(this.hass, "open_options")}</a>
+              <a class="btn" href="/config/integrations/integration/waipu_tv">${z(this.hass, "open_options")}</a>
             </div>` : k}
       </div>
       ${e?.enabled ? this._renderOptions(e) : k}
-      <p class="muted note">${V(this.hass, "playlists_note")}</p>
+      <p class="muted note">${z(this.hass, "playlists_note")}</p>
     </div>`;
 	}
 	_renderOptions(e) {
-		let t = (e) => V(this.hass, e ? "on" : "off_value"), n = (e) => V(this.hass, "from_options", { value: t(e) }), r = V(this.hass, "m3u_playlists"), i = e.instant_restart ? "" : ` ${V(this.hass, "needs_restart")}`, a = [
+		let t = (e) => z(this.hass, e ? "on" : "off_value"), n = (e) => z(this.hass, "from_options", { value: t(e) }), r = z(this.hass, "m3u_playlists"), i = e.instant_restart ? "" : ` ${z(this.hass, "needs_restart")}`, a = [
 			[
 				"hidden",
 				"0 | 1",
 				t(!1),
 				`${r}, epg.xml`,
-				V(this.hass, "param_hidden")
+				z(this.hass, "param_hidden")
 			],
 			[
 				"drm",
 				"0 | 1",
 				t(!0),
 				`${r}, epg.xml`,
-				V(this.hass, "param_drm")
+				z(this.hass, "param_drm")
 			],
 			[
 				"protocol",
 				"auto | hls | dash",
 				"auto",
 				`${r}, recordings.m3u`,
-				V(this.hass, "param_protocol")
+				z(this.hass, "param_protocol")
 			],
 			[
 				"timeshift",
 				"0 | 1",
 				n(e.defaults.timeshift),
 				r,
-				V(this.hass, "param_timeshift") + i
+				z(this.hass, "param_timeshift") + i
 			],
 			[
 				"hls_proxy",
 				"0 | 1",
 				n(e.defaults.hls_proxy),
 				r,
-				V(this.hass, "param_hls_proxy")
+				z(this.hass, "param_hls_proxy")
 			],
 			[
 				"filter",
 				"all | favorites | live | vod",
 				"all",
 				"epg.xml",
-				V(this.hass, "param_filter")
+				z(this.hass, "param_filter")
 			]
 		];
 		return E`<div class="card">
-      <div class="card-h"><h2>${V(this.hass, "options_title")}</h2></div>
+      <div class="card-h"><h2>${z(this.hass, "options_title")}</h2></div>
       <div class="card-b">
-        <p class="intro">${V(this.hass, "options_intro")}</p>
+        <p class="intro">${z(this.hass, "options_intro")}</p>
         <div class="table-box">
           <table>
             <thead>
               <tr>
-                <th>${V(this.hass, "parameter")}</th>
-                <th>${V(this.hass, "values")}</th>
-                <th>${V(this.hass, "default")}</th>
-                <th>${V(this.hass, "applies_to")}</th>
-                <th>${V(this.hass, "meaning")}</th>
+                <th>${z(this.hass, "parameter")}</th>
+                <th>${z(this.hass, "values")}</th>
+                <th>${z(this.hass, "default")}</th>
+                <th>${z(this.hass, "applies_to")}</th>
+                <th>${z(this.hass, "meaning")}</th>
               </tr>
             </thead>
             <tbody>
@@ -1883,33 +1890,33 @@ var pt = [
     `];
 	}
 };
-customElements.define("waipu-playlists-tab", mt);
+customElements.define("waipu-playlists-tab", _t);
 // src/player-view.ts
-var Q = "waipu-license", $ = 3e4, ht = "waipu-tv.volume", gt = (() => {
+var Q = "waipu-license", $ = 3e4, vt = "waipu-tv.volume", yt = (() => {
 	let e = document.createElement("video");
 	return e.volume = .5, e.volume === .5;
-})(), _t, vt, yt = (e) => {
+})(), bt, xt, St = (e) => {
 	let t = e instanceof ArrayBuffer ? new Uint8Array(e) : new Uint8Array(e.buffer, e.byteOffset, e.byteLength), n = "";
 	for (let e of t) n += String.fromCharCode(e);
 	return btoa(n);
-}, bt = (e) => Uint8Array.from(atob(e), (e) => e.charCodeAt(0));
-function xt() {
-	return _t ??= import("./shaka-player.compiled-es2021-BzI3yHKF.js").then((t) => /* @__PURE__ */ e(t.default, 1)).then(({ default: e }) => (e.polyfill.installAll(), e.net.NetworkingEngine.registerScheme(Q, (t, n) => {
-		let r = t.slice(14), i = Be(vt, r, yt(n.body)).then(({ license: e }) => ({
+}, Ct = (e) => Uint8Array.from(atob(e), (e) => e.charCodeAt(0));
+function wt() {
+	return bt ??= import("./shaka-player.compiled-es2021-BzI3yHKF.js").then((t) => /* @__PURE__ */ e(t.default, 1)).then(({ default: e }) => (e.polyfill.installAll(), e.net.NetworkingEngine.registerScheme(Q, (t, n) => {
+		let r = t.slice(14), i = He(xt, r, St(n.body)).then(({ license: e }) => ({
 			uri: t,
 			originalUri: t,
 			originalRequest: n,
-			data: bt(e),
+			data: Ct(e),
 			headers: {}
 		}), (n) => {
 			throw new e.util.Error(e.util.Error.Severity.CRITICAL, e.util.Error.Category.NETWORK, e.util.Error.Code.HTTP_ERROR, t, n?.message ?? String(n));
 		});
 		return e.util.AbortableOperation.notAbortable(i);
-	}), e)), _t;
+	}), e)), bt;
 }
-var St;
-function Ct() {
-	return St ??= (async () => {
+var Tt;
+function Et() {
+	return Tt ??= (async () => {
 		if (!navigator.requestMediaKeySystemAccess) return null;
 		for (let [e, t, n] of [[
 			"widevine",
@@ -1926,33 +1933,34 @@ function Ct() {
 			}]), e;
 		} catch {}
 		return null;
-	})(), St;
+	})(), Tt;
 }
-var wt = [
+var Dt = [
 	["mp4a", "AAC"],
 	["ec-3", "Dolby Digital Plus"],
 	["ac-3", "Dolby Digital"]
 ];
-function Tt(e) {
-	let t = wt.find(([t]) => e.codecs?.startsWith(t))?.[1] ?? e.codecs ?? "", n = !e.channelsCount || e.channelsCount <= 2 ? "Stereo" : e.channelsCount === 6 ? "5.1" : `${e.channelsCount} ch`;
+function Ot(e) {
+	let t = Dt.find(([t]) => e.codecs?.startsWith(t))?.[1] ?? e.codecs ?? "", n = !e.channelsCount || e.channelsCount <= 2 ? "Stereo" : e.channelsCount === 6 ? "5.1" : `${e.channelsCount} ch`;
 	return [e.label || e.language, `${n}${t ? ` (${t})` : ""}`].filter(Boolean).join(" · ");
 }
-function Et(e) {
-	let t = e.getAudioTracks(), n = t.find((e) => e.active);
-	if (!n || (n.channelsCount ?? 2) > 2) return;
-	let r = t.filter((e) => e.language === n.language && (e.channelsCount ?? 0) > 2).sort((e, t) => (t.channelsCount ?? 0) - (e.channelsCount ?? 0))[0];
-	r && e.selectAudioTrack(r);
+function kt(e, t) {
+	let n = e.getAudioTracks(), r = n.find((e) => e.active);
+	if (!r) return;
+	let i = t && n.some((e) => e.language === t) ? t : r.language, a = n.filter((e) => e.language === i).sort((e, t) => (t.channelsCount ?? 0) - (e.channelsCount ?? 0))[0];
+	a && a !== r && e.selectAudioTrack(a);
 }
-var Dt = (e) => {
+var At = (e) => {
 	let t = Math.max(0, Math.floor(e)), n = Math.floor(t / 3600), r = String(Math.floor(t % 3600 / 60)).padStart(n ? 2 : 1, "0");
 	return `${n ? `${n}:` : ""}${r}:${String(t % 60).padStart(2, "0")}`;
-}, Ot = class extends I {
+}, jt = class extends P {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
 			channels: { attribute: !1 },
 			recordings: { attribute: !1 },
 			instantRestart: { type: Boolean },
+			audioLanguage: { attribute: !1 },
 			target: { attribute: !1 },
 			_blocked: { state: !0 },
 			_error: { state: !0 },
@@ -1985,14 +1993,14 @@ var Dt = (e) => {
 	}
 	firstUpdated() {
 		try {
-			let e = Number(localStorage.getItem(ht));
-			gt && e > 0 && e <= 1 && (this._video.volume = e);
+			let e = Number(localStorage.getItem(vt));
+			yt && e > 0 && e <= 1 && (this._video.volume = e);
 		} catch {}
 	}
 	_volumeChanged(e) {
 		this._muted = e.muted, this._volume = e.volume;
 		try {
-			e.volume > 0 && localStorage.setItem(ht, String(e.volume));
+			e.volume > 0 && localStorage.setItem(vt, String(e.volume));
 		} catch {}
 	}
 	updated(e) {
@@ -2016,7 +2024,7 @@ var Dt = (e) => {
 		this._channel && e.add(this._channel.id);
 		let t = /* @__PURE__ */ new Date();
 		try {
-			let n = await R(this.hass, t, new Date(t.getTime() + 6e4), [...e]), r = {};
+			let n = await I(this.hass, t, new Date(t.getTime() + 6e4), [...e]), r = {};
 			for (let [e, i] of Object.entries(n.programs)) {
 				let n = i.find((e) => new Date(e.start) <= t && t < new Date(e.stop));
 				n && (r[e] = n);
@@ -2024,56 +2032,56 @@ var Dt = (e) => {
 			this._now = r;
 		} catch {}
 		let n = "recording" in this.target ? this.target.recording.program_id : this._now[this._channel?.id ?? ""]?.id;
-		n && n !== this._describedId && (this._describedId = n, this._description = void 0, Ne(this.hass, n).then((e) => this._description = e.textContent?.descLong || e.textContent?.descShort || "").catch(() => this._description = ""));
+		n && n !== this._describedId && (this._describedId = n, this._description = void 0, Fe(this.hass, n).then((e) => this._description = e.textContent?.descLong || e.textContent?.descShort || "").catch(() => this._description = ""));
 	}
 	async _play() {
 		let e = ++this._playId;
 		this._error = this._blocked = void 0, this._audio = this._text = [];
 		let t = this._player;
 		this._player = void 0, await t?.destroy();
-		let n = this.target, r = this._channel, i = r?.name ?? "", a = "recording" in n || !r?.hls, o = a ? await Ct() : null;
+		let n = this.target, r = this._channel, i = r?.name ?? "", a = "recording" in n || !r?.hls, o = a ? await Et() : null;
 		if (a && !o) {
 			this._badge = void 0, this._blocked = window.isSecureContext ? {
-				title: V(this.hass, "drm_unsupported_title", { name: i }),
-				text: V(this.hass, "drm_unsupported_text")
+				title: z(this.hass, "drm_unsupported_title", { name: i }),
+				text: z(this.hass, "drm_unsupported_text")
 			} : {
-				title: V(this.hass, "drm_https_title", { name: i }),
-				text: V(this.hass, "drm_https_text")
+				title: z(this.hass, "drm_https_title", { name: i }),
+				text: z(this.hass, "drm_https_text")
 			};
 			return;
 		}
 		let s = o === "widevine" ? "dash" : "hls";
 		this._badge = a ? o === "widevine" ? "DASH · Widevine" : "HLS · FairPlay" : "HLS";
 		try {
-			let t = await xt();
-			vt = this.hass;
-			let { url: r } = "recording" in n ? await ze(this.hass, n.recording.id, s) : await Re(this.hass, n.channel, s, !!n.fromStart), i = o === "fairplay" ? bt((await Ve(this.hass)).certificate) : void 0;
+			let t = await wt();
+			xt = this.hass, this._settings ??= Ge(this.hass).catch(() => ({}));
+			let r = await this._settings, { url: i } = "recording" in n ? await Ve(this.hass, n.recording.id, s) : await Be(this.hass, n.channel, s, !!n.fromStart), a = o === "fairplay" ? Ct((await Ue(this.hass)).certificate) : void 0;
 			if (e !== this._playId) return;
-			let a = new t.Player();
-			this._player = a, await a.attach(this._video), a.configure({ drm: {
+			let c = new t.Player();
+			this._player = c, await c.attach(this._video), c.configure({ drm: {
 				servers: {
 					"com.widevine.alpha": `${Q}:widevine`,
 					"com.apple.fps": `${Q}:fairplay`
 				},
-				...i ? { advanced: { "com.apple.fps": { serverCertificate: i } } } : {}
-			} }), a.addEventListener("error", (e) => this._fail(e.detail));
-			let c = () => {
-				this._audio = a.getAudioTracks(), this._text = a.getTextTracks();
+				...a ? { advanced: { "com.apple.fps": { serverCertificate: a } } } : {}
+			} }), c.addEventListener("error", (e) => this._fail(e.detail));
+			let l = () => {
+				this._audio = c.getAudioTracks(), this._text = c.getTextTracks();
 			};
 			for (let e of [
 				"trackschanged",
 				"variantchanged",
 				"textchanged",
 				"adaptation"
-			]) a.addEventListener(e, c);
-			await a.load(r), Et(a), c();
+			]) c.addEventListener(e, l);
+			await c.load(i), kt(c, r.audio_language ?? this.audioLanguage), l();
 		} catch (t) {
 			e === this._playId && this._fail(t);
 		}
 	}
 	_fail(e) {
 		let t = e, n = t?.data?.find((e) => typeof e == "string" && !e.startsWith(Q)), r = [t?.code ? `#${t.code}` : "", n ?? t?.message ?? String(e)].filter(Boolean).join(" ");
-		this._error = V(this.hass, "playback_error", { message: r });
+		this._error = z(this.hass, "playback_error", { message: r });
 	}
 	_togglePlay() {
 		let e = this._video;
@@ -2097,21 +2105,29 @@ var Dt = (e) => {
 		let e = this._text.find((e) => e.active);
 		this._player?.selectTextTrack(e ? null : this._text[0]), this._text = this._player?.getTextTracks() ?? [];
 	}
+	async _chooseAudio(e) {
+		this._player?.selectAudioTrack(e);
+		let t = {
+			...await this._settings,
+			audio_language: e.language
+		};
+		this._settings = Promise.resolve(t), Ke(this.hass, t).catch(() => void 0);
+	}
 	async _toggleFavorite(e) {
 		this._busy = !0;
-		let t = await Y(this, this.hass, () => Le(this.hass, e.id, !e.favorite));
-		this._busy = !1, t && (q(this, "channels"), J(this, V(this.hass, e.favorite ? "favorite_removed" : "favorite_added", { name: e.name })));
+		let t = await Y(this, this.hass, () => ze(this.hass, e.id, !e.favorite));
+		this._busy = !1, t && (q(this, "channels"), J(this, z(this.hass, e.favorite ? "favorite_removed" : "favorite_added", { name: e.name })));
 	}
 	async _record(e) {
 		this._busy = !0;
-		let t = await Y(this, this.hass, () => z(this.hass, e.id));
-		this._busy = !1, t && (q(this, "recordings"), J(this, V(this.hass, "recording_started", { title: e.title })));
+		let t = await Y(this, this.hass, () => L(this.hass, e.id));
+		this._busy = !1, t && (q(this, "recordings"), J(this, z(this.hass, "recording_started", { title: e.title })));
 	}
 	async _deleteRecording(e) {
-		if (!confirm(V(this.hass, "confirm_delete", { count: 1 }))) return;
+		if (!confirm(z(this.hass, "confirm_delete", { count: 1 }))) return;
 		this._busy = !0;
-		let t = await Y(this, this.hass, () => B(this.hass, [e.id]));
-		this._busy = !1, t && (q(this, "recordings"), J(this, V(this.hass, "deleted", { count: 1 })), X(this, null));
+		let t = await Y(this, this.hass, () => R(this.hass, [e.id]));
+		this._busy = !1, t && (q(this, "recordings"), J(this, z(this.hass, "deleted", { count: 1 })), X(this, null));
 	}
 	_timeline(e) {
 		let t = this._player, n = this.renderRoot.querySelector("video");
@@ -2124,13 +2140,13 @@ var Dt = (e) => {
 				end: e,
 				avail: [r.start, r.end],
 				pos: n.currentTime,
-				label: ["0:00", Dt(e)],
+				label: ["0:00", At(e)],
 				seek: (e) => n.currentTime = e
 			} : void 0;
 		}
 		let i = t.getPlayheadTimeAsDate()?.getTime() ?? Date.now() - (r.end - n.currentTime) * 1e3, a = (e) => i + (e - n.currentTime) * 1e3, o = [a(r.start), a(r.end)], [s, c] = e ? [new Date(e.start).getTime(), new Date(e.stop).getTime()] : o;
 		if (c <= s) return;
-		let l = H(this.hass, {
+		let l = B(this.hass, {
 			hour: "2-digit",
 			minute: "2-digit"
 		});
@@ -2152,10 +2168,10 @@ var Dt = (e) => {
 	}
 	render() {
 		this._tick;
-		let e = this.target, t = this._channel, n = "recording" in e ? e.recording : void 0, r = n ? void 0 : this._now[t?.id ?? ""], i = H(this.hass, {
+		let e = this.target, t = this._channel, n = "recording" in e ? e.recording : void 0, r = n ? void 0 : this._now[t?.id ?? ""], i = B(this.hass, {
 			hour: "2-digit",
 			minute: "2-digit"
-		}), a = H(this.hass, {
+		}), a = B(this.hass, {
 			weekday: "short",
 			day: "numeric",
 			month: "short",
@@ -2176,23 +2192,23 @@ var Dt = (e) => {
                 @volumechange=${(e) => this._volumeChanged(e.target)}
               ></video>
               <div class="top">
-                <button class="icon-btn" title=${V(this.hass, "back")} aria-label=${V(this.hass, "back")} @click=${() => X(this, null)}>
-                  ${Ze()}
+                <button class="icon-btn" title=${z(this.hass, "back")} aria-label=${z(this.hass, "back")} @click=${() => X(this, null)}>
+                  ${et()}
                 </button>
                 ${t ? E`<img class="logo" src=${t.logo} alt="" />` : k}
                 <div class="meta">
                   <div>${t ? `${t.number} · ${t.name}` : n?.channel_id}</div>
                   <div>
-                    ${n ? V(this.hass, "recording_from", { date: n.start ? a.format(new Date(n.start)) : "" }) : r ? `${o(r)} · ${r.title}` : V(this.hass, "no_guide")}
+                    ${n ? z(this.hass, "recording_from", { date: n.start ? a.format(new Date(n.start)) : "" }) : r ? `${o(r)} · ${r.title}` : z(this.hass, "no_guide")}
                   </div>
                 </div>
                 ${t ? this._star(t, !0) : k}
                 ${this._badge ? E`<span class="badge">${this._badge}</span>` : k}
-                ${document.pictureInPictureEnabled ? E`<button class="icon-btn pip" title=${V(this.hass, "pip")} aria-label=${V(this.hass, "pip")} @click=${this._pip}>
-                      ${nt()}
+                ${document.pictureInPictureEnabled ? E`<button class="icon-btn pip" title=${z(this.hass, "pip")} aria-label=${z(this.hass, "pip")} @click=${this._pip}>
+                      ${at()}
                     </button>` : k}
-                <button class="icon-btn" title=${V(this.hass, "fullscreen")} aria-label=${V(this.hass, "fullscreen")} @click=${this._fullscreen}>
-                  ${rt()}
+                <button class="icon-btn" title=${z(this.hass, "fullscreen")} aria-label=${z(this.hass, "fullscreen")} @click=${this._fullscreen}>
+                  ${ot()}
                 </button>
               </div>
               ${this._blocked ? E`<div class="msg">
@@ -2200,7 +2216,7 @@ var Dt = (e) => {
                       <h3>${this._blocked.title}</h3>
                       <p>${this._blocked.text}</p>
                       ${d ? E`<button class="btn primary" @click=${() => X(this, { channel: d.id })}>
-                            ${V(this.hass, "watch_name", { name: d.name })}
+                            ${z(this.hass, "watch_name", { name: d.name })}
                           </button>` : k}
                     </div>
                   </div>` : k}
@@ -2208,7 +2224,7 @@ var Dt = (e) => {
             ${c ? E`<div
                     class="scrub"
                     role="slider"
-                    aria-label=${V(this.hass, "position")}
+                    aria-label=${z(this.hass, "position")}
                     aria-valuemin="0"
                     aria-valuemax="100"
                     aria-valuenow=${Math.round(parseFloat(l(c.pos)))}
@@ -2224,17 +2240,17 @@ var Dt = (e) => {
             <div class="controls">
               <button
                 class="icon-btn"
-                title=${V(this.hass, this._playing ? "pause" : "play")}
-                aria-label=${V(this.hass, this._playing ? "pause" : "play")}
+                title=${z(this.hass, this._playing ? "pause" : "play")}
+                aria-label=${z(this.hass, this._playing ? "pause" : "play")}
                 @click=${this._togglePlay}
               >
-                ${this._playing ? tt() : Xe()}
+                ${this._playing ? it() : $e()}
               </button>
-              ${n ? k : E`<button class="icon-btn" title=${V(this.hass, "prev_channel")} aria-label=${V(this.hass, "prev_channel")} @click=${() => this._zap(-1)}>
-                      ${Qe()}
+              ${n ? k : E`<button class="icon-btn" title=${z(this.hass, "prev_channel")} aria-label=${z(this.hass, "prev_channel")} @click=${() => this._zap(-1)}>
+                      ${tt()}
                     </button>
-                    <button class="icon-btn" title=${V(this.hass, "next_channel")} aria-label=${V(this.hass, "next_channel")} @click=${() => this._zap(1)}>
-                      ${$e()}
+                    <button class="icon-btn" title=${z(this.hass, "next_channel")} aria-label=${z(this.hass, "next_channel")} @click=${() => this._zap(1)}>
+                      ${nt()}
                     </button>`}
               ${t?.vod && !n ? E`<button
                     class="pill"
@@ -2245,41 +2261,41 @@ var Dt = (e) => {
 			fromStart: !0
 		})}
                   >
-                    ${et()}${V(this.hass, "from_start")}
+                    ${rt()}${z(this.hass, "from_start")}
                   </button>` : k}
               ${!n && (t?.vod || u > $ || s) ? E`<button class="pill live" aria-pressed=${!s && u <= $} @click=${this._goLive}>
-                    ${V(this.hass, "live")}
+                    ${z(this.hass, "live")}
                   </button>` : k}
               <span class="time">
-                ${n && c ? `${Dt(c.pos)} / ${Dt(c.end)}` : u > $ ? V(this.hass, "behind_live", { minutes: Math.max(1, Math.round(u / 6e4)) }) : k}
+                ${n && c ? `${At(c.pos)} / ${At(c.end)}` : u > $ ? z(this.hass, "behind_live", { minutes: Math.max(1, Math.round(u / 6e4)) }) : k}
               </span>
               <span class="grow"></span>
               ${this._audio.length > 1 ? E`<select
-                    aria-label=${V(this.hass, "audio_track")}
+                    aria-label=${z(this.hass, "audio_track")}
                     @change=${(e) => {
 			let t = this._audio[Number(e.target.value)];
-			t && this._player?.selectAudioTrack(t);
+			t && this._chooseAudio(t);
 		}}
                   >
-                    ${this._audio.map((e, t) => E`<option value=${t} ?selected=${e.active}>${Tt(e)}</option>`)}
+                    ${this._audio.map((e, t) => E`<option value=${t} ?selected=${e.active}>${Ot(e)}</option>`)}
                   </select>` : k}
               ${this._text.length ? E`<button
                     class="icon-btn"
                     aria-pressed=${!!ee}
-                    title=${V(this.hass, "subtitles")}
-                    aria-label=${V(this.hass, "subtitles")}
+                    title=${z(this.hass, "subtitles")}
+                    aria-label=${z(this.hass, "subtitles")}
                     @click=${this._toggleText}
                   >
-                    ${it()}
+                    ${st()}
                   </button>` : k}
               <div class="volume">
-                ${gt ? E`<div class="volume-pop">
+                ${yt ? E`<div class="volume-pop">
                       <input
                         type="range"
                         min="0"
                         max="1"
                         step="0.05"
-                        aria-label=${V(this.hass, "volume")}
+                        aria-label=${z(this.hass, "volume")}
                         .value=${String(this._muted ? 0 : this._volume)}
                         @input=${(e) => {
 			let t = Number(e.target.value);
@@ -2289,11 +2305,11 @@ var Dt = (e) => {
                     </div>` : k}
                 <button
                   class="icon-btn"
-                  title=${V(this.hass, this._muted ? "unmute" : "mute")}
-                  aria-label=${V(this.hass, this._muted ? "unmute" : "mute")}
+                  title=${z(this.hass, this._muted ? "unmute" : "mute")}
+                  aria-label=${z(this.hass, this._muted ? "unmute" : "mute")}
                   @click=${() => this._video.muted = !this._video.muted}
                 >
-                  ${this._muted || this._volume === 0 ? ot() : at()}
+                  ${this._muted || this._volume === 0 ? lt() : ct()}
                 </button>
               </div>
             </div>
@@ -2330,11 +2346,11 @@ var Dt = (e) => {
       ${this._description ? E`<p>${this._description}</p>` : k}
       <div class="toolbar">
         ${n ? E`<button class="btn danger" ?disabled=${this._busy} @click=${() => this._deleteRecording(n)}>
-              ${qe()}${V(this.hass, "delete_recording")}
-            </button>` : t ? E`${a ? a.status === "RECORDING" ? E`<span class="chip rec">${G()}${V(this.hass, "rec")}</span>` : E`<span class="chip sched">${W(14)}${V(this.hass, "scheduled")}</span>` : t.recordable ? E`<button class="btn primary" ?disabled=${this._busy} @click=${() => this._record(t)}>
-                        ${G()}${V(this.hass, "record")}
+              ${W()}${z(this.hass, "delete_recording")}
+            </button>` : t ? E`${a ? a.status === "RECORDING" ? E`<span class="chip rec">${G()}${z(this.hass, "rec")}</span>` : E`<span class="chip sched">${H(14)}${z(this.hass, "scheduled")}</span>` : t.recordable ? E`<button class="btn primary" ?disabled=${this._busy} @click=${() => this._record(t)}>
+                        ${G()}${z(this.hass, "record")}
                       </button>` : k}
-                <button class="btn" @click=${() => this._dialog = t}>${V(this.hass, "program_details")}</button>` : k}
+                <button class="btn" @click=${() => this._dialog = t}>${z(this.hass, "program_details")}</button>` : k}
       </div>
     </div>`;
 	}
@@ -2359,7 +2375,7 @@ var Dt = (e) => {
                 </div>
               </button>
             </li>`;
-			}) : [E`<li class="note">${V(this.hass, "no_recordings")}</li>`];
+			}) : [E`<li class="note">${z(this.hass, "no_recordings")}</li>`];
 		} else {
 			let r = this._listChannels();
 			o = r.map((r) => {
@@ -2369,27 +2385,27 @@ var Dt = (e) => {
             <img class="logo" src=${r.logo} alt="" loading="lazy" />
             <div class="meta">
               <div>${r.number} · ${r.name}</div>
-              <div>${i ? `${n.format(new Date(i.start))} ${i.title}` : V(this.hass, r.vod ? "on_demand" : "no_guide")}</div>
+              <div>${i ? `${n.format(new Date(i.start))} ${i.title}` : z(this.hass, r.vod ? "on_demand" : "no_guide")}</div>
               ${i ? E`<div class="progress"><div style="width:${o}%"></div></div>` : k}
             </div>
-            ${!r.hls && !window.isSecureContext ? E`<span class="lock" title=${V(this.hass, "needs_https")}>${st()}</span>` : k}
+            ${!r.hls && !window.isSecureContext ? E`<span class="lock" title=${z(this.hass, "needs_https")}>${ut()}</span>` : k}
           </button>
           ${this._star(r, !1)}
         </li>`;
-			}), this._list === "fav" ? o.push(E`<li class="note">${V(this.hass, r.length ? "favorites_note" : "no_favorites_watch")}</li>`) : r.length || o.push(E`<li class="note">${V(this.hass, "no_channels_match")}</li>`);
+			}), this._list === "fav" ? o.push(E`<li class="note">${z(this.hass, r.length ? "favorites_note" : "no_favorites_watch")}</li>`) : r.length || o.push(E`<li class="note">${z(this.hass, "no_channels_match")}</li>`);
 		}
 		return E`<aside class="card">
       <div class="zap-head">
         <div class="seg" role="group">
           ${i.map(([e, t]) => E`<button aria-pressed=${this._list === e} @click=${() => this._list = e}>
-              ${V(this.hass, t)}
+              ${z(this.hass, t)}
             </button>`)}
         </div>
         ${this._list === "all" || this._list === "vod" ? E`<label class="search">
-              ${Ge()}
+              ${U()}
               <input
                 type="search"
-                placeholder=${V(this.hass, "filter_channels")}
+                placeholder=${z(this.hass, "filter_channels")}
                 .value=${this._search}
                 @input=${(e) => this._search = e.target.value}
               />
@@ -2401,7 +2417,7 @@ var Dt = (e) => {
     </aside>`;
 	}
 	_star(e, t) {
-		let n = V(this.hass, e.favorite ? "remove_favorite" : "add_favorite");
+		let n = z(this.hass, e.favorite ? "remove_favorite" : "add_favorite");
 		return E`<button
       class="star-btn ${t ? "on-video" : ""}"
       aria-pressed=${e.favorite}
@@ -2410,7 +2426,7 @@ var Dt = (e) => {
       ?disabled=${this._busy}
       @click=${() => this._toggleFavorite(e)}
     >
-      ${Ye()}
+      ${Qe()}
     </button>`;
 	}
 	static {
@@ -2823,21 +2839,21 @@ var Dt = (e) => {
     `];
 	}
 };
-customElements.define("waipu-player", Ot);
+customElements.define("waipu-player", jt);
 // src/recordings-tab.ts
-var kt = {
+var Mt = {
 	RECORDING: 0,
 	SCHEDULED: 1,
 	FINISHED: 2,
 	FAILED: 3
 };
-function At(e, t) {
-	let n = (kt[e.status] ?? 9) - (kt[t.status] ?? 9);
+function Nt(e, t) {
+	let n = (Mt[e.status] ?? 9) - (Mt[t.status] ?? 9);
 	if (n) return n;
 	let r = (e.start ?? "").localeCompare(t.start ?? "");
 	return e.status === "SCHEDULED" ? r : -r;
 }
-var jt = class extends I {
+var Pt = class extends P {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -2854,7 +2870,7 @@ var jt = class extends I {
 	}
 	_shown() {
 		let e = this._search.trim().toLowerCase();
-		return (this.data?.recordings ?? []).filter((t) => (this._filter === "all" || t.status === this._filter) && (!e || `${t.title} ${t.episode_title ?? ""}`.toLowerCase().includes(e))).sort(At);
+		return (this.data?.recordings ?? []).filter((t) => (this._filter === "all" || t.status === this._filter) && (!e || `${t.title} ${t.episode_title ?? ""}`.toLowerCase().includes(e))).sort(Nt);
 	}
 	_rows(e) {
 		let t = [], n = /* @__PURE__ */ new Map();
@@ -2872,16 +2888,16 @@ var jt = class extends I {
 		this._selected = n;
 	}
 	async _delete(e) {
-		if (!e.length || !confirm(V(this.hass, "confirm_delete", { count: e.length }))) return;
+		if (!e.length || !confirm(z(this.hass, "confirm_delete", { count: e.length }))) return;
 		this._busy = !0;
-		let t = await Y(this, this.hass, () => B(this.hass, e));
-		this._busy = !1, t && (this._toggle(e, !1), q(this, "recordings"), J(this, V(this.hass, "deleted", { count: e.length })));
+		let t = await Y(this, this.hass, () => R(this.hass, e));
+		this._busy = !1, t && (this._toggle(e, !1), q(this, "recordings"), J(this, z(this.hass, "deleted", { count: e.length })));
 	}
 	async _stopSeries(e, t) {
-		if (!confirm(V(this.hass, "confirm_stop_series", { title: t }))) return;
+		if (!confirm(z(this.hass, "confirm_stop_series", { title: t }))) return;
 		this._busy = !0;
-		let n = await Y(this, this.hass, () => Ie(this.hass, e));
-		this._busy = !1, n && (q(this, "recordings"), J(this, V(this.hass, "series_stopped", { title: t })));
+		let n = await Y(this, this.hass, () => Re(this.hass, e));
+		this._busy = !1, n && (q(this, "recordings"), J(this, z(this.hass, "series_stopped", { title: t })));
 	}
 	render() {
 		let e = this.data?.recordings ?? [], t = (t) => e.filter((e) => e.status === t).length, n = this.data?.recorded_hours ?? 0, r = this.data?.booked_hours ?? 0, i = this._shown(), a = i.map((e) => e.id), o = [
@@ -2899,39 +2915,39 @@ var jt = class extends I {
 		return E`<div class="content">
       <div class="stats">
         <div class="card stat">
-          <div class="k">${V(this.hass, "storage_used")}</div>
+          <div class="k">${z(this.hass, "storage_used")}</div>
           <div class="v">
             ${n.toFixed(1)} h
-            ${r ? E`<span class="muted of">${V(this.hass, "of_hours", { hours: r })}</span>` : k}
+            ${r ? E`<span class="muted of">${z(this.hass, "of_hours", { hours: r })}</span>` : k}
           </div>
           ${r ? E`<div class="meter" role="meter" aria-valuemin="0" aria-valuemax=${r} aria-valuenow=${n}>
                 <div style="width:${Math.min(100, n / r * 100)}%"></div>
               </div>` : k}
         </div>
-        <div class="card stat"><div class="k">${V(this.hass, "recorded")}</div><div class="v">${t("FINISHED")}</div></div>
+        <div class="card stat"><div class="k">${z(this.hass, "recorded")}</div><div class="v">${t("FINISHED")}</div></div>
         <div class="card stat">
-          <div class="k">${V(this.hass, "recording_now")}</div>
+          <div class="k">${z(this.hass, "recording_now")}</div>
           <div class="v rec">${t("RECORDING")}</div>
         </div>
         <div class="card stat">
-          <div class="k">${V(this.hass, "scheduled")}</div>
+          <div class="k">${z(this.hass, "scheduled")}</div>
           <div class="v sched">${t("SCHEDULED")}</div>
         </div>
       </div>
       <div class="card">
         <div class="card-h">
-          <h2>${V(this.hass, "recordings")}</h2>
+          <h2>${z(this.hass, "recordings")}</h2>
           <div class="toolbar">
             <div class="seg" role="group">
               ${o.map((e) => E`<button aria-pressed=${e === this._filter} @click=${() => this._filter = e}>
-                  ${V(this.hass, s[e])}
+                  ${z(this.hass, s[e])}
                 </button>`)}
             </div>
             <label class="search">
-              ${Ge()}
+              ${U()}
               <input
                 type="search"
-                placeholder=${V(this.hass, "search_recordings")}
+                placeholder=${z(this.hass, "search_recordings")}
                 .value=${this._search}
                 @input=${(e) => this._search = e.target.value}
               />
@@ -2939,11 +2955,11 @@ var jt = class extends I {
           </div>
         </div>
         ${this._selected.size ? E`<div class="bulk">
-              <span>${V(this.hass, "selected", { count: this._selected.size })}</span>
+              <span>${z(this.hass, "selected", { count: this._selected.size })}</span>
               <button class="btn danger" ?disabled=${this._busy} @click=${() => this._delete([...this._selected])}>
-                ${qe()}${V(this.hass, "delete_selected")}
+                ${W()}${z(this.hass, "delete_selected")}
               </button>
-              <button class="btn" @click=${() => this._selected = /* @__PURE__ */ new Set()}>${V(this.hass, "clear_selection")}</button>
+              <button class="btn" @click=${() => this._selected = /* @__PURE__ */ new Set()}>${z(this.hass, "clear_selection")}</button>
             </div>` : k}
         <div class="table-box">
           ${i.length ? E`<table>
@@ -2957,18 +2973,18 @@ var jt = class extends I {
                       />
                     </th>
                     <th class="thumb-col"></th>
-                    <th>${V(this.hass, "title")}</th>
-                    <th>${V(this.hass, "channel")}</th>
-                    <th>${V(this.hass, "date")}</th>
-                    <th>${V(this.hass, "length")}</th>
-                    <th>${V(this.hass, "status")}</th>
+                    <th>${z(this.hass, "title")}</th>
+                    <th>${z(this.hass, "channel")}</th>
+                    <th>${z(this.hass, "date")}</th>
+                    <th>${z(this.hass, "length")}</th>
+                    <th>${z(this.hass, "status")}</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   ${this._rows(i).map((e) => Array.isArray(e) ? this._renderGroup(e) : this._renderRecording(e, !1))}
                 </tbody>
-              </table>` : E`<p class="card-b muted">${this.data ? V(this.hass, "no_recordings") : V(this.hass, "loading")}</p>`}
+              </table>` : E`<p class="card-b muted">${this.data ? z(this.hass, "no_recordings") : z(this.hass, "loading")}</p>`}
         </div>
       </div>
     </div>`;
@@ -2984,17 +3000,17 @@ var jt = class extends I {
           />
         </td>
         <td></td>
-        <td colspan="5">${e[0].title} <span class="muted">· ${V(this.hass, "episodes", { count: e.length })}</span></td>
+        <td colspan="5">${e[0].title} <span class="muted">· ${z(this.hass, "episodes", { count: e.length })}</span></td>
         <td>
           ${n ? E`<button class="btn" ?disabled=${this._busy} @click=${() => this._stopSeries(n, e[0].title)}>
-                ${V(this.hass, "stop_series")}
+                ${z(this.hass, "stop_series")}
               </button>` : k}
         </td>
       </tr>
       ${e.map((e) => this._renderRecording(e, !0))}`;
 	}
 	_renderRecording(e, t) {
-		let n = H(this.hass, {
+		let n = B(this.hass, {
 			day: "2-digit",
 			month: "2-digit",
 			hour: "2-digit",
@@ -3020,23 +3036,23 @@ var jt = class extends I {
       <td class="actions">
         ${e.status === "FINISHED" ? E`<button
               class="play-btn"
-              aria-label=${V(this.hass, "play_recording")}
-              title=${V(this.hass, "play_recording")}
+              aria-label=${z(this.hass, "play_recording")}
+              title=${z(this.hass, "play_recording")}
               @click=${() => X(this, { recording: e })}
             >
-              ${Xe()}
+              ${$e()}
             </button>` : k}
-        <button class="icon-btn" aria-label=${V(this.hass, "delete")} title=${V(this.hass, "delete")} ?disabled=${this._busy} @click=${() => this._delete([e.id])}>
-          ${qe()}
+        <button class="icon-btn" aria-label=${z(this.hass, "delete")} title=${z(this.hass, "delete")} ?disabled=${this._busy} @click=${() => this._delete([e.id])}>
+          ${W()}
         </button>
       </td>
     </tr>`;
 	}
 	_status(e) {
 		switch (e) {
-			case "RECORDING": return E`<span class="chip rec">${G()}${V(this.hass, "rec")}</span>`;
-			case "SCHEDULED": return E`<span class="chip sched">${W(14)}${V(this.hass, "scheduled")}</span>`;
-			case "FINISHED": return E`<span class="chip">${V(this.hass, "recorded")}</span>`;
+			case "RECORDING": return E`<span class="chip rec">${G()}${z(this.hass, "rec")}</span>`;
+			case "SCHEDULED": return E`<span class="chip sched">${H(14)}${z(this.hass, "scheduled")}</span>`;
+			case "FINISHED": return E`<span class="chip">${z(this.hass, "recorded")}</span>`;
 			default: return E`<span class="chip">${e}</span>`;
 		}
 	}
@@ -3161,9 +3177,9 @@ var jt = class extends I {
     `];
 	}
 };
-customElements.define("waipu-recordings-tab", jt);
+customElements.define("waipu-recordings-tab", Pt);
 // src/waipu-tv-panel.ts
-var Mt = "waipu-tv.last-watched", Nt = class extends I {
+var Ft = "waipu-tv.last-watched", It = class extends P {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -3191,7 +3207,7 @@ var Mt = "waipu-tv.last-watched", Nt = class extends I {
 			if (!this._channels) return;
 			let e = null;
 			try {
-				e = localStorage.getItem(Mt);
+				e = localStorage.getItem(Ft);
 			} catch {}
 			let t = this._channels.channels.find((e) => e.favorite) ?? this._channels.channels[0];
 			this._navigate(e ?? (t ? `/watch/${encodeURIComponent(t.id)}` : ""), !0);
@@ -3206,7 +3222,7 @@ var Mt = "waipu-tv.last-watched", Nt = class extends I {
 		if (e !== this._watchPath && (n === "watch" ? this._channels : this._recordings)) {
 			this._watchPath = e;
 			try {
-				localStorage.setItem(Mt, e);
+				localStorage.setItem(Ft, e);
 			} catch {}
 			if (n === "watch") this._watch = {
 				channel: decodeURIComponent(r),
@@ -3228,16 +3244,16 @@ var Mt = "waipu-tv.last-watched", Nt = class extends I {
 	}
 	async _reload(e) {
 		try {
-			e === "channels" ? this._channels = await Me(this.hass) : this._recordings = await Pe(this.hass);
+			e === "channels" ? this._channels = await Pe(this.hass) : this._recordings = await Ie(this.hass);
 		} catch (e) {
-			this._showToast(V(this.hass, "error", { message: e.message ?? String(e) }));
+			this._showToast(z(this.hass, "error", { message: e.message ?? String(e) }));
 		}
 	}
 	_showToast(e) {
 		this._toast = e, window.clearTimeout(this._toastTimer), this._toastTimer = window.setTimeout(() => this._toast = void 0, 4e3);
 	}
 	async _refresh() {
-		this._showToast(V(this.hass, "refreshing")), await this.hass.callService("button", "press", { entity_id: "button.waipu_tv_refresh" }), await Promise.all([this._reload("channels"), this._reload("recordings")]);
+		this._showToast(z(this.hass, "refreshing")), await this.hass.callService("button", "press", { entity_id: "button.waipu_tv_refresh" }), await Promise.all([this._reload("channels"), this._reload("recordings")]);
 	}
 	render() {
 		if (!this.hass) return k;
@@ -3252,8 +3268,8 @@ var Mt = "waipu-tv.last-watched", Nt = class extends I {
           <ha-menu-button .hass=${this.hass} .narrow=${this.narrow}></ha-menu-button>
           <h1>waipu.tv</h1>
           ${this._channels?.subscription ? E`<span class="pill">${this._channels.subscription}</span>` : k}
-          <button class="icon-btn" title=${V(this.hass, "refresh")} aria-label=${V(this.hass, "refresh")} @click=${this._refresh}>
-            ${We()}
+          <button class="icon-btn" title=${z(this.hass, "refresh")} aria-label=${z(this.hass, "refresh")} @click=${this._refresh}>
+            ${Ye()}
           </button>
         </div>
         <div class="tabs" role="tablist">
@@ -3264,7 +3280,7 @@ var Mt = "waipu-tv.last-watched", Nt = class extends I {
 			e === "watch" ? this._watch || this._navigate("/watch") : (this._tab = e, this._watch && this._navigate(""));
 		}}
             >
-              ${V(this.hass, e)}
+              ${z(this.hass, e)}
             </button>`)}
         </div>
       </header>
@@ -3273,8 +3289,9 @@ var Mt = "waipu-tv.last-watched", Nt = class extends I {
             .channels=${this._channels?.channels ?? []}
             .recordings=${this._recordings?.recordings ?? []}
             .instantRestart=${this._channels?.instant_restart ?? !1}
+            .audioLanguage=${this._channels?.audio_language ?? null}
             .target=${this._watch}
-          ></waipu-player>` : this._linkPending() ? E`<p class="pending">${V(this.hass, "loading")}</p>` : this._renderTab()}
+          ></waipu-player>` : this._linkPending() ? E`<p class="pending">${z(this.hass, "loading")}</p>` : this._renderTab()}
       ${this._toast ? E`<div class="toast" role="status">${this._toast}</div>` : k}
     `;
 	}
@@ -3378,4 +3395,4 @@ var Mt = "waipu-tv.last-watched", Nt = class extends I {
     `];
 	}
 };
-customElements.define("waipu-tv-panel", Nt);
+customElements.define("waipu-tv-panel", It);

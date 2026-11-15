@@ -15,13 +15,16 @@ import {
   fetchProgram,
   fetchRecordingStream,
   fetchStream,
+  fetchUserSettings,
   record,
+  saveUserSettings,
   setFavorite,
   type Channel,
   type DrmSystem,
   type HomeAssistant,
   type Program,
   type Recording,
+  type UserSettings,
 } from "./api";
 import { formatter, t } from "./i18n";
 import {
@@ -138,17 +141,18 @@ function audioLabel(track: shakaLib.extern.AudioTrack) {
   return [track.label || track.language, `${layout}${codec ? ` (${codec})` : ""}`].filter(Boolean).join(" · ");
 }
 
-/** 5.1 when the stream has it in the language playing and the browser can decode it (Shaka only
- * lists playable tracks: Chrome can't decode Dolby Digital, Safari can). Applied once per start, so
- * a choice made in the audio menu sticks. */
-function preferSurround(player: shakaLib.Player) {
+/** The preferred language when the stream has it, else the one playing; within it the most
+ * channels the browser can decode, so 5.1 where possible (Shaka only lists playable tracks: Chrome
+ * can't decode Dolby Digital, Safari can). Applied once per start. */
+function pickAudio(player: shakaLib.Player, language: string | null | undefined) {
   const tracks = player.getAudioTracks();
   const active = tracks.find((a) => a.active);
-  if (!active || (active.channelsCount ?? 2) > 2) return;
-  const surround = tracks
-    .filter((a) => a.language === active.language && (a.channelsCount ?? 0) > 2)
+  if (!active) return;
+  const wanted = language && tracks.some((a) => a.language === language) ? language : active.language;
+  const best = tracks
+    .filter((a) => a.language === wanted)
     .sort((a, b) => (b.channelsCount ?? 0) - (a.channelsCount ?? 0))[0];
-  if (surround) player.selectAudioTrack(surround);
+  if (best && best !== active) player.selectAudioTrack(best);
 }
 
 const clock = (seconds: number) => {
@@ -175,6 +179,7 @@ class WaipuPlayer extends LitElement {
     channels: { attribute: false },
     recordings: { attribute: false },
     instantRestart: { type: Boolean },
+    audioLanguage: { attribute: false },
     target: { attribute: false },
     _blocked: { state: true },
     _error: { state: true },
@@ -197,6 +202,8 @@ class WaipuPlayer extends LitElement {
   declare channels: Channel[];
   declare recordings: Recording[];
   declare instantRestart: boolean;
+  /** The integration's default; a language picked in the audio menu overrides it for the user. */
+  declare audioLanguage: string | null;
   declare target: WatchTarget;
   declare _blocked?: { title: string; text: string };
   declare _error?: string;
@@ -217,6 +224,7 @@ class WaipuPlayer extends LitElement {
   private _playId = 0;
   private _timers: number[] = [];
   private _describedId?: string;
+  private _settings?: Promise<UserSettings>;
 
   constructor() {
     super();
@@ -348,6 +356,8 @@ class WaipuPlayer extends LitElement {
     try {
       const shaka = await loadShaka();
       licenseHass = this.hass;
+      this._settings ??= fetchUserSettings(this.hass).catch(() => ({}));
+      const settings = await this._settings;
       const { url } =
         "recording" in target
           ? await fetchRecordingStream(this.hass, target.recording.id, protocol)
@@ -374,7 +384,7 @@ class WaipuPlayer extends LitElement {
       };
       for (const event of ["trackschanged", "variantchanged", "textchanged", "adaptation"]) player.addEventListener(event, tracks);
       await player.load(url);
-      preferSurround(player);
+      pickAudio(player, settings.audio_language ?? this.audioLanguage);
       tracks();
     } catch (err) {
       if (playId === this._playId) this._fail(err);
@@ -425,6 +435,14 @@ class WaipuPlayer extends LitElement {
     const active = this._text.find((x) => x.active);
     this._player?.selectTextTrack(active ? null : this._text[0]);
     this._text = this._player?.getTextTracks() ?? [];
+  }
+
+  /** A track picked in the audio menu; its language becomes the user's preference. */
+  private async _chooseAudio(track: shakaLib.extern.AudioTrack) {
+    this._player?.selectAudioTrack(track);
+    const settings = { ...(await this._settings), audio_language: track.language };
+    this._settings = Promise.resolve(settings);
+    saveUserSettings(this.hass, settings).catch(() => undefined);
   }
 
   private _onKey = (e: KeyboardEvent) => {
@@ -649,7 +667,7 @@ class WaipuPlayer extends LitElement {
                     aria-label=${t(this.hass, "audio_track")}
                     @change=${(e: Event) => {
                       const track = this._audio[Number((e.target as HTMLSelectElement).value)];
-                      if (track) this._player?.selectAudioTrack(track);
+                      if (track) this._chooseAudio(track);
                     }}
                   >
                     ${this._audio.map((a, i) => html`<option value=${i} ?selected=${a.active}>${audioLabel(a)}</option>`)}

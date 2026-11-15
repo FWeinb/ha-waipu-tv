@@ -188,6 +188,7 @@ class WaipuTvPanel extends LitElement {
             .channels=${this._channels?.channels ?? []}
             .recordings=${this._recordings?.recordings ?? []}
             .instantRestart=${this._channels?.instant_restart ?? false}
+            .audioLanguage=${this._channels?.audio_language ?? null}
             .target=${this._watch}
           ></waipu-player>`
         : this._linkPending()

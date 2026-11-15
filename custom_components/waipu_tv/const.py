@@ -26,6 +26,12 @@ CONF_PLAYLISTS = "playlists"
 CONF_ACCESS_KEY = "access_key"
 CONF_TIMESHIFT = "timeshift"
 CONF_HLS_PROXY = "hls_proxy"
+CONF_AUDIO_LANGUAGE = "audio_language"
+
+# the player's preferred audio language: waipu.tv's codes as seen in its streams, "qaa" being the
+# original language, "qad" audio description and "qks" clear language; others can be typed in
+AUDIO_DEFAULT = "default"  # what the stream marks as default
+AUDIO_LANGUAGES = [AUDIO_DEFAULT, "de", "en", "fr", "qaa", "qad", "qks"]
 
 GUIDE_DAYS = [1, 2, 3, 7]
 
@@ -41,4 +47,5 @@ DEFAULT_OPTIONS = {
     CONF_PLAYLISTS: True,
     CONF_TIMESHIFT: False,
     CONF_HLS_PROXY: False,
+    CONF_AUDIO_LANGUAGE: AUDIO_DEFAULT,
 }

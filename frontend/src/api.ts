@@ -53,6 +53,8 @@ export interface ChannelsResult {
   subscription: string | null;
   instant_restart: boolean;
   channels: Channel[];
+  /** The player's default audio language from the integration options; null: the stream's. */
+  audio_language: string | null;
 }
 
 export interface GuideResult {
@@ -128,3 +130,19 @@ export const fetchLicense = (hass: HomeAssistant, system: DrmSystem, challenge: 
 
 export const fetchFairplayCertificate = (hass: HomeAssistant) =>
   ws<{ certificate: string }>(hass, "fairplay_certificate");
+
+/** Per-user panel settings, kept by Home Assistant with the user's frontend data, so they follow
+ * the user to every device. */
+export interface UserSettings {
+  audio_language?: string;
+}
+
+const USER_DATA_KEY = "waipu_tv";
+
+export const fetchUserSettings = (hass: HomeAssistant) =>
+  hass
+    .callWS<{ value: UserSettings | null }>({ type: "frontend/get_user_data", key: USER_DATA_KEY })
+    .then((r) => r.value ?? {});
+
+export const saveUserSettings = (hass: HomeAssistant, value: UserSettings) =>
+  hass.callWS<null>({ type: "frontend/set_user_data", key: USER_DATA_KEY, value });

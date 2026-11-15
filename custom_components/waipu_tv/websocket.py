@@ -15,7 +15,9 @@ from homeassistant.util import dt as dt_util
 from .api import Program, Recording
 from .api.playlist import FILTERS
 from .const import (
+    AUDIO_DEFAULT,
     CONF_ACCESS_KEY,
+    CONF_AUDIO_LANGUAGE,
     CONF_HLS_PROXY,
     CONF_PLAYLISTS,
     CONF_TIMESHIFT,
@@ -65,14 +67,18 @@ def _recording(r: Recording) -> dict[str, Any]:
 @websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/channels"})
 @callback
 def ws_channels(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]) -> None:
-    """All channels of the account, favorites marked, in the account's order."""
-    data = loaded_data(hass).channels.data
+    """All channels of the account, favorites marked, in the account's order, and the player's
+    default audio language (users can override it; the panel keeps that in their user data)."""
+    coordinator = loaded_data(hass).channels
+    data = coordinator.data
+    language = coordinator.config_entry.options.get(CONF_AUDIO_LANGUAGE, AUDIO_DEFAULT)
     connection.send_result(
         msg["id"],
         {
             "subscription": data.account.subscription,
             "instant_restart": data.account.instant_restart,
             "channels": [asdict(c) for c in data.channels],
+            "audio_language": None if language == AUDIO_DEFAULT else language,
         },
     )
 

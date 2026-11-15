@@ -33,8 +33,10 @@ Setup has three steps; the last two are also the integration's options.
 2. **Guide & entities:** which channels to import (all visible, favorites only, live TV only), how
    many guide days to load, whether to load descriptions and cast for the favorites' programs, and
    the update intervals.
-3. **Playlist server:** on or off, the access key, time-shift from program start and the HLS
-   playlist proxy.
+3. **Playlist server:** on or off, the access key, time-shift from program start, the HLS
+   playlist proxy, and the player's preferred audio language (for example original language or
+   audio description). Each user can pick their own in the player's audio menu; Home Assistant
+   remembers it for them on every device.
 
 ## Panel
 

@@ -45,6 +45,7 @@ async def test_channels(ws):
     assert msg["success"]
     result = msg["result"]
     assert result["subscription"] == "perfect plus"
+    assert result["audio_language"] is None  # the stream's default"
     assert [c["id"] for c in result["channels"] if c["favorite"]] == ["ard"]
     assert result["channels"][0] == {
         "id": "ard",

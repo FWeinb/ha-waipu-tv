@@ -32,10 +32,12 @@ from homeassistant.helpers.selector import (
 
 from .api import WaipuAuthError, WaipuClient, WaipuError
 from .const import (
+    AUDIO_LANGUAGES,
     CHANNELS_FAVORITES,
     CHANNELS_LIVE,
     CHANNELS_VISIBLE,
     CONF_ACCESS_KEY,
+    CONF_AUDIO_LANGUAGE,
     CONF_CHANNELS,
     CONF_CHANNELS_INTERVAL,
     CONF_DEVICE_ID,
@@ -141,6 +143,16 @@ def _playlists_schema(values: Mapping[str, Any]) -> probatio.Schema:
             ): str,
             probatio.Required(CONF_TIMESHIFT, default=values[CONF_TIMESHIFT]): bool,
             probatio.Required(CONF_HLS_PROXY, default=values[CONF_HLS_PROXY]): bool,
+            probatio.Required(
+                CONF_AUDIO_LANGUAGE, default=values[CONF_AUDIO_LANGUAGE]
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=AUDIO_LANGUAGES,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key=CONF_AUDIO_LANGUAGE,
+                    custom_value=True,
+                )
+            ),
         }
     )
 

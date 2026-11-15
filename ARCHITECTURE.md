@@ -95,7 +95,8 @@ port is complete and the old package is deleted.
        | Parallel guide requests | 4 | 1–8 |
 
     3. **Playlist server:** on/off, access key (generated, can be replaced), time-shift
-       from program start (off), serve HLS playlists through Home Assistant (off).
+       from program start (off), serve HLS playlists through Home Assistant (off), and the
+       player's preferred audio language (the stream's default).
 15. **Changes made through the integration reload the affected data immediately**: recording,
     deleting, setting a favorite. The intervals only apply to changes made elsewhere.
 16. **Stream quality is fixed:** the device capabilities sent to waipu.tv are up to 1080p50 H.264
@@ -269,10 +270,13 @@ port is complete and the old package is deleted.
     on live channels, and on on-demand channels worked with HLS (Safari) but not with DASH (Chrome).
     No watch progress in v1.
 55. **Audio:** every stream checked carries AAC stereo next to Dolby Digital (AC-3) 5.1 in the main
-    language. The player picks 5.1 when the browser can decode it, in the language already playing
-    (so audio description or clear language never win); once per start, so a choice in the audio
-    menu sticks. Chrome can't decode Dolby Digital and stays on AAC; Safari can. waipu.tv's CDN sends
-    `Access-Control-Allow-Origin: *`.
+    language; some add audio description (`qad`), clear language (`qks`), other languages or the
+    original language (`qaa`, arte). At each start the player takes the preferred language when the
+    stream has it, else the one playing, and within it the most channels the browser can decode, so
+    5.1 where possible (Chrome can't decode Dolby Digital and stays on AAC; Safari can). The
+    preference is the user's, else the integration option: a language picked in the audio menu is
+    stored in the user's Home Assistant frontend data (`frontend/set_user_data`, key `waipu_tv`), so
+    it follows the user to every device. waipu.tv's CDN sends `Access-Control-Allow-Origin: *`.
 56. **Deep links:** the player follows the URL: `/waipu-tv/watch/<channel>` (plus `/from-start`) and
     `/waipu-tv/recording/<id>`, set with Home Assistant's own navigation (`pushState` and
     `location-changed`), so links can be bookmarked or shared and Back leaves the player. Switching
