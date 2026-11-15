@@ -160,4 +160,6 @@ login, channels, streams, the Widevine license, the guide and recordings.
 
 ## License
 
-[GPL-3.0-or-later](LICENSE).
+[GPL-3.0-or-later](LICENSE), except the waipu.tv icon in
+[`custom_components/waipu_tv/brand`](custom_components/waipu_tv/brand/NOTICE.md): the waipu.tv
+logo is a trademark of exaring AG, owned by them, and only used to identify the service.
