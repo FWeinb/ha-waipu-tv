@@ -39,7 +39,7 @@ def _with_key(url: str, key: str) -> str:
 
 
 def _with_params(url: str, params: dict[str, str | None]) -> str:
-    """Append params (None values skipped) without URL-encoding catch-up placeholders."""
+    """Append params, None values skipped."""
     query = "&".join(f"{k}={v}" for k, v in params.items() if v is not None)
     return url + ("?" + query if query else "")
 
@@ -66,11 +66,10 @@ def render_m3u(
     protocol: str = "auto",
     hls_proxy: bool | None = None,
     timeshift: bool = False,
-    catchup: bool = False,
 ) -> str:
     """hls_proxy: True/False adds proxy=1/0 to HLS stream URLs, None keeps the server default.
     timeshift: live streams start at the beginning of the running program (rewind buffer).
-    catchup: catch-up attributes, so players can restart programs from the guide."""
+    No catch-up attributes: waipu.tv can't play programs from the guide's past."""
     epg_url = _with_key(epg_url, key)
     lines = [f'#EXTM3U url-tvg="{epg_url}" x-tvg-url="{epg_url}"']
     for ch in channels:
@@ -83,11 +82,6 @@ def render_m3u(
             f'tvg-id="{ch.id}" tvg-chno="{ch.number}" tvg-name="{name}" '
             f'tvg-logo="{ch.logo}" group-title="{";".join(groups)}"'
         )
-        if catchup and not ch.vod:
-            # {utc}: program start as unix time, filled in by Kodi IPTV Simple and TiviMate;
-            # waipu.tv only restarts running or recently started programs, hence one day
-            source = _with_key(_with_params(stream, {"proxy": proxy, "start": "{utc}"}), key)
-            attrs += f' catchup="default" catchup-days="1" catchup-source="{source}"'
         lines.append(f"#EXTINF:-1 {attrs},{name}")
         if is_dash:
             lines += _dash_props(base_url, key)

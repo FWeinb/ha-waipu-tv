@@ -93,8 +93,8 @@ client, guide cache and playlist endpoints. It is ported into the integration an
        | Guide refresh | 2 h | at least 30 min |
        | Parallel guide requests | 4 | 1–8 |
 
-    3. **Playlist server:** on/off, access key (generated, can be replaced), catch-up (on),
-       time-shift from program start (off), serve HLS playlists through Home Assistant (off).
+    3. **Playlist server:** on/off, access key (generated, can be replaced), time-shift
+       from program start (off), serve HLS playlists through Home Assistant (off).
 15. **Changes made through the integration reload the affected data immediately**: recording,
     deleting, setting a favorite. The intervals only apply to changes made elsewhere.
 16. **Stream quality is fixed:** the device capabilities sent to waipu.tv are up to 1080p50 H.264
@@ -180,7 +180,7 @@ client, guide cache and playlist endpoints. It is ported into the integration an
     locks out old links.
 33. **Endpoints:** `all.m3u`, `favorites.m3u`, `live.m3u`, `vod.m3u`, `recordings.m3u`, `epg.xml`
     (gzipped on request), stream redirects and the Widevine license relay. Playlist options
-    `hidden=1`, `drm=0`, `protocol=`, `hls_proxy=`, `timeshift=1`, `catchup=0` as today. Each
+    `hidden=1`, `drm=0`, `protocol=`, `hls_proxy=`, `timeshift=1` as today. Each
     playlist's `url-tvg` points to the guide for the same channel selection.
 34. **No re-encoding, ever.** Each stream request resolves a fresh stream URL and redirects to
     waipu.tv's CDN.
@@ -196,9 +196,10 @@ client, guide cache and playlist endpoints. It is ported into the integration an
     without gzip, which ffmpeg-based players (VLC, Jellyfin) don't send; the option, or `hls_proxy=1`
     per playlist, serves HLS playlists through Home Assistant. Segments always come from the CDN.
     Proxied URLs are HMAC-signed so the proxy can't fetch arbitrary URLs.
-39. **Time-shift and catch-up use waipu.tv's instant restart** and are only offered when the
-    account has it. Time-shift starts live streams at the running program's start (falling back to
-    live); catch-up uses `catchup="default"`, `catchup-days="1"` and `?start={utc}`.
+39. **Time-shift uses waipu.tv's instant restart** and is only offered when the account has it:
+    live streams start at the running program's start, falling back to live. **No catch-up:**
+    waipu.tv can't play programs that already ended (confirmed on an LG C9), so playlists carry no
+    catch-up attributes.
 40. **Unexpected errors answer HTTP 500** and are logged instead of dropping the connection.
 
 ## Decided during implementation
@@ -244,6 +245,7 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 - **Playlist-server switch entity:** configuration only.
 - **Configurable address for players:** one address can't fit several networks or VLANs; the
   address is mirrored from each request instead (decision 42).
+- **Catch-up attributes in playlists:** waipu.tv can't play ended programs; only time-shift works.
 - **Per-channel calendars or "now playing" sensors:** one calendar covers it.
 - **Favorites order stored only in Home Assistant:** would drift from the waipu.tv apps.
 
@@ -253,15 +255,14 @@ Run against a real account so far: sign-in, channels, recordings, the full backg
 (about 19 s; 30 s with guide details) and the panel in headless Chrome (light, dark, narrow) in the
 dev instance. On an LG C9 with [webos-iptv-player](https://github.com/lennylxx/webos-iptv-player),
 `favorites.m3u` played DRM (DASH + Widevine through the license relay) and non-DRM (HLS)
-channels, and catch-up showed up in the player. The manual release checklist still covers:
+channels, and time-shift worked. The manual release checklist still covers:
 
-- recording and deleting, favorites and instant restart (ported or captured, not tested end to
-  end); catch-up and time-shift actually playing from an earlier start;
+- recording and deleting, favorites (ported or captured, not tested end to end);
 - the series-recording and cancel calls (ported from pvr.waipu, not tested);
 - the delete body: pvr.waipu sends `{"ids": [...]}`, ha-waipu `{"recordingIds": [...]}`; we follow
   pvr.waipu;
 - that HLS segments don't need gzip, only playlists;
-- that on-demand channels play via DASH in Kodi and TiviMate, not only in the player you tried;
-- TiviMate's support for the `{utc}` catch-up placeholder;
+- that on-demand channels play via DASH in Kodi and TiviMate, not only in the player you tried
+  (they do on the LG C9);
 - what the cast `role` of the program API holds (character or job); XMLTV writes it as the actor's
   role.

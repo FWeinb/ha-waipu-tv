@@ -127,7 +127,7 @@ async def test_playlists_for_admins(ws):
     assert result["urls"]["favorites"] == f"{base}/favorites.m3u?key={KEY}"
     assert result["urls"]["epg"] == f"{base}/epg.xml?key={KEY}"
     assert set(result["urls"]) == {"all", "favorites", "live", "vod", "recordings", "epg"}
-    assert result["defaults"] == {"catchup": True, "timeshift": False, "hls_proxy": False}
+    assert result["defaults"] == {"timeshift": False, "hls_proxy": False}
     assert result["instant_restart"] is True
 
 

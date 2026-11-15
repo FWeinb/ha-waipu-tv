@@ -613,7 +613,6 @@ var V = (e, t, n = {}) => e.callWS({
 	param_hidden: "Include channels hidden in your waipu.tv channel list.",
 	param_drm: "0: only channels without DRM (HLS), for players without Widevine.",
 	param_protocol: "auto: HLS for channels pvr.waipu plays without DRM, DASH + Widevine for all others. Recordings: dash or hls.",
-	param_catchup: "Catch-up: players can restart running and recently started programs from the guide.",
 	param_timeshift: "Live channels open at the start of the running program so you can rewind.",
 	param_hls_proxy: "Serve HLS playlists through Home Assistant, for ffmpeg-based players (VLC, Jellyfin).",
 	param_filter: "Channel selection of the guide: all, favorites, live or vod.",
@@ -711,7 +710,6 @@ var V = (e, t, n = {}) => e.callWS({
 	param_hidden: "Auch Sender, die in deiner waipu.tv-Senderliste ausgeblendet sind.",
 	param_drm: "0: nur Sender ohne DRM (HLS), für Player ohne Widevine.",
 	param_protocol: "auto: HLS für Sender, die pvr.waipu ohne DRM abspielt, DASH + Widevine für alle anderen. Aufnahmen: dash oder hls.",
-	param_catchup: "Catch-up: Player können laufende und kürzlich begonnene Sendungen aus dem Programm neu starten.",
 	param_timeshift: "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
 	param_hls_proxy: "HLS-Playlists über Home Assistant ausliefern, für ffmpeg-basierte Player (VLC, Jellyfin).",
 	param_filter: "Senderauswahl des Programms: all, favorites, live oder vod.",
@@ -1816,13 +1814,6 @@ var qe = [
 				"auto",
 				`${r}, recordings.m3u`,
 				H(this.hass, "param_protocol")
-			],
-			[
-				"catchup",
-				"0 | 1",
-				n(e.defaults.catchup),
-				r,
-				H(this.hass, "param_catchup") + i
 			],
 			[
 				"timeshift",

@@ -15,7 +15,6 @@ from .api import Program, Recording
 from .api.playlist import FILTERS
 from .const import (
     CONF_ACCESS_KEY,
-    CONF_CATCHUP,
     CONF_HLS_PROXY,
     CONF_PLAYLISTS,
     CONF_TIMESHIFT,
@@ -206,7 +205,6 @@ def ws_playlists(hass: HomeAssistant, connection: Connection, msg: dict[str, Any
             "urls": urls,
             # defaults of the per-playlist options, for the panel's explanation
             "defaults": {
-                "catchup": entry.options[CONF_CATCHUP],
                 "timeshift": entry.options[CONF_TIMESHIFT],
                 "hls_proxy": entry.options[CONF_HLS_PROXY],
             },

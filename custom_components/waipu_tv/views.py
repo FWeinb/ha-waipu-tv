@@ -30,7 +30,6 @@ from .api.playlist import (
 )
 from .const import (
     CONF_ACCESS_KEY,
-    CONF_CATCHUP,
     CONF_HLS_PROXY,
     CONF_PLAYLISTS,
     CONF_TIMESHIFT,
@@ -162,7 +161,7 @@ class _Request:
         }
         guide = {k: v for k, v in guide.items() if v and v != "all"}
         epg_url = f"{self.base_url}/epg.xml" + ("?" + urlencode(guide) if guide else "")
-        # time-shift and catch-up need the account's instant restart
+        # time-shift needs the account's instant restart
         restart = self.data.channels.data.account.instant_restart
         body = render_m3u(
             self._channels(selection),
@@ -172,7 +171,6 @@ class _Request:
             protocol,
             hls_proxy=hls_proxy,
             timeshift=restart and _flag(self.query, "timeshift", self.options[CONF_TIMESHIFT]),
-            catchup=restart and _flag(self.query, "catchup", self.options[CONF_CATCHUP]),
         )
         return web.Response(
             text=body,
@@ -219,14 +217,7 @@ class _Request:
         channel = self._channel(channel_id)
         protocol = channel_protocol(channel, protocol)
         client = self.data.client
-        if start := self.query.get("start"):
-            # catch-up from the guide: no fallback, the player shows the error
-            if not start.isdigit():
-                raise BadRequest("start must be a unix time")
-            upstream = await client.stream_url(
-                channel.id, protocol, dt_util.utc_from_timestamp(int(start))
-            )
-        elif self.query.get("timeshift") == "1":
+        if self.query.get("timeshift") == "1":
             upstream = await self._timeshift_url(channel, protocol)
         else:
             upstream = await client.stream_url(channel.id, protocol)

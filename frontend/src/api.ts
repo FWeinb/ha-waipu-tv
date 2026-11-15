@@ -72,7 +72,7 @@ export interface PlaylistsResult {
   enabled: boolean;
   entry_id: string;
   urls: Record<string, string>;
-  defaults: { catchup: boolean; timeshift: boolean; hls_proxy: boolean };
+  defaults: { timeshift: boolean; hls_proxy: boolean };
   instant_restart: boolean;
 }
 

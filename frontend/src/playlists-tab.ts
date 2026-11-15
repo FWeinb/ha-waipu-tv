@@ -88,7 +88,6 @@ class WaipuPlaylistsTab extends LitElement {
       ["hidden", "0 | 1", onOff(false), `${m3u}, epg.xml`, t(this.hass, "param_hidden")],
       ["drm", "0 | 1", onOff(true), `${m3u}, epg.xml`, t(this.hass, "param_drm")],
       ["protocol", "auto | hls | dash", "auto", `${m3u}, recordings.m3u`, t(this.hass, "param_protocol")],
-      ["catchup", "0 | 1", fromOptions(data.defaults.catchup), m3u, t(this.hass, "param_catchup") + restart],
       ["timeshift", "0 | 1", fromOptions(data.defaults.timeshift), m3u, t(this.hass, "param_timeshift") + restart],
       ["hls_proxy", "0 | 1", fromOptions(data.defaults.hls_proxy), m3u, t(this.hass, "param_hls_proxy")],
       ["filter", "all | favorites | live | vod", "all", "epg.xml", t(this.hass, "param_filter")],

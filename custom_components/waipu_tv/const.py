@@ -24,7 +24,6 @@ CONF_GUIDE_PARALLEL = "guide_parallel"
 # step 3: playlist server
 CONF_PLAYLISTS = "playlists"
 CONF_ACCESS_KEY = "access_key"
-CONF_CATCHUP = "catchup"
 CONF_TIMESHIFT = "timeshift"
 CONF_HLS_PROXY = "hls_proxy"
 
@@ -40,7 +39,6 @@ DEFAULT_OPTIONS = {
     CONF_GUIDE_INTERVAL: 120,
     CONF_GUIDE_PARALLEL: 4,
     CONF_PLAYLISTS: True,
-    CONF_CATCHUP: True,
     CONF_TIMESHIFT: False,
     CONF_HLS_PROXY: False,
 }

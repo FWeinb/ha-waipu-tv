@@ -58,13 +58,11 @@
         "data": {
           "playlists": "M3U-Playlists & XMLTV-Programm",
           "access_key": "Zugangsschlüssel",
-          "catchup": "Catch-up aus dem TV-Programm",
           "timeshift": "Timeshift ab Sendungsbeginn",
           "hls_proxy": "HLS-Playlists über Home Assistant ausliefern"
         },
         "data_description": {
           "access_key": "Wird an jede Playlist-URL als ?key=… angehängt. Jeder mit dem Schlüssel kann über dein Konto schauen. Leere das Feld, um einen neuen Schlüssel zu erzeugen; alte Links funktionieren dann nicht mehr.",
-          "catchup": "Player können laufende und kürzlich begonnene Sendungen neu starten.",
           "timeshift": "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
           "hls_proxy": "Nur für ffmpeg-basierte Player (VLC, Jellyfin) nötig; auch pro Playlist einstellbar."
         }
@@ -103,13 +101,11 @@
         "data": {
           "playlists": "M3U-Playlists & XMLTV-Programm",
           "access_key": "Zugangsschlüssel",
-          "catchup": "Catch-up aus dem TV-Programm",
           "timeshift": "Timeshift ab Sendungsbeginn",
           "hls_proxy": "HLS-Playlists über Home Assistant ausliefern"
         },
         "data_description": {
           "access_key": "Wird an jede Playlist-URL als ?key=… angehängt. Jeder mit dem Schlüssel kann über dein Konto schauen. Leere das Feld, um einen neuen Schlüssel zu erzeugen; alte Links funktionieren dann nicht mehr.",
-          "catchup": "Player können laufende und kürzlich begonnene Sendungen neu starten.",
           "timeshift": "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
           "hls_proxy": "Nur für ffmpeg-basierte Player (VLC, Jellyfin) nötig; auch pro Playlist einstellbar."
         }

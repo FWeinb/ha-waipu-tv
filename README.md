@@ -33,8 +33,8 @@ Setup has three steps; the last two are also the integration's options.
 2. **Guide & entities:** which channels to import (all visible, favorites only, live TV only), how
    many guide days to load, whether to load descriptions and cast for the favorites' programs, and
    the update intervals.
-3. **Playlist server:** on or off, the access key, catch-up, time-shift from program start and the
-   HLS playlist proxy.
+3. **Playlist server:** on or off, the access key, time-shift from program start and the HLS
+   playlist proxy.
 
 ## Panel
 
@@ -113,9 +113,9 @@ Options per playlist, added to the URL:
 | `protocol=hls` / `protocol=dash` | force a protocol instead of choosing per channel |
 | `hls_proxy=1` / `hls_proxy=0` | serve HLS playlists through Home Assistant, for ffmpeg-based players such as VLC or Jellyfin |
 | `timeshift=1` / `timeshift=0` | open live channels at the start of the running program |
-| `catchup=1` / `catchup=0` | restart running and recently started programs from the guide |
 
-Time-shift and catch-up need waipu.tv's instant restart in your package.
+Time-shift needs waipu.tv's instant restart in your package. waipu.tv can't play programs that
+already ended, so the playlists offer no catch-up.
 
 **DRM channels** play as DASH with Widevine. They need a player with its own Widevine support, such
 as Kodi with inputstream.adaptive, TiviMate or OTT Navigator; Home Assistant only relays the license

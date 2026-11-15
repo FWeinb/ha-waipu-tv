@@ -78,24 +78,20 @@ async def test_all_playlist(client):
     ]
     assert f"\n{BASE}/stream/ard.m3u8?key={KEY}\n" in m3u
     assert "KODIPROP" not in m3u
-    # the hidden on-demand channel plays via DASH + Widevine, without catch-up
+    # the hidden on-demand channel plays via DASH + Widevine
     m3u = await (await get(client, "all.m3u", hidden="1")).text()
     filmtastic = m3u.split("#EXTINF")[3]
     assert f"license_key={BASE}/license?key={KEY}||R{{SSM}}|" in filmtastic
     assert f"\n{BASE}/stream/filmtastic.mpd?key={KEY}\n" in filmtastic
-    assert "catchup" not in filmtastic
-    # catch-up is on by default and the account has instant restart
-    assert f'catchup-source="{BASE}/stream/ard.m3u8?start={{utc}}&key={KEY}"' in m3u
+    # no catch-up: waipu.tv can't play past programs
+    assert "catchup" not in m3u
     assert "timeshift=1" not in m3u
 
 
 async def test_playlist_options(client):
-    m3u = await (
-        await get(client, "favorites.m3u", hidden="1", drm="0", catchup="0", timeshift="1")
-    ).text()
+    m3u = await (await get(client, "favorites.m3u", hidden="1", drm="0", timeshift="1")).text()
 
     assert f'url-tvg="{BASE}/epg.xml?filter=favorites&hidden=1&drm=0&key={KEY}"' in m3u
-    assert "catchup" not in m3u
     assert f"\n{BASE}/stream/ard.m3u8?timeshift=1&key={KEY}\n" in m3u
     assert m3u.count("#EXTINF") == 1
 
@@ -124,15 +120,12 @@ async def test_stream_redirects_to_fresh_url(client, mock_waipu):
     ]
 
 
-async def test_catchup_and_timeshift_start_times(client, mock_waipu):
+async def test_timeshift_starts_at_the_running_program(client, mock_waipu):
     mock_waipu.post(URL_STREAM, json={"streamUrl": "https://cdn.example.com/ard.mpd"})
-    restart = int(datetime(2026, 11, 14, 11, 15, tzinfo=UTC).timestamp())
 
-    await get(client, "stream/ard.mpd", start=str(restart))
     await get(client, "stream/ard.mpd", timeshift="1")
 
-    catchup, timeshift = stream_requests(mock_waipu)
-    assert catchup["startTime"] == restart
+    (timeshift,) = stream_requests(mock_waipu)
     # the program running at 12:30 UTC started at 12:00 UTC
     assert timeshift["startTime"] == int(datetime(2026, 11, 14, 12, tzinfo=UTC).timestamp())
 

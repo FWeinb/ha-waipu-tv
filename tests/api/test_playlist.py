@@ -91,19 +91,13 @@ def test_hls_proxy_option():
     assert "/stream/pro7.mpd?key=k\n" in m3u  # DASH unaffected
 
 
-def test_catchup_and_timeshift():
-    m3u = render_m3u([ARD, PRO7, VOD], BASE, "k", EPG, timeshift=True, catchup=True)
+def test_timeshift():
+    m3u = render_m3u([ARD, PRO7, VOD], BASE, "k", EPG, timeshift=True)
 
-    assert (
-        'catchup="default" catchup-days="1" '
-        f'catchup-source="{BASE}/stream/ard.m3u8?start={{utc}}&key=k"'
-    ) in m3u
     assert f"\n{BASE}/stream/ard.m3u8?timeshift=1&key=k\n" in m3u
     assert f"\n{BASE}/stream/pro7.mpd?timeshift=1&key=k\n" in m3u
     vod_block = m3u.split("#EXTINF")[3]
-    assert "catchup" not in vod_block  # on-demand channels have no restart
-    assert "/stream/vodch.mpd?key=k" in vod_block
-    assert "catchup" not in render_m3u([ARD], BASE, "k", EPG)
+    assert "/stream/vodch.mpd?key=k" in vod_block  # on-demand channels have no restart
 
 
 def test_force_protocol():

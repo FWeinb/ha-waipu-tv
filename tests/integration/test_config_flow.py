@@ -43,7 +43,6 @@ GUIDE = {
 PLAYLISTS = {
     "playlists": True,
     "access_key": "",
-    "catchup": True,
     "timeshift": True,
     "hls_proxy": False,
 }
@@ -83,7 +82,6 @@ async def test_full_flow(hass, mock_token):
         "guide_parallel": 2,
         "playlists": True,
         "access_key": entry.options["access_key"],
-        "catchup": True,
         "timeshift": True,
         "hls_proxy": False,
     }

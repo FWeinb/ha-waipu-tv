@@ -58,13 +58,11 @@
         "data": {
           "playlists": "M3U playlists & XMLTV guide",
           "access_key": "Access key",
-          "catchup": "Catch-up from the guide",
           "timeshift": "Time-shift from program start",
           "hls_proxy": "Serve HLS playlists through Home Assistant"
         },
         "data_description": {
           "access_key": "Added to every playlist URL as ?key=…. Anyone with the key can watch on your account. Clear the field to generate a new key; it locks out old links.",
-          "catchup": "Players can restart running and recently started programs.",
           "timeshift": "Live channels open at the start of the running program so you can rewind.",
           "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist."
         }
@@ -103,13 +101,11 @@
         "data": {
           "playlists": "M3U playlists & XMLTV guide",
           "access_key": "Access key",
-          "catchup": "Catch-up from the guide",
           "timeshift": "Time-shift from program start",
           "hls_proxy": "Serve HLS playlists through Home Assistant"
         },
         "data_description": {
           "access_key": "Added to every playlist URL as ?key=…. Anyone with the key can watch on your account. Clear the field to generate a new key; it locks out old links.",
-          "catchup": "Players can restart running and recently started programs.",
           "timeshift": "Live channels open at the start of the running program so you can rewind.",
           "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist."
         }

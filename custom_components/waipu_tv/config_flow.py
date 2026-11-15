@@ -36,7 +36,6 @@ from .const import (
     CHANNELS_LIVE,
     CHANNELS_VISIBLE,
     CONF_ACCESS_KEY,
-    CONF_CATCHUP,
     CONF_CHANNELS,
     CONF_CHANNELS_INTERVAL,
     CONF_DEVICE_ID,
@@ -140,7 +139,6 @@ def _playlists_schema(values: Mapping[str, Any]) -> probatio.Schema:
             probatio.Optional(
                 CONF_ACCESS_KEY, description={"suggested_value": values[CONF_ACCESS_KEY]}
             ): str,
-            probatio.Required(CONF_CATCHUP, default=values[CONF_CATCHUP]): bool,
             probatio.Required(CONF_TIMESHIFT, default=values[CONF_TIMESHIFT]): bool,
             probatio.Required(CONF_HLS_PROXY, default=values[CONF_HLS_PROXY]): bool,
         }
