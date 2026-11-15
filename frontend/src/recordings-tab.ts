@@ -12,9 +12,10 @@ import {
   type RecordingsResult,
 } from "./api";
 import { formatter, t } from "./i18n";
-import { clockIcon, playIcon, recIcon, searchIcon, trashIcon } from "./icons";
+import { clockIcon, downIcon, playIcon, recIcon, trashIcon } from "./icons";
 import { shared } from "./styles";
 import { attempt, changed, toast, watch } from "./util";
+import "./search-field";
 
 type Filter = "all" | RecordingStatus;
 
@@ -36,6 +37,7 @@ class WaipuRecordingsTab extends LitElement {
     _filter: { state: true },
     _search: { state: true },
     _selected: { state: true },
+    _open: { state: true },
     _busy: { state: true },
   };
 
@@ -45,13 +47,15 @@ class WaipuRecordingsTab extends LitElement {
   declare _filter: Filter;
   declare _search: string;
   declare _selected: Set<string>;
+  declare _open: Set<number>; // expanded series groups; collapsed by default
   declare _busy: boolean;
 
   constructor() {
     super();
-    this._filter = "all";
+    this._filter = "FINISHED";
     this._search = "";
     this._selected = new Set();
+    this._open = new Set();
     this._busy = false;
   }
 
@@ -121,14 +125,9 @@ class WaipuRecordingsTab extends LitElement {
     const booked = this.data?.booked_hours ?? 0;
     const shown = this._shown();
     const shownIds = shown.map((r) => r.id);
-    const filters: Filter[] = ["all", "FINISHED", "RECORDING", "SCHEDULED"];
-    const filterLabel = {
-      all: "all",
-      FINISHED: "recorded",
-      RECORDING: "recording_now",
-      SCHEDULED: "scheduled",
-      FAILED: "all",
-    } as const;
+    // running recordings are only listed under All
+    const filters: Filter[] = ["FINISHED", "SCHEDULED", "all"];
+    const filterLabel = { FINISHED: "recorded", SCHEDULED: "scheduled", all: "all" } as const;
 
     return html`<div class="content">
       <div class="stats">
@@ -155,36 +154,23 @@ class WaipuRecordingsTab extends LitElement {
         </div>
       </div>
       <div class="card">
-        <div class="card-h">
+        <div class="card-h bar">
           <h2>${t(this.hass, "recordings")}</h2>
+          <div class="seg center" role="group">
+            ${filters.map(
+              (f) => html`<button aria-pressed=${f === this._filter} @click=${() => (this._filter = f)}>
+                ${t(this.hass, filterLabel[f as keyof typeof filterLabel])}
+              </button>`,
+            )}
+          </div>
           <div class="toolbar">
-            <div class="seg" role="group">
-              ${filters.map(
-                (f) => html`<button aria-pressed=${f === this._filter} @click=${() => (this._filter = f)}>
-                  ${t(this.hass, filterLabel[f])}
-                </button>`,
-              )}
-            </div>
-            <label class="search">
-              ${searchIcon()}
-              <input
-                type="search"
-                placeholder=${t(this.hass, "search_recordings")}
-                .value=${this._search}
-                @input=${(e: Event) => (this._search = (e.target as HTMLInputElement).value)}
-              />
-            </label>
+            <waipu-search
+              .label=${t(this.hass, "search_recordings")}
+              .value=${this._search}
+              @value-changed=${(e: CustomEvent) => (this._search = e.detail.value)}
+            ></waipu-search>
           </div>
         </div>
-        ${this._selected.size
-          ? html`<div class="bulk">
-              <span>${t(this.hass, "selected", { count: this._selected.size })}</span>
-              <button class="btn danger" ?disabled=${this._busy} @click=${() => this._delete([...this._selected])}>
-                ${trashIcon()}${t(this.hass, "delete_selected")}
-              </button>
-              <button class="btn" @click=${() => (this._selected = new Set())}>${t(this.hass, "clear_selection")}</button>
-            </div>`
-          : nothing}
         <div class="table-box">
           ${shown.length
             ? html`<table>
@@ -202,8 +188,8 @@ class WaipuRecordingsTab extends LitElement {
                     <th>${t(this.hass, "channel")}</th>
                     <th>${t(this.hass, "date")}</th>
                     <th>${t(this.hass, "length")}</th>
-                    <th>${t(this.hass, "status")}</th>
-                    <th></th>
+                    ${this._showStatus ? html`<th>${t(this.hass, "status")}</th>` : nothing}
+                    <th>${t(this.hass, "actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -214,6 +200,16 @@ class WaipuRecordingsTab extends LitElement {
               </table>`
             : html`<p class="card-b muted">${this.data ? t(this.hass, "no_recordings") : t(this.hass, "loading")}</p>`}
         </div>
+        <!-- below the table, pinned to the bottom of the window while the table scrolls -->
+        ${this._selected.size
+          ? html`<div class="bulk">
+              <span>${t(this.hass, "selected", { count: this._selected.size })}</span>
+              <button class="btn danger" ?disabled=${this._busy} @click=${() => this._delete([...this._selected])}>
+                ${trashIcon()}${t(this.hass, "delete_selected")}
+              </button>
+              <button class="btn" @click=${() => (this._selected = new Set())}>${t(this.hass, "clear_selection")}</button>
+            </div>`
+          : nothing}
       </div>
     </div>`;
   }
@@ -222,7 +218,13 @@ class WaipuRecordingsTab extends LitElement {
     const ids = group.map((r) => r.id);
     // the series is looked up from any of its episodes
     const programId = group.find((r) => r.program_id)?.program_id;
-    return html`<tr class="group">
+    const channel = this.channels.find((c) => c.id === group[0].channel_id);
+    const key = group[0].group!;
+    // folded, the row shows the latest episode's channel, date and length
+    const latest = group.reduce((a, b) => ((b.start ?? "") > (a.start ?? "") ? b : a));
+    // a search shows the matching episodes
+    const open = this._open.has(key) || !!this._search.trim();
+    return html`<tr class=${open ? "group open" : "group"}>
         <td class="check">
           <input
             type="checkbox"
@@ -230,26 +232,55 @@ class WaipuRecordingsTab extends LitElement {
             @change=${(e: Event) => this._toggle(ids, (e.target as HTMLInputElement).checked)}
           />
         </td>
-        <td></td>
-        <td colspan="5">${group[0].title} <span class="muted">· ${t(this.hass, "episodes", { count: group.length })}</span></td>
-        <td>
+        <td><div class="stack">${this._thumb(group.find((r) => r.image) ?? group[0])}</div></td>
+        <td class="title" colspan=${open ? (this._showStatus ? 5 : 4) : 1}>
+          <button class="expander" aria-expanded=${open} @click=${() => this._toggleGroup(key)}>
+            <span>${group[0].title}${downIcon(18)}</span>
+            <span>${[t(this.hass, "episodes", { count: group.length }), open && channel?.name].filter(Boolean).join(" · ")}</span>
+          </button>
+        </td>
+        ${open ? nothing : html`${this._details(latest)}${this._showStatus ? html`<td></td>` : nothing}`}
+        <td class="actions">
           ${programId
-            ? html`<button class="btn" ?disabled=${this._busy} @click=${() => this._stopSeries(programId, group[0].title)}>
+            ? html`<button class="btn small" ?disabled=${this._busy} @click=${() => this._stopSeries(programId, group[0].title)}>
                 ${t(this.hass, "stop_series")}
               </button>`
             : nothing}
         </td>
       </tr>
-      ${group.map((r) => this._renderRecording(r, true))}`;
+      ${open ? group.map((r, i) => this._renderRecording(r, true, i === group.length - 1)) : nothing}`;
   }
 
-  private _renderRecording(r: Recording, child: boolean) {
+  /** The status says nothing new when the filter already picks one. */
+  private get _showStatus() {
+    return this._filter === "all";
+  }
+
+  private _toggleGroup(key: number) {
+    const open = new Set(this._open);
+    if (!open.delete(key)) open.add(key);
+    this._open = open;
+  }
+
+  private _thumb(r: Recording) {
+    return r.image ? html`<img class="thumb" src=${r.image} alt="" loading="lazy" />` : html`<div class="thumb"></div>`;
+  }
+
+  /** The channel, date and length cells. */
+  private _details(r: Recording) {
     const date = formatter(this.hass, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
     const channel = this.channels.find((c) => c.id === r.channel_id);
+    return html`<td>${channel?.name ?? r.channel_id}</td>
+      <td>${r.start ? date.format(new Date(r.start)) : ""}</td>
+      <td>${Math.round(r.duration / 60)} min</td>`;
+  }
+
+  /** child: an episode of the series group above; last: its last one. */
+  private _renderRecording(r: Recording, child: boolean, last = false) {
     const episode = [r.season && r.episode ? `S${r.season}E${r.episode}` : "", r.episode_title ?? ""]
       .filter(Boolean)
       .join(" · ");
-    return html`<tr class=${child ? "child" : ""}>
+    return html`<tr class=${child ? (last ? "child last" : "child") : ""}>
       <td class="check">
         <input
           type="checkbox"
@@ -257,15 +288,13 @@ class WaipuRecordingsTab extends LitElement {
           @change=${(e: Event) => this._toggle([r.id], (e.target as HTMLInputElement).checked)}
         />
       </td>
-      <td>${r.image ? html`<img class="thumb" src=${r.image} alt="" loading="lazy" />` : html`<div class="thumb"></div>`}</td>
+      <td class="thumb-cell">${this._thumb(r)}</td>
       <td class="title">
         <div>${child && episode ? episode : r.title}</div>
         ${!child && episode ? html`<div>${episode}</div>` : nothing}
       </td>
-      <td>${channel?.name ?? r.channel_id}</td>
-      <td>${r.start ? date.format(new Date(r.start)) : ""}</td>
-      <td>${Math.round(r.duration / 60)} min</td>
-      <td>${this._status(r.status)}</td>
+      ${this._details(r)}
+      ${this._showStatus ? html`<td>${this._status(r.status)}</td>` : nothing}
       <td class="actions">
         ${r.status === "FINISHED"
           ? html`<button
@@ -339,11 +368,19 @@ class WaipuRecordingsTab extends LitElement {
         background: var(--wt-primary);
       }
       .bulk {
+        position: sticky;
+        bottom: 16px;
+        z-index: 2;
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 8px 16px;
-        background: var(--wt-primary-soft);
+        margin: 8px;
+        padding: 8px 8px 8px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--wt-primary);
+        /* opaque, as rows scroll beneath it */
+        background: linear-gradient(var(--wt-primary-soft), var(--wt-primary-soft)), var(--wt-card);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         color: var(--wt-primary);
         font-weight: 500;
         flex-wrap: wrap;
@@ -378,12 +415,100 @@ class WaipuRecordingsTab extends LitElement {
       td.actions {
         white-space: nowrap;
       }
-      tr.group td {
+      /* a series: its row, then its episodes, smaller and joined by a line below its thumbnail */
+      tr.group.open td,
+      tr.child:not(.last) td {
+        border-bottom: 0;
+      }
+      tr.group.open td {
         background: var(--wt-chip);
+      }
+      .expander {
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        border: 0;
+        background: none;
+        text-align: left;
+        cursor: pointer;
+      }
+      .expander span:first-child {
+        display: flex;
+        align-items: center;
+        gap: 4px;
         font-weight: 500;
       }
-      tr.child td.title {
-        padding-left: 28px;
+      /* a disclosure chevron after the series title: right when folded, down when open */
+      .expander svg {
+        color: var(--wt-muted);
+        transform: rotate(-90deg);
+        transition: transform 0.15s;
+      }
+      .expander[aria-expanded="true"] svg {
+        transform: none;
+      }
+      .expander:hover svg {
+        color: var(--wt-fg);
+      }
+      /* a series' thumbnail as a little stack of episodes */
+      .stack {
+        width: 72px;
+        position: relative;
+      }
+      .stack::before,
+      .stack::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 6px;
+        background: var(--wt-line);
+      }
+      .stack::before {
+        transform: translate(6px, -6px) scale(0.9);
+        opacity: 0.5;
+      }
+      .stack::after {
+        transform: translate(3px, -3px) scale(0.95);
+      }
+      .stack .thumb {
+        position: relative;
+        z-index: 1;
+      }
+      .expander span:nth-child(2) {
+        font-size: 12.5px;
+        color: var(--wt-muted);
+      }
+      tr.child td {
+        padding-top: 4px;
+        padding-bottom: 4px;
+      }
+      tr.child.last td {
+        padding-bottom: 10px;
+      }
+      tr.child td.thumb-cell {
+        position: relative;
+        padding-left: 30px;
+      }
+      tr.child td.thumb-cell::before {
+        content: "";
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--wt-line);
+      }
+      tr.child.last td.thumb-cell::before {
+        bottom: 50%;
+      }
+      tr.child .thumb {
+        width: 50px;
+        height: 28px;
+      }
+      .btn.small {
+        height: 30px;
+        padding: 0 12px;
+        font-size: 13px;
       }
       .thumb {
         width: 72px;

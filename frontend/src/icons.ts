@@ -18,7 +18,7 @@ export const playIcon = () =>
   svg`<svg class="i" viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;stroke:none" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>`;
 export const backIcon = () => icon(svg`<path d="M15 6l-6 6 6 6"/>`);
 export const upIcon = () => icon(svg`<path d="M6 15l6-6 6 6"/>`);
-export const downIcon = () => icon(svg`<path d="M6 9l6 6 6-6"/>`);
+export const downIcon = (size = 20) => icon(svg`<path d="M6 9l6 6 6-6"/>`, size);
 export const restartIcon = (size = 16) =>
   icon(svg`<path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/>`, size);
 export const pauseIcon = () =>

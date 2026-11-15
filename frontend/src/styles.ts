@@ -75,6 +75,30 @@ export const shared = css`
     flex: 1;
     min-width: 12em;
   }
+  /* a header in one row: the title, the main switch in the middle, the rest on the right; the
+     title lines up with the table below, the same space above and below */
+  .card-h.bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    padding: 12px;
+  }
+  .card-h.bar h2 {
+    line-height: 36px; /* as tall as the buttons, so its text sits on their middle */
+  }
+  .card-h.bar .toolbar {
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+  }
+  @media (max-width: 720px) {
+    .card-h.bar {
+      grid-template-columns: 1fr auto;
+    }
+    .card-h.bar .center {
+      grid-row: 2;
+      grid-column: 1 / -1;
+      justify-self: center;
+    }
+  }
   .card-b {
     padding: 8px 16px 16px;
   }

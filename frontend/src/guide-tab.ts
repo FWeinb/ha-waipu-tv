@@ -11,8 +11,9 @@ import {
   type Recording,
 } from "./api";
 import { formatter, t } from "./i18n";
-import { clockIcon, recIcon, searchIcon } from "./icons";
+import { clockIcon, recIcon } from "./icons";
 import "./program-dialog";
+import "./search-field";
 import { shared } from "./styles";
 import { toast } from "./util";
 
@@ -181,16 +182,16 @@ class WaipuGuideTab extends LitElement {
     return html`
       <div class="content">
         <div class="card">
-          <div class="card-h">
+          <div class="card-h bar">
             <h2>${t(this.hass, "tv_guide")}</h2>
+            <div class="seg center" role="group">
+              ${this._days.map(
+                (d, i) => html`<button aria-pressed=${i === this._day} @click=${() => this._selectDay(i)}>
+                  ${i === 0 ? t(this.hass, "today") : i === 1 ? t(this.hass, "tomorrow") : day.format(new Date(d))}
+                </button>`,
+              )}
+            </div>
             <div class="toolbar">
-              <div class="seg" role="group">
-                ${this._days.map(
-                  (d, i) => html`<button aria-pressed=${i === this._day} @click=${() => this._selectDay(i)}>
-                    ${i === 0 ? t(this.hass, "today") : day.format(new Date(d))}
-                  </button>`,
-                )}
-              </div>
               <div class="seg" role="group">
                 <button aria-pressed=${!this._all} @click=${() => (this._all = false)}>
                   ${t(this.hass, "favorites")}
@@ -199,16 +200,11 @@ class WaipuGuideTab extends LitElement {
                   ${t(this.hass, "all_channels")}
                 </button>
               </div>
-              <button class="btn" @click=${this._now_clicked}>${clockIcon()}${t(this.hass, "now")}</button>
-              <label class="search">
-                ${searchIcon()}
-                <input
-                  type="search"
-                  placeholder=${t(this.hass, "search_programs")}
-                  .value=${this._search}
-                  @input=${(e: Event) => (this._search = (e.target as HTMLInputElement).value)}
-                />
-              </label>
+              <waipu-search
+                .label=${t(this.hass, "search_programs")}
+                .value=${this._search}
+                @value-changed=${(e: CustomEvent) => (this._search = e.detail.value)}
+              ></waipu-search>
             </div>
           </div>
           ${this._renderGrid()}
@@ -232,14 +228,14 @@ class WaipuGuideTab extends LitElement {
     `;
   }
 
+  /** Clicking the day already shown scrolls back to the current time (there's no Now button). */
   private _selectDay(i: number) {
+    if (i === this._day) {
+      this._jumpToNow();
+      return;
+    }
     this._day = i;
     this._scrollToNow = true;
-  }
-
-  private _now_clicked() {
-    if (this._day !== 0) this._selectDay(0);
-    else this._jumpToNow();
   }
 
   private _renderGrid() {
