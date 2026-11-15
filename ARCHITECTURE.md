@@ -251,15 +251,17 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 
 Run against a real account so far: sign-in, channels, recordings, the full background guide load
 (about 19 s; 30 s with guide details) and the panel in headless Chrome (light, dark, narrow) in the
-dev instance. The manual release checklist still covers:
+dev instance. On an LG C9 with [webos-iptv-player](https://github.com/lennylxx/webos-iptv-player),
+`favorites.m3u` played DRM (DASH + Widevine through the license relay) and non-DRM (HLS)
+channels, and catch-up showed up in the player. The manual release checklist still covers:
 
-- stream URLs, the license relay, recording and deleting, favorites and instant restart (ported or
-  captured, not tested end to end);
+- recording and deleting, favorites and instant restart (ported or captured, not tested end to
+  end); catch-up and time-shift actually playing from an earlier start;
 - the series-recording and cancel calls (ported from pvr.waipu, not tested);
 - the delete body: pvr.waipu sends `{"ids": [...]}`, ha-waipu `{"recordingIds": [...]}`; we follow
   pvr.waipu;
 - that HLS segments don't need gzip, only playlists;
 - that on-demand channels play via DASH in Kodi and TiviMate, not only in the player you tried;
-- TiviMate's support for the `{utc}` catch-up placeholder.
+- TiviMate's support for the `{utc}` catch-up placeholder;
 - what the cast `role` of the program API holds (character or job); XMLTV writes it as the actor's
   role.
