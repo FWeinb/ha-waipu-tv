@@ -7,3 +7,6 @@ config/
 
 # kept locally for reference, not part of the integration
 mockups/
+
+# network captures: contain tokens and account data
+*.har

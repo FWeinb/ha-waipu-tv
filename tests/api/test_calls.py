@@ -284,3 +284,37 @@ async def test_widevine_license_error(aioclient_mock, client):
     with pytest.raises(WaipuError) as err:
         await client.widevine_license(b"CHALLENGE")
     assert err.value.status == 403
+
+
+async def test_fairplay_certificate(aioclient_mock, client):
+    url = "https://drm.wpstr.tv/license-server-fairplay/cert/exaring"
+    aioclient_mock.get(url, content=b"\x30\x82CERT")
+
+    assert await client.fairplay_certificate() == b"\x30\x82CERT"
+    (call,) = calls(aioclient_mock, "GET", url)
+    assert "Authorization" not in call[3]
+
+
+async def test_fairplay_license(aioclient_mock, client):
+    url = "https://drm.wpstr.tv/license-server-fairplay"
+    aioclient_mock.post(url, text=base64.b64encode(b"CKC").decode())
+
+    assert await client.fairplay_license(b"\x00\x00\x00\x01SPC") == b"CKC"
+
+    (call,) = calls(aioclient_mock, "POST", url)
+    assert call[2] == b"\x00\x00\x00\x01SPC"
+    assert "Authorization" not in call[3]
+    custom = json.loads(base64.b64decode(call[3]["dt-custom-data"]))
+    assert custom == {
+        "merchant": "exaring",
+        "sessionId": "default",
+        "userId": "00000000-0000-0000-0000-000000000001",
+    }
+
+
+@pytest.mark.parametrize(("status", "text"), [(403, "no"), (200, "not base64!")])
+async def test_fairplay_license_errors(aioclient_mock, client, status, text):
+    aioclient_mock.post("https://drm.wpstr.tv/license-server-fairplay", status=status, text=text)
+
+    with pytest.raises(WaipuError):
+        await client.fairplay_license(b"SPC")

@@ -16,6 +16,7 @@ The waipu.tv API is undocumented. Only port calls from these sources, never gues
 | [pvr.waipu](https://github.com/flubshi/pvr.waipu) (Kodi add-on, GPL-2.0-or-later) | login, channel list, stream URLs, Widevine license, EPG grid, recordings, instant restart, series recordings |
 | [ha-waipu](https://github.com/GB-1972/ha-waipu) (Home Assistant, GPL-3.0) | cross-check of recording fields (`stationId`, `stationDisplay`, …); no code copied |
 | play.waipu.tv network capture | setting favorites: `PATCH user-stations.waipu.tv/api/stations/user-settings/<id>` with `{"favorite": true\|false}` |
+| play.waipu.tv capture in Safari (2026-11-15, kept local as `*.har`, never committed) | FairPlay: `GET drm.wpstr.tv/license-server-fairplay/cert/exaring` (DER, no auth); `POST drm.wpstr.tv/license-server-fairplay` with the raw SPC and a `dt-custom-data` header (same JSON as Widevine's `x-dt-custom-data`), answered with the base64 CKC |
 
 The integration started as a port of `waipu2m3u`, a standalone playlist server in this repo; the
 port is complete and the old package is deleted.
@@ -242,8 +243,9 @@ port is complete and the old package is deleted.
   (mockup has a player view); measured on 2026-11-15:
   - every stream checked carries AAC next to Dolby AC-3, so the player can prefer AAC;
   - waipu.tv's CDN sends `Access-Control-Allow-Origin: *`;
-  - asked for HLS, DRM channels come as FairPlay (`SAMPLE-AES`, `skd://drmtoday…`), so Safari and
-    iOS are possible; the FairPlay certificate and license calls still need a capture;
+  - asked for HLS, DRM channels come as FairPlay (`SAMPLE-AES`, `skd://drmtoday?assetId=…`), so
+    Safari and iOS are possible; the certificate and license calls are captured and in the API
+    client (`fairplay_certificate`, `fairplay_license`), not yet served to a player;
   - DRM needs a secure origin in every browser: over plain HTTP only channels without DRM play;
   - untested: whether waipu.tv licenses desktop Widevine (Chrome's software CDM).
 - **Separate playlist server port, standalone server, Docker image:** replaced by Home Assistant's

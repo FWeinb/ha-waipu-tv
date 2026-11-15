@@ -35,6 +35,9 @@ URL_STREAM = "https://stream-url-provider.waipu.tv/api/stream-url"
 URL_EPG_GRID = "https://epg-cache.waipu.tv/api/grid/{station}/{start}"
 URL_PROGRAM = "https://epg-cache.waipu.tv/api/programs/{program}"
 URL_LICENSE = "https://drm.wpstr.tv/license-proxy-widevine/cenc/"
+# FairPlay (Safari, iOS): captured from play.waipu.tv, not part of pvr.waipu
+URL_FAIRPLAY_CERT = "https://drm.wpstr.tv/license-server-fairplay/cert/exaring"
+URL_FAIRPLAY_LICENSE = "https://drm.wpstr.tv/license-server-fairplay"
 URL_RECORDINGS = "https://recording.waipu.tv/api/recordings"
 URL_RECORDING_SUMMARY = "https://recording.waipu.tv/api/recordings/summary"
 URL_SERIALS = "https://recording-scheduler.waipu.tv/api/serials"
@@ -413,18 +416,19 @@ class WaipuClient:
 
     # --- DRM ------------------------------------------------------------------------------------
 
-    async def widevine_license(self, challenge: bytes) -> bytes:
-        """Forward a Widevine challenge to waipu.tv's license proxy; returns the raw license."""
+    async def _drm_custom_data(self) -> str:
+        """DRMtoday's custom data: which merchant and user a license is for."""
         account = await self.account()
         custom_data = {"merchant": "exaring", "sessionId": "default", "userId": account.user_handle}
+        return base64.b64encode(json.dumps(custom_data).encode()).decode()
+
+    async def widevine_license(self, challenge: bytes) -> bytes:
+        """Forward a Widevine challenge to waipu.tv's license proxy; returns the raw license."""
         status, body = await self._request(
             "POST",
             URL_LICENSE,
             challenge,
-            headers={
-                "Content-Type": "text/xml",
-                "x-dt-custom-data": base64.b64encode(json.dumps(custom_data).encode()).decode(),
-            },
+            headers={"Content-Type": "text/xml", "x-dt-custom-data": await self._drm_custom_data()},
             auth=False,
         )
         if status != 200:
@@ -432,6 +436,30 @@ class WaipuClient:
         try:
             return base64.b64decode(json.loads(body)["license"])
         except (ValueError, KeyError, TypeError) as err:
+            raise WaipuError("unexpected license response") from err
+
+    async def fairplay_certificate(self) -> bytes:
+        """waipu.tv's FairPlay application certificate (DER), needed to create the SPC."""
+        status, body = await self._request("GET", URL_FAIRPLAY_CERT, auth=False)
+        if status != 200:
+            raise WaipuError(f"FairPlay certificate returned HTTP {status}", status)
+        return body
+
+    async def fairplay_license(self, spc: bytes) -> bytes:
+        """Forward a FairPlay SPC to waipu.tv's license server; returns the raw CKC. Unlike
+        Widevine, the header is dt-custom-data and the answer is base64 text."""
+        status, body = await self._request(
+            "POST",
+            URL_FAIRPLAY_LICENSE,
+            spc,
+            headers={"dt-custom-data": await self._drm_custom_data()},
+            auth=False,
+        )
+        if status != 200:
+            raise WaipuError(f"license server returned HTTP {status}", status)
+        try:
+            return base64.b64decode(body, validate=True)
+        except ValueError as err:
             raise WaipuError("unexpected license response") from err
 
     # --- CDN ------------------------------------------------------------------------------------
