@@ -4,9 +4,9 @@ import { LitElement, css, html } from "lit";
 
 import { setFavorite, type Channel, type HomeAssistant } from "./api";
 import { t } from "./i18n";
-import { refreshIcon, searchIcon, starIcon } from "./icons";
+import { playIcon, refreshIcon, searchIcon, starIcon } from "./icons";
 import { shared } from "./styles";
-import { attempt, changed, toast } from "./util";
+import { attempt, changed, toast, watch } from "./util";
 
 type Filter = "all" | "live" | "vod" | "hidden";
 
@@ -39,6 +39,13 @@ class WaipuFavoritesTab extends LitElement {
       changed(this, "channels");
       toast(this, t(this.hass, c.favorite ? "favorite_removed" : "favorite_added", { name: c.name }));
     }
+  }
+
+  private _play(c: Channel) {
+    const label = t(this.hass, "watch_name", { name: c.name });
+    return html`<button class="play-btn" title=${label} aria-label=${label} @click=${() => watch(this, { channel: c.id })}>
+      ${playIcon()}
+    </button>`;
   }
 
   private _star(c: Channel) {
@@ -94,7 +101,7 @@ class WaipuFavoritesTab extends LitElement {
                     <div>${c.name}</div>
                     <div>${this._kind(c)}</div>
                   </div>
-                  ${this._star(c)}
+                  ${this._play(c)}${this._star(c)}
                 </li>`,
               )}
             </ul>
@@ -131,7 +138,7 @@ class WaipuFavoritesTab extends LitElement {
                     <div>${c.name}</div>
                     <div>${this._kind(c)}</div>
                   </div>
-                  ${this._star(c)}
+                  ${this._play(c)}${this._star(c)}
                 </div>`,
               )}
             </div>

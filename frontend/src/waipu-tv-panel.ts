@@ -1,4 +1,4 @@
-// The waipu.tv sidebar panel: guide, favorites, recordings and (for admins) playlists.
+// The waipu.tv sidebar panel: guide, favorites, recordings, (for admins) playlists, and the player.
 
 import { LitElement, css, html, nothing } from "lit";
 
@@ -12,9 +12,11 @@ import {
 import { t } from "./i18n";
 import { refreshIcon } from "./icons";
 import { shared } from "./styles";
+import type { WatchTarget } from "./util";
 import "./favorites-tab";
 import "./guide-tab";
 import "./playlists-tab";
+import "./player-view";
 import "./recordings-tab";
 
 type Tab = "guide" | "favorites" | "recordings" | "playlists";
@@ -26,6 +28,7 @@ class WaipuTvPanel extends LitElement {
     _tab: { state: true },
     _channels: { state: true },
     _recordings: { state: true },
+    _watch: { state: true },
     _toast: { state: true },
   };
 
@@ -34,6 +37,7 @@ class WaipuTvPanel extends LitElement {
   declare _tab: Tab;
   declare _channels?: ChannelsResult;
   declare _recordings?: RecordingsResult;
+  declare _watch?: WatchTarget; // the player replaces the tab while set
   declare _toast?: string;
   private _loaded = false;
   private _toastTimer?: number;
@@ -43,6 +47,10 @@ class WaipuTvPanel extends LitElement {
     this._tab = "guide";
     this.addEventListener("waipu-changed", (e) => this._reload((e as CustomEvent).detail.what));
     this.addEventListener("waipu-toast", (e) => this._showToast((e as CustomEvent).detail.message));
+    this.addEventListener("waipu-watch", (e) => {
+      this._watch = (e as CustomEvent).detail.target ?? undefined;
+      window.scrollTo(0, 0);
+    });
   }
 
   protected willUpdate() {
@@ -92,13 +100,27 @@ class WaipuTvPanel extends LitElement {
         </div>
         <div class="tabs" role="tablist">
           ${tabs.map(
-            (tab) => html`<button role="tab" aria-selected=${tab === this._tab} @click=${() => (this._tab = tab)}>
+            (tab) => html`<button
+              role="tab"
+              aria-selected=${!this._watch && tab === this._tab}
+              @click=${() => {
+                this._tab = tab;
+                this._watch = undefined;
+              }}
+            >
               ${t(this.hass, tab)}
             </button>`,
           )}
         </div>
       </header>
-      ${this._renderTab()}
+      ${this._watch
+        ? html`<waipu-player
+            .hass=${this.hass}
+            .channels=${this._channels?.channels ?? []}
+            .instantRestart=${this._channels?.instant_restart ?? false}
+            .target=${this._watch}
+          ></waipu-player>`
+        : this._renderTab()}
       ${this._toast ? html`<div class="toast" role="status">${this._toast}</div>` : nothing}
     `;
   }

@@ -1,12 +1,12 @@
 # waipu.tv for Home Assistant
 
 A Home Assistant integration for a [waipu.tv](https://www.waipu.tv) account: the TV guide,
-favorites and recordings in a sidebar panel, entities and actions for automations, and M3U
-playlists plus an XMLTV guide for IPTV players such as Kodi or TiviMate, served by Home Assistant
-itself.
+favorites, recordings and a player in a sidebar panel, entities and actions for automations, and
+M3U playlists plus an XMLTV guide for IPTV players such as Kodi or TiviMate, served by Home
+Assistant itself.
 
-Playback inside Home Assistant is out of scope; watching is the IPTV player's job. Nothing is
-re-encoded or decrypted: streams go directly from waipu.tv to the player.
+Nothing is re-encoded or decrypted by Home Assistant: streams go directly from waipu.tv to the
+browser or player, which decrypts protected channels itself.
 
 > **Unofficial.** waipu.tv has no public API. This integration is not affiliated with waipu.tv or
 > exaring AG and may break when waipu.tv changes its services.
@@ -47,6 +47,14 @@ A **waipu.tv** entry in the sidebar, for all users:
 - **Recordings:** finished, running and scheduled recordings grouped by series, storage used,
   delete (single or several at once) and stop series recordings.
 - **Playlists** (admins only): the playlist and guide URLs to copy into your IPTV player.
+- **Player:** Watch a channel from the program dialog or the favorites, or play a finished
+  recording. Switch through your favorites, jump to the start of the running program or back to
+  live.
+
+Channels protected with DRM (most private channels) play in Chrome, Edge, Firefox and Android
+(Widevine) and in Safari and on iOS (FairPlay), but browsers only allow this over **HTTPS**, for
+example through Home Assistant Cloud. Over plain HTTP, channels without DRM such as Das Erste, ZDF
+or arte still play.
 
 ## Entities
 

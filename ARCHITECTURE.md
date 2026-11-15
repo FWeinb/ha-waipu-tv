@@ -1,8 +1,8 @@
 # Architecture
 
 **waipu.tv for Home Assistant** (`waipu_tv`) is a Home Assistant integration for a waipu.tv account.
-It covers the TV guide, favorites and recording management, plus M3U playlists and an XMLTV guide
-for IPTV players, served by Home Assistant itself. Playback in Home Assistant is out of scope.
+It covers the TV guide, favorites and recording management, a player in its sidebar panel, plus M3U
+playlists and an XMLTV guide for IPTV players, served by Home Assistant itself.
 
 This file records the decisions made so far and why. The UI mockup is
 `mockups/homeassistant.html` (static, sample data).
@@ -126,11 +126,13 @@ port is complete and the old package is deleted.
 
 ## Panel
 
-23. **A sidebar panel visible to all users**, with four tabs:
+23. **A sidebar panel visible to all users**, with four tabs and the player (decisions 51–55):
     - **Guide:** timeline grid (favorites or all channels), live/recording/scheduled markers, program
-      dialog with Record, Record series, Cancel and add-channel-to-favorites;
-    - **Favorites:** favorites list and all channels with filters, star toggles;
-    - **Recordings:** status filters, series groups, bulk delete, storage meter;
+      dialog with Watch (running programs), Record, Record series, Cancel and
+      add-channel-to-favorites;
+    - **Favorites:** favorites list and all channels with filters, star toggles, Watch buttons;
+    - **Recordings:** status filters, series groups, bulk delete, storage meter, Play on finished
+      recordings;
     - **Playlists (admins only):** playlist and guide URLs with Copy buttons, link to the options.
 24. **The panel talks to the integration through Home Assistant's websocket API** (commands such as
     `waipu_tv/guide`, `waipu_tv/recordings`, `waipu_tv/record`, `waipu_tv/set_favorite`), so Home
@@ -220,11 +222,13 @@ port is complete and the old package is deleted.
     coordinator right away. With "favorites only" imports a favorite change also refreshes the guide.
 46. **Websocket commands:** `waipu_tv/channels`, `guide` (returns the guide's days as local midnights,
     so the panel needs no time-zone arithmetic), `program`, `recordings`, `record` (`series` flag),
-    `cancel_series`, `delete_recordings`, `set_favorite`, `playlists` (admins only; URLs, option defaults, instant
-    restart).
+    `cancel_series`, `delete_recordings`, `set_favorite`, `playlists` (admins only; URLs, option
+    defaults, instant restart), and for the player `stream`, `recording_stream`, `license`,
+    `fairplay_certificate`.
 47. **Panel registration:** registered while the account is loaded, removed on unload; the bundle is
     served from `/waipu_tv_static/` with a content hash in the URL. Vite's library mode leaves the
-    committed bundle unminified, which keeps its diffs readable.
+    committed bundle unminified, which keeps its diffs readable. Shaka Player is a separate,
+    hash-named chunk next to it (about 1 MB, 290 KB gzipped), loaded only when the player opens.
 48. **Panel scope v1:** no "watched" column (watch progress isn't loaded), deleting asks with the
     browser's confirm dialog, the program dialog closes on backdrop clicks, the Playlists tab
     explains the per-playlist query parameters.
@@ -237,18 +241,32 @@ port is complete and the old package is deleted.
     guide; failed requests are retried on the next check. XMLTV gets `desc`, `credits`, `date` and
     `episode-num` (xmltv_ns) from them. The panel still loads details on demand.
 
+## Player
+
+51. **Playback in the panel with Shaka Player 5.3.2**, opened with Watch from the program dialog
+    (running programs), the favorites and finished recordings; any tab leaves it. Revisited after a
+    first attempt was dropped: a spike on 2026-11-15 (branch `prototype/drm-spike`, never merged)
+    showed with a real account that waipu.tv licenses browser DRM. Chrome's Widevine played RTL at
+    1080p; Safari's FairPlay started at 360p and reached 1080p after about 12 s through Safari's own
+    quality switching.
+52. **DRM per browser:** Chrome, Edge, Firefox and Android get DASH + Widevine; Safari and iOS get
+    HLS + FairPlay (asked for HLS, waipu.tv serves DRM channels as FairPlay, `skd://drmtoday`).
+    Channels on pvr.waipu's HLS list play as HLS without DRM everywhere; recordings are treated as
+    protected. DRM needs a secure origin (HTTPS or localhost) in every browser: over plain HTTP the
+    player explains this and offers a favorite without DRM instead of failing.
+53. **Stream URLs and licenses go through the websocket** (decision 46), for every user who can open
+    the panel. Licenses travel as base64; Shaka reaches them through a `waipu-license:` URL scheme,
+    so Home Assistant's login covers playback without extra HTTP endpoints. The FairPlay license
+    server only allows play.waipu.tv as origin, so relaying is required anyway.
+54. **Controls:** the browser's own video controls (pause, volume, full screen, picture in picture,
+    seeking), plus channel up/down through the favorites, From start (time-shift, decision 39; needs
+    instant restart) and Live, and the favorites with what's on now. No custom seek bar and no
+    watch progress in v1.
+55. **Audio:** every stream checked carries AAC next to Dolby AC-3; Chrome picks AAC by itself,
+    Safari can also play AC-3. waipu.tv's CDN sends `Access-Control-Allow-Origin: *`.
+
 ## Rejected
 
-- **Browser playback** in the panel: a first attempt with Shaka Player was removed. Being reconsidered
-  (the mockup has a player view). A spike on 2026-11-15 (branch `prototype/drm-spike`, never
-  merged) settled the main question, with a real account and localhost as the secure origin:
-  - waipu.tv licenses browser DRM: Chrome's Widevine (DASH) played RTL at 1080p; Safari's FairPlay
-    (HLS, via `fairplay_certificate` / `fairplay_license`) started at 360p and reached 1080p after
-    about 12 s through Safari's own quality switching;
-  - every stream checked carries AAC next to Dolby AC-3; Chrome picks AAC by itself;
-  - waipu.tv's CDN sends `Access-Control-Allow-Origin: *`; the FairPlay license server only allows
-    play.waipu.tv, so licenses go through Home Assistant;
-  - DRM needs a secure origin in every browser: over plain HTTP only channels without DRM play.
 - **Separate playlist server port, standalone server, Docker image:** replaced by Home Assistant's
   web server.
 - **Playlist-server switch entity:** configuration only.
@@ -272,5 +290,7 @@ Still open:
 
 - that HLS segments don't need gzip, only playlists;
 - Kodi and TiviMate (only the LG C9 player was tried);
+- the player in Firefox, Edge, and in the Android and iOS companion apps (FairPlay inside the iOS
+  app's web view); playing recordings, especially as HLS + FairPlay in Safari;
 - what the cast `role` of the program API holds (character or job); XMLTV writes it as the actor's
   role.

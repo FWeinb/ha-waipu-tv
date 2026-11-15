@@ -211,6 +211,22 @@ export const shared = css`
   .star-btn[aria-pressed="true"] svg {
     fill: currentColor;
   }
+  .play-btn {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--wt-primary);
+    flex: none;
+  }
+  .play-btn:hover {
+    background: var(--wt-primary-soft);
+  }
   .logo {
     width: 40px;
     height: 40px;

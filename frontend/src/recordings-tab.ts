@@ -1,4 +1,4 @@
-// Recordings: storage meter, status filter, series groups (stoppable), single and bulk delete.
+// Recordings: storage meter, status filter, series groups (stoppable), play, single and bulk delete.
 
 import { LitElement, css, html, nothing } from "lit";
 
@@ -12,9 +12,9 @@ import {
   type RecordingsResult,
 } from "./api";
 import { formatter, t } from "./i18n";
-import { clockIcon, recIcon, searchIcon, trashIcon } from "./icons";
+import { clockIcon, playIcon, recIcon, searchIcon, trashIcon } from "./icons";
 import { shared } from "./styles";
-import { attempt, changed, toast } from "./util";
+import { attempt, changed, toast, watch } from "./util";
 
 type Filter = "all" | RecordingStatus;
 
@@ -266,7 +266,17 @@ class WaipuRecordingsTab extends LitElement {
       <td>${r.start ? date.format(new Date(r.start)) : ""}</td>
       <td>${Math.round(r.duration / 60)} min</td>
       <td>${this._status(r.status)}</td>
-      <td>
+      <td class="actions">
+        ${r.status === "FINISHED"
+          ? html`<button
+              class="play-btn"
+              aria-label=${t(this.hass, "play_recording")}
+              title=${t(this.hass, "play_recording")}
+              @click=${() => watch(this, { recording: r })}
+            >
+              ${playIcon()}
+            </button>`
+          : nothing}
         <button class="icon-btn" aria-label=${t(this.hass, "delete")} title=${t(this.hass, "delete")} ?disabled=${this._busy} @click=${() => this._delete([r.id])}>
           ${trashIcon()}
         </button>
@@ -364,6 +374,9 @@ class WaipuRecordingsTab extends LitElement {
       }
       .thumb-col {
         width: 88px;
+      }
+      td.actions {
+        white-space: nowrap;
       }
       tr.group td {
         background: var(--wt-chip);

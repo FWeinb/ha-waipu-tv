@@ -112,3 +112,19 @@ export const deleteRecordings = (hass: HomeAssistant, recordingIds: string[]) =>
 
 export const setFavorite = (hass: HomeAssistant, channel: string, favorite: boolean) =>
   ws<null>(hass, "set_favorite", { channel, favorite });
+
+export type Protocol = "dash" | "hls";
+export type DrmSystem = "widevine" | "fairplay";
+
+export const fetchStream = (hass: HomeAssistant, channel: string, protocol: Protocol, fromStart: boolean) =>
+  ws<{ url: string }>(hass, "stream", { channel, protocol, from_start: fromStart });
+
+export const fetchRecordingStream = (hass: HomeAssistant, recordingId: string, protocol: Protocol) =>
+  ws<{ url: string }>(hass, "recording_stream", { recording_id: recordingId, protocol });
+
+/** challenge and license are base64. */
+export const fetchLicense = (hass: HomeAssistant, system: DrmSystem, challenge: string) =>
+  ws<{ license: string }>(hass, "license", { system, challenge });
+
+export const fetchFairplayCertificate = (hass: HomeAssistant) =>
+  ws<{ certificate: string }>(hass, "fairplay_certificate");

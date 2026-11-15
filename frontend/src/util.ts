@@ -1,4 +1,4 @@
-import type { HomeAssistant } from "./api";
+import type { HomeAssistant, Recording } from "./api";
 import { t } from "./i18n";
 
 /** Ask the panel to reload data after a change. */
@@ -20,4 +20,12 @@ export async function attempt(el: HTMLElement, hass: HomeAssistant, action: () =
     toast(el, t(hass, "error", { message }));
     return false;
   }
+}
+
+/** What the player shows: a live channel (optionally from the running program's start) or a recording. */
+export type WatchTarget = { channel: string; fromStart?: boolean } | { recording: Recording };
+
+/** Ask the panel to open the player, or to close it with null. */
+export function watch(el: HTMLElement, target: WatchTarget | null) {
+  el.dispatchEvent(new CustomEvent("waipu-watch", { detail: { target }, bubbles: true, composed: true }));
 }

@@ -1,4 +1,4 @@
-// Program details with Record, Record series, Cancel and the channel's favorite star.
+// Program details with Watch, Record, Record series, Cancel and the channel's favorite star.
 
 import { LitElement, css, html, nothing } from "lit";
 
@@ -13,9 +13,9 @@ import {
   type Recording,
 } from "./api";
 import { formatter, t } from "./i18n";
-import { clockIcon, closeIcon, recIcon, starIcon } from "./icons";
+import { clockIcon, closeIcon, playIcon, recIcon, starIcon } from "./icons";
 import { shared } from "./styles";
-import { attempt, changed, toast } from "./util";
+import { attempt, changed, toast, watch } from "./util";
 
 class WaipuProgramDialog extends LitElement {
   static properties = {
@@ -129,6 +129,17 @@ class WaipuProgramDialog extends LitElement {
         ${!p.recordable ? html`<p class="muted small">${t(this.hass, "not_recordable")}</p>` : nothing}
       </div>
       <div class="dlg-a">
+        ${live && this.channel
+          ? html`<button
+              class="btn"
+              @click=${() => {
+                this._close();
+                watch(this, { channel: this.channel!.id });
+              }}
+            >
+              ${playIcon()}${t(this.hass, "watch")}
+            </button>`
+          : nothing}
         ${rec
           ? html`<button
               class="btn danger"

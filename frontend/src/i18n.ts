@@ -104,6 +104,20 @@ const en = {
   param_filter: "Channel selection of the guide: all, favorites, live or vod.",
   needs_restart: "Needs instant restart, which your waipu.tv package doesn't include.",
   error: "waipu.tv: {message}",
+  watch: "Watch",
+  watch_name: "Watch {name}",
+  play_recording: "Play recording",
+  from_start: "From start",
+  back: "Back",
+  prev_channel: "Previous channel",
+  next_channel: "Next channel",
+  no_guide: "No guide data",
+  recording_from: "Recording from {date}",
+  drm_https_title: "{name} is protected by DRM, which browsers only play over HTTPS",
+  drm_https_text: "Open Home Assistant over HTTPS, for example through Home Assistant Cloud, to watch it here. Channels without DRM, such as Das Erste or ZDF, also play over HTTP. IPTV players are not affected.",
+  drm_unsupported_title: "This browser can't play {name}",
+  drm_unsupported_text: "It supports neither Widevine nor FairPlay. Channels without DRM, such as Das Erste or ZDF, play here.",
+  playback_error: "Playback failed: {message}",
 };
 
 type Key = keyof typeof en;
@@ -209,6 +223,20 @@ const de: Record<Key, string> = {
   param_filter: "Senderauswahl des Programms: all, favorites, live oder vod.",
   needs_restart: "Benötigt Instant Restart, das dein waipu.tv-Paket nicht enthält.",
   error: "waipu.tv: {message}",
+  watch: "Ansehen",
+  watch_name: "{name} ansehen",
+  play_recording: "Aufnahme abspielen",
+  from_start: "Von Anfang",
+  back: "Zurück",
+  prev_channel: "Vorheriger Sender",
+  next_channel: "Nächster Sender",
+  no_guide: "Keine Programmdaten",
+  recording_from: "Aufnahme vom {date}",
+  drm_https_title: "{name} ist mit DRM geschützt; Browser spielen das nur über HTTPS ab",
+  drm_https_text: "Öffne Home Assistant über HTTPS, zum Beispiel über Home Assistant Cloud, um den Sender hier zu sehen. Sender ohne DRM wie Das Erste oder ZDF laufen auch über HTTP. IPTV-Player sind nicht betroffen.",
+  drm_unsupported_title: "Dieser Browser kann {name} nicht abspielen",
+  drm_unsupported_text: "Er unterstützt weder Widevine noch FairPlay. Sender ohne DRM wie Das Erste oder ZDF laufen hier.",
+  playback_error: "Wiedergabe fehlgeschlagen: {message}",
 };
 
 export function t(hass: HomeAssistant, key: Key, vars: Record<string, string | number> = {}) {
