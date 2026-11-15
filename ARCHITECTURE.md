@@ -126,7 +126,7 @@ port is complete and the old package is deleted.
 
 ## Panel
 
-23. **A sidebar panel visible to all users**, with four tabs and the player (decisions 51–55):
+23. **A sidebar panel visible to all users**, with four tabs and the player (decisions 51–56):
     - **Guide:** timeline grid (favorites or all channels), live/recording/scheduled markers, program
       dialog with Watch (running programs), Record, Record series, Cancel and
       add-channel-to-favorites;
@@ -259,9 +259,14 @@ port is complete and the old package is deleted.
     so Home Assistant's login covers playback without extra HTTP endpoints. The FairPlay license
     server only allows play.waipu.tv as origin, so relaying is required anyway.
 54. **Controls:** the browser's own video controls (pause, volume, full screen, picture in picture,
-    seeking), plus channel up/down through the favorites, From start (time-shift, decision 39; needs
-    instant restart) and Live, and the favorites with what's on now. No custom seek bar and no
-    watch progress in v1.
+    seeking), plus channel up/down through the favorites and the favorites with what's on now. From
+    start (time-shift, decision 39; needs instant restart) and Live only on on-demand channels:
+    tested by hand, From start was unreliable on live channels; on on-demand channels it worked with
+    HLS (Safari) but not with DASH (Chrome). No custom seek bar and no watch progress in v1.
+56. **Deep links:** the player follows the URL: `/waipu-tv/watch/<channel>` (plus `/from-start`) and
+    `/waipu-tv/recording/<id>`, set with Home Assistant's own navigation (`pushState` and
+    `location-changed`), so links can be bookmarked or shared and Back leaves the player. Switching
+    channels inside the player replaces the history entry.
 55. **Audio:** every stream checked carries AAC next to Dolby AC-3; Chrome picks AAC by itself,
     Safari can also play AC-3. waipu.tv's CDN sends `Access-Control-Allow-Origin: *`.
 
@@ -291,6 +296,7 @@ Still open:
 - that HLS segments don't need gzip, only playlists;
 - Kodi and TiviMate (only the LG C9 player was tried);
 - the player in Firefox, Edge, and in the Android and iOS companion apps (FairPlay inside the iOS
-  app's web view); playing recordings, especially as HLS + FairPlay in Safari;
+  app's web view); Chrome and Safari played DRM and non-DRM channels and on-demand channels;
+- why From start fails with DASH on on-demand channels and is unreliable on live channels;
 - what the cast `role` of the program API holds (character or job); XMLTV writes it as the actor's
   role.

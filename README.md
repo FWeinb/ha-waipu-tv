@@ -48,8 +48,9 @@ A **waipu.tv** entry in the sidebar, for all users:
   delete (single or several at once) and stop series recordings.
 - **Playlists** (admins only): the playlist and guide URLs to copy into your IPTV player.
 - **Player:** Watch a channel from the program dialog or the favorites, or play a finished
-  recording. Switch through your favorites, jump to the start of the running program or back to
-  live.
+  recording, and switch through your favorites. On-demand channels can also start from the
+  beginning of the running program. Each channel has its own link, such as
+  `/waipu-tv/watch/ard`, to bookmark or share.
 
 Channels protected with DRM (most private channels) play in Chrome, Edge, Firefox and Android
 (Widevine) and in Safari and on iOS (FairPlay), but browsers only allow this over **HTTPS**, for

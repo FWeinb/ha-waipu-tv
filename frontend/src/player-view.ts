@@ -303,17 +303,19 @@ class WaipuPlayer extends LitElement {
                   <button class="icon-btn" title=${t(this.hass, "next_channel")} aria-label=${t(this.hass, "next_channel")} @click=${() => this._zap(1)}>
                     ${downIcon()}
                   </button>
-                  <button
-                    class="pill"
-                    aria-pressed=${fromStart}
-                    ?disabled=${!this.instantRestart || !channel}
-                    @click=${() => watch(this, { channel: channel!.id, fromStart: true })}
-                  >
-                    ${restartIcon()}${t(this.hass, "from_start")}
-                  </button>
-                  <button class="pill live" aria-pressed=${!fromStart} @click=${() => watch(this, { channel: channel!.id })}>
-                    ${t(this.hass, "live")}
-                  </button>
+                  ${channel?.vod
+                    ? html`<button
+                          class="pill"
+                          aria-pressed=${fromStart}
+                          ?disabled=${!this.instantRestart}
+                          @click=${() => watch(this, { channel: channel.id, fromStart: true })}
+                        >
+                          ${restartIcon()}${t(this.hass, "from_start")}
+                        </button>
+                        <button class="pill live" aria-pressed=${!fromStart} @click=${() => watch(this, { channel: channel.id })}>
+                          ${t(this.hass, "live")}
+                        </button>`
+                    : nothing}
                 </div>`}
           </div>
           ${this._error ? html`<div class="card error">${this._error}</div>` : nothing}

@@ -2196,20 +2196,20 @@ var pt = class extends I {
                   <button class="icon-btn" title=${B(this.hass, "next_channel")} aria-label=${B(this.hass, "next_channel")} @click=${() => this._zap(1)}>
                     ${Qe()}
                   </button>
-                  <button
-                    class="pill"
-                    aria-pressed=${s}
-                    ?disabled=${!this.instantRestart || !t}
-                    @click=${() => Z(this, {
+                  ${t?.vod ? E`<button
+                          class="pill"
+                          aria-pressed=${s}
+                          ?disabled=${!this.instantRestart}
+                          @click=${() => Z(this, {
 			channel: t.id,
 			fromStart: !0
 		})}
-                  >
-                    ${$e()}${B(this.hass, "from_start")}
-                  </button>
-                  <button class="pill live" aria-pressed=${!s} @click=${() => Z(this, { channel: t.id })}>
-                    ${B(this.hass, "live")}
-                  </button>
+                        >
+                          ${$e()}${B(this.hass, "from_start")}
+                        </button>
+                        <button class="pill live" aria-pressed=${!s} @click=${() => Z(this, { channel: t.id })}>
+                          ${B(this.hass, "live")}
+                        </button>` : k}
                 </div>`}
           </div>
           ${this._error ? E`<div class="card error">${this._error}</div>` : k}
@@ -2827,6 +2827,7 @@ var _t = class extends I {
 		this.properties = {
 			hass: { attribute: !1 },
 			narrow: { type: Boolean },
+			route: { attribute: !1 },
 			_tab: { state: !0 },
 			_channels: { state: !0 },
 			_recordings: { state: !0 },
@@ -2836,11 +2837,38 @@ var _t = class extends I {
 	}
 	constructor() {
 		super(), this._loaded = !1, this._tab = "guide", this.addEventListener("waipu-changed", (e) => this._reload(e.detail.what)), this.addEventListener("waipu-toast", (e) => this._showToast(e.detail.message)), this.addEventListener("waipu-watch", (e) => {
-			this._watch = e.detail.target ?? void 0, window.scrollTo(0, 0);
+			let t = e.detail.target, n = t ? "recording" in t ? `/recording/${encodeURIComponent(t.recording.id)}` : `/watch/${encodeURIComponent(t.channel)}${t.fromStart ? "/from-start" : ""}` : "";
+			this._navigate(n, !!t && !!this._watch), window.scrollTo(0, 0);
 		});
 	}
 	willUpdate() {
-		this.hass && !this._loaded && (this._loaded = !0, this._reload("channels"), this._reload("recordings"));
+		this.hass && !this._loaded && (this._loaded = !0, this._reload("channels"), this._reload("recordings")), this._followRoute();
+	}
+	_followRoute() {
+		let e = this.route?.path ?? "", t = e.match(/^\/(watch|recording)\/([^/]+)(\/from-start)?$/);
+		if (!t) {
+			this._watch = this._watchPath = void 0;
+			return;
+		}
+		let [, n, r, i] = t;
+		if (e !== this._watchPath && (n === "watch" ? this._channels : this._recordings)) {
+			if (this._watchPath = e, n === "watch") this._watch = {
+				channel: decodeURIComponent(r),
+				fromStart: !!i
+			};
+			else {
+				let e = this._recordings.recordings.find((e) => e.id === decodeURIComponent(r));
+				this._watch = e ? { recording: e } : void 0;
+			}
+		}
+	}
+	_linkPending() {
+		let e = this.route?.path ?? "";
+		return /^\/(watch|recording)\//.test(e) && e !== this._watchPath;
+	}
+	_navigate(e, t = !1) {
+		let n = `${this.route?.prefix ?? "/waipu-tv"}${e}`;
+		t ? history.replaceState(history.state, "", n) : history.pushState(null, "", n), window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: t } }));
 	}
 	async _reload(e) {
 		try {
@@ -2877,7 +2905,7 @@ var _t = class extends I {
               role="tab"
               aria-selected=${!this._watch && e === this._tab}
               @click=${() => {
-			this._tab = e, this._watch = void 0;
+			this._tab = e, this._watch && this._navigate("");
 		}}
             >
               ${B(this.hass, e)}
@@ -2889,7 +2917,7 @@ var _t = class extends I {
             .channels=${this._channels?.channels ?? []}
             .instantRestart=${this._channels?.instant_restart ?? !1}
             .target=${this._watch}
-          ></waipu-player>` : this._renderTab()}
+          ></waipu-player>` : this._linkPending() ? E`<p class="pending">${B(this.hass, "loading")}</p>` : this._renderTab()}
       ${this._toast ? E`<div class="toast" role="status">${this._toast}</div>` : k}
     `;
 	}
@@ -2974,6 +3002,10 @@ var _t = class extends I {
       .tabs button[aria-selected="true"] {
         opacity: 1;
         border-bottom-color: currentColor;
+      }
+      .pending {
+        padding: 16px;
+        color: var(--secondary-text-color);
       }
       .toast {
         position: fixed;

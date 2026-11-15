@@ -25,6 +25,7 @@ class WaipuTvPanel extends LitElement {
   static properties = {
     hass: { attribute: false },
     narrow: { type: Boolean },
+    route: { attribute: false },
     _tab: { state: true },
     _channels: { state: true },
     _recordings: { state: true },
@@ -34,12 +35,15 @@ class WaipuTvPanel extends LitElement {
 
   declare hass: HomeAssistant;
   declare narrow: boolean;
+  /** From Home Assistant: the path below the panel's URL, e.g. "/watch/rtl". */
+  declare route?: { prefix: string; path: string };
   declare _tab: Tab;
   declare _channels?: ChannelsResult;
   declare _recordings?: RecordingsResult;
-  declare _watch?: WatchTarget; // the player replaces the tab while set
+  declare _watch?: WatchTarget; // the player replaces the tab while set; follows the URL
   declare _toast?: string;
   private _loaded = false;
+  private _watchPath?: string;
   private _toastTimer?: number;
 
   constructor() {
@@ -48,7 +52,14 @@ class WaipuTvPanel extends LitElement {
     this.addEventListener("waipu-changed", (e) => this._reload((e as CustomEvent).detail.what));
     this.addEventListener("waipu-toast", (e) => this._showToast((e as CustomEvent).detail.message));
     this.addEventListener("waipu-watch", (e) => {
-      this._watch = (e as CustomEvent).detail.target ?? undefined;
+      const target: WatchTarget | null = (e as CustomEvent).detail.target;
+      const path = !target
+        ? ""
+        : "recording" in target
+          ? `/recording/${encodeURIComponent(target.recording.id)}`
+          : `/watch/${encodeURIComponent(target.channel)}${target.fromStart ? "/from-start" : ""}`;
+      // switching inside the player replaces the history entry, so Back leaves the player
+      this._navigate(path, !!target && !!this._watch);
       window.scrollTo(0, 0);
     });
   }
@@ -59,6 +70,40 @@ class WaipuTvPanel extends LitElement {
       this._reload("channels");
       this._reload("recordings");
     }
+    this._followRoute();
+  }
+
+  /** Deep links: /waipu-tv/watch/<channel>[/from-start] and /waipu-tv/recording/<id>. */
+  private _followRoute() {
+    const path = this.route?.path ?? "";
+    const match = path.match(/^\/(watch|recording)\/([^/]+)(\/from-start)?$/);
+    if (!match) {
+      this._watch = this._watchPath = undefined;
+      return;
+    }
+    // built once per path, after the data it needs, so the player doesn't restart on reloads
+    const [, kind, id, fromStart] = match;
+    if (path === this._watchPath || !(kind === "watch" ? this._channels : this._recordings)) return;
+    this._watchPath = path;
+    if (kind === "watch") this._watch = { channel: decodeURIComponent(id), fromStart: !!fromStart };
+    else {
+      const recording = this._recordings!.recordings.find((r) => r.id === decodeURIComponent(id));
+      this._watch = recording ? { recording } : undefined;
+    }
+  }
+
+  /** A deep link whose data is still loading. */
+  private _linkPending() {
+    const path = this.route?.path ?? "";
+    return /^\/(watch|recording)\//.test(path) && path !== this._watchPath;
+  }
+
+  /** Like Home Assistant's own navigation, so the URL, Back and bookmarks work. */
+  private _navigate(path: string, replace = false) {
+    const url = `${this.route?.prefix ?? "/waipu-tv"}${path}`;
+    if (replace) history.replaceState(history.state, "", url);
+    else history.pushState(null, "", url);
+    window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace } }));
   }
 
   private async _reload(what: "channels" | "recordings") {
@@ -105,7 +150,7 @@ class WaipuTvPanel extends LitElement {
               aria-selected=${!this._watch && tab === this._tab}
               @click=${() => {
                 this._tab = tab;
-                this._watch = undefined;
+                if (this._watch) this._navigate("");
               }}
             >
               ${t(this.hass, tab)}
@@ -120,7 +165,9 @@ class WaipuTvPanel extends LitElement {
             .instantRestart=${this._channels?.instant_restart ?? false}
             .target=${this._watch}
           ></waipu-player>`
-        : this._renderTab()}
+        : this._linkPending()
+          ? html`<p class="pending">${t(this.hass, "loading")}</p>`
+          : this._renderTab()}
       ${this._toast ? html`<div class="toast" role="status">${this._toast}</div>` : nothing}
     `;
   }
@@ -213,6 +260,10 @@ class WaipuTvPanel extends LitElement {
       .tabs button[aria-selected="true"] {
         opacity: 1;
         border-bottom-color: currentColor;
+      }
+      .pending {
+        padding: 16px;
+        color: var(--secondary-text-color);
       }
       .toast {
         position: fixed;
