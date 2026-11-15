@@ -2,6 +2,7 @@ __pycache__/
 node_modules/
 .venv/
 .pytest_cache/
+.ruff_cache/
 config/
 
 # kept locally for reference, not part of the integration
