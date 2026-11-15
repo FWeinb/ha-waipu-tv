@@ -104,6 +104,9 @@ export const fetchPlaylists = (hass: HomeAssistant) => ws<PlaylistsResult>(hass,
 export const record = (hass: HomeAssistant, programId: string, series = false) =>
   ws<null>(hass, "record", { program_id: programId, series });
 
+export const cancelSeries = (hass: HomeAssistant, programId: string) =>
+  ws<null>(hass, "cancel_series", { program_id: programId });
+
 export const deleteRecordings = (hass: HomeAssistant, recordingIds: string[]) =>
   ws<null>(hass, "delete_recordings", { recording_ids: recordingIds });
 

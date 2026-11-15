@@ -13,6 +13,13 @@ record_series:
       selector:
         text:
 
+cancel_series:
+  fields:
+    program_id:
+      required: true
+      selector:
+        text:
+
 delete_recordings:
   fields:
     recording_ids:

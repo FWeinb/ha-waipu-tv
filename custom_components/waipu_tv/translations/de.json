@@ -187,6 +187,16 @@
         }
       }
     },
+    "cancel_series": {
+      "name": "Serienaufnahme beenden",
+      "description": "Beendet die Aufnahme einer Serie: geplante Folgen werden abgebrochen, laufende und fertige bleiben erhalten.",
+      "fields": {
+        "program_id": {
+          "name": "Sendungs-ID",
+          "description": "Eine aufgenommene oder geplante Folge der Serie."
+        }
+      }
+    },
     "delete_recordings": {
       "name": "Aufnahmen löschen",
       "description": "Bricht geplante Aufnahmen ab und löscht fertige.",
@@ -218,6 +228,9 @@
     },
     "unknown_channel": {
       "message": "Unbekannter Sender {channel}."
+    },
+    "not_a_series_recording": {
+      "message": "{program_id} gehört zu keiner Serienaufnahme."
     },
     "api_error": {
       "message": "Anfrage an waipu.tv fehlgeschlagen: {error}"

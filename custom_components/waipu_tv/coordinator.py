@@ -53,6 +53,25 @@ class WaipuTvData:
         await _call(self.client.record_series(program_id))
         await self.recordings.async_refresh()
 
+    async def async_cancel_series(self, program_id: str) -> None:
+        """Stop the series recording that recorded or scheduled this program."""
+        group = next(
+            (
+                r.group
+                for r in self.recordings.data.recordings
+                if r.program_id == program_id and r.group is not None
+            ),
+            None,
+        )
+        if group is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_a_series_recording",
+                translation_placeholders={"program_id": program_id},
+            )
+        await _call(self.client.cancel_series(group))
+        await self.recordings.async_refresh()
+
     async def async_delete_recordings(self, recording_ids: list[str]) -> None:
         await _call(self.client.delete_recordings(recording_ids))
         await self.recordings.async_refresh()

@@ -211,6 +211,29 @@ async def test_record_series_needs_a_series(aioclient_mock, client):
         await client.record_series("p1")
 
 
+async def test_cancel_series(aioclient_mock, client):
+    url = "https://recording-scheduler.waipu.tv/api/delete-requests"
+    aioclient_mock.post(url, json={})
+
+    await client.cancel_series(7)
+
+    (call,) = calls(aioclient_mock, "POST", url)
+    assert sent_json(call) == {
+        "serialRecordings": [
+            {
+                "id": 7,
+                "deleteFutureRecordings": True,
+                "deleteFinishedRecordings": False,
+                "deleteRunningRecordings": False,
+            }
+        ]
+    }
+    assert (
+        call[3]["Content-Type"]
+        == "application/vnd.waipu.recording-scheduler-delete-serial-recordings-v1+json"
+    )
+
+
 async def test_delete_recordings(aioclient_mock, client):
     aioclient_mock.delete(URL_RECORDINGS, json={})
 

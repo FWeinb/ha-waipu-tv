@@ -159,6 +159,7 @@ client, guide cache and playlist endpoints. It is ported into the integration an
     | --- | --- |
     | `waipu_tv.record_program` | `program_id` |
     | `waipu_tv.record_series` | `program_id` (series and channel are read from the program) |
+    | `waipu_tv.cancel_series` | `program_id` of a recorded or scheduled episode (stops the series; finished and running episodes stay) |
     | `waipu_tv.delete_recordings` | `recording_ids` (cancels scheduled, deletes finished) |
     | `waipu_tv.set_favorite` | `channel` (waipu.tv station id, e.g. `ard`), `favorite` |
 
@@ -216,7 +217,7 @@ client, guide cache and playlist endpoints. It is ported into the integration an
     coordinator right away. With "favorites only" imports a favorite change also refreshes the guide.
 46. **Websocket commands:** `waipu_tv/channels`, `guide` (returns the guide's days as local midnights,
     so the panel needs no time-zone arithmetic), `program`, `recordings`, `record` (`series` flag),
-    `delete_recordings`, `set_favorite`, `playlists` (admins only; URLs, option defaults, instant
+    `cancel_series`, `delete_recordings`, `set_favorite`, `playlists` (admins only; URLs, option defaults, instant
     restart).
 47. **Panel registration:** registered while the account is loaded, removed on unload; the bundle is
     served from `/waipu_tv_static/` with a content hash in the URL. Vite's library mode leaves the
@@ -224,8 +225,9 @@ client, guide cache and playlist endpoints. It is ported into the integration an
 48. **Panel scope v1:** no "watched" column (watch progress isn't loaded), deleting asks with the
     browser's confirm dialog, the program dialog closes on backdrop clicks, the Playlists tab
     explains the per-playlist query parameters.
-49. **Not built yet:** cancelling a whole series rule (pvr.waipu's `recording-scheduler` delete
-    request) isn't ported.
+49. **Stopping a series** uses pvr.waipu's `recording-scheduler` delete request for the recording
+    group. The action and the panel take an episode's program id and look the group up in the loaded
+    recordings, so users never see group ids; the panel's series rows have a "Stop series" button.
 50. **Guide details for favorites**, like pvr.waipu: after each guide check, the program API is asked
     once per program of a favorite (among the imported channels) in the guide range, within the
     parallel-request limit. Details don't change, so they are kept until the program leaves the

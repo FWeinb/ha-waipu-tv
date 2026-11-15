@@ -102,6 +102,16 @@ async def test_record_and_errors(ws, mock_waipu):
     assert msg["error"]["translation_key"] == "api_error"
 
 
+async def test_cancel_series(ws, mock_waipu):
+    url = "https://recording-scheduler.waipu.tv/api/delete-requests"
+    mock_waipu.post(url, json={})
+
+    msg = await command(ws, "cancel_series", program_id="11111111-2222-3333-4444-555555555555")
+
+    assert msg["success"]
+    assert [c for c in mock_waipu.mock_calls if c[0] == "POST" and str(c[1]) == url]
+
+
 async def test_set_favorite_unknown_channel(ws):
     msg = await command(ws, "set_favorite", channel="nope", favorite=True)
 

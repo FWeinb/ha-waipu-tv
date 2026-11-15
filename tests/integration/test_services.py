@@ -78,6 +78,25 @@ async def test_record_series(hass, waipu):
     ]
 
 
+async def test_cancel_series_uses_the_programs_recording_group(hass, waipu):
+    url = "https://recording-scheduler.waipu.tv/api/delete-requests"
+    waipu.post(url, json={})
+    mock_reload(waipu)
+
+    # 1000000004, a finished episode of group 7
+    await call(hass, "cancel_series", {"program_id": "66666666-7777-8888-9999-000000000000"})
+
+    (request,) = sent(waipu, "POST", url)
+    assert request["serialRecordings"][0]["id"] == 7
+
+
+async def test_cancel_series_needs_a_series_recording(hass, waipu):
+    with pytest.raises(ServiceValidationError) as err:
+        # 1000000001 has no recording group
+        await call(hass, "cancel_series", {"program_id": "5e9b103c-e92d-5408-b5c9-cb15136c32dc"})
+    assert err.value.translation_key == "not_a_series_recording"
+
+
 async def test_delete_recordings_reloads_recordings(hass, waipu):
     waipu.delete(URL_RECORDINGS, json={})
     mock_reload(waipu)

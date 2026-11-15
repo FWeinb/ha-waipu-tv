@@ -38,6 +38,7 @@ URL_LICENSE = "https://drm.wpstr.tv/license-proxy-widevine/cenc/"
 URL_RECORDINGS = "https://recording.waipu.tv/api/recordings"
 URL_RECORDING_SUMMARY = "https://recording.waipu.tv/api/recordings/summary"
 URL_SERIALS = "https://recording-scheduler.waipu.tv/api/serials"
+URL_DELETE_REQUESTS = "https://recording-scheduler.waipu.tv/api/delete-requests"
 
 ACCEPT_RECORDINGS = "application/vnd.waipu.recordings-v4+json"
 EPG_WINDOW = timedelta(hours=4)  # the grid API serves 4 h windows aligned to UTC
@@ -367,6 +368,25 @@ class WaipuClient:
             URL_SERIALS,
             {"channel": station.upper(), "title": title, "seriesId": series_id},
             content_type="application/vnd.waipu.recording-scheduler-serials-v1+json",
+        )
+
+    async def cancel_series(self, group: int) -> None:
+        """Stop a series recording: scheduled episodes are cancelled, running and finished ones
+        kept."""
+        await self._json(
+            "POST",
+            URL_DELETE_REQUESTS,
+            {
+                "serialRecordings": [
+                    {
+                        "id": group,
+                        "deleteFutureRecordings": True,
+                        "deleteFinishedRecordings": False,
+                        "deleteRunningRecordings": False,
+                    }
+                ]
+            },
+            content_type="application/vnd.waipu.recording-scheduler-delete-serial-recordings-v1+json",
         )
 
     async def delete_recordings(self, recording_ids: list[str]) -> None:

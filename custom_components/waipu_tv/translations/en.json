@@ -187,6 +187,16 @@
         }
       }
     },
+    "cancel_series": {
+      "name": "Stop series recording",
+      "description": "Stops recording a series: scheduled episodes are cancelled, running and finished ones are kept.",
+      "fields": {
+        "program_id": {
+          "name": "Program id",
+          "description": "Any recorded or scheduled episode of the series."
+        }
+      }
+    },
     "delete_recordings": {
       "name": "Delete recordings",
       "description": "Cancels scheduled and deletes finished recordings.",
@@ -218,6 +228,9 @@
     },
     "unknown_channel": {
       "message": "Unknown channel {channel}."
+    },
+    "not_a_series_recording": {
+      "message": "{program_id} is not part of a series recording."
     },
     "api_error": {
       "message": "waipu.tv request failed: {error}"

@@ -1,4 +1,4 @@
-"""Actions: record a program or series, delete recordings, set a favorite."""
+"""Actions: record a program or series, stop a series, delete recordings, set a favorite."""
 
 import probatio
 
@@ -30,6 +30,10 @@ async def _record_series(call: ServiceCall) -> None:
     await loaded_data(call.hass).async_record_series(call.data[ATTR_PROGRAM_ID])
 
 
+async def _cancel_series(call: ServiceCall) -> None:
+    await loaded_data(call.hass).async_cancel_series(call.data[ATTR_PROGRAM_ID])
+
+
 async def _delete_recordings(call: ServiceCall) -> None:
     await loaded_data(call.hass).async_delete_recordings(call.data[ATTR_RECORDING_IDS])
 
@@ -44,5 +48,6 @@ async def _set_favorite(call: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, "record_program", _record_program, PROGRAM_SCHEMA)
     hass.services.async_register(DOMAIN, "record_series", _record_series, PROGRAM_SCHEMA)
+    hass.services.async_register(DOMAIN, "cancel_series", _cancel_series, PROGRAM_SCHEMA)
     hass.services.async_register(DOMAIN, "delete_recordings", _delete_recordings, DELETE_SCHEMA)
     hass.services.async_register(DOMAIN, "set_favorite", _set_favorite, FAVORITE_SCHEMA)

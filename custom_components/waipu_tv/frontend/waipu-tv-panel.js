@@ -29,11 +29,11 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 	let t = "";
 	for (let n of e.cssRules) t += n.cssText;
 	return a(t);
-})(e) : e, { is: l, defineProperty: u, getOwnPropertyDescriptor: d, getOwnPropertyNames: ee, getOwnPropertySymbols: te, getPrototypeOf: ne } = Object, f = globalThis, p = f.trustedTypes, re = p ? p.emptyScript : "", ie = f.reactiveElementPolyfillSupport, m = (e, t) => e, h = {
+})(e) : e, { is: l, defineProperty: u, getOwnPropertyDescriptor: d, getOwnPropertyNames: ee, getOwnPropertySymbols: te, getPrototypeOf: ne } = Object, f = globalThis, re = f.trustedTypes, ie = re ? re.emptyScript : "", ae = f.reactiveElementPolyfillSupport, p = (e, t) => e, m = {
 	toAttribute(e, t) {
 		switch (t) {
 			case Boolean:
-				e = e ? re : null;
+				e = e ? ie : null;
 				break;
 			case Object:
 			case Array: e = e == null ? e : JSON.stringify(e);
@@ -58,23 +58,23 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 		}
 		return n;
 	}
-}, ae = (e, t) => !l(e, t), oe = {
+}, oe = (e, t) => !l(e, t), se = {
 	attribute: !0,
 	type: String,
-	converter: h,
+	converter: m,
 	reflect: !1,
 	useDefault: !1,
-	hasChanged: ae
+	hasChanged: oe
 };
 Symbol.metadata ??= Symbol("metadata"), f.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-var g = class extends HTMLElement {
+var h = class extends HTMLElement {
 	static addInitializer(e) {
 		this._$Ei(), (this.l ??= []).push(e);
 	}
 	static get observedAttributes() {
 		return this.finalize(), this._$Eh && [...this._$Eh.keys()];
 	}
-	static createProperty(e, t = oe) {
+	static createProperty(e, t = se) {
 		if (t.state && (t.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((t = Object.create(t)).wrapped = !0), this.elementProperties.set(e, t), !t.noAccessor) {
 			let n = Symbol(), r = this.getPropertyDescriptor(e, n, t);
 			r !== void 0 && u(this.prototype, e, r);
@@ -100,16 +100,16 @@ var g = class extends HTMLElement {
 		};
 	}
 	static getPropertyOptions(e) {
-		return this.elementProperties.get(e) ?? oe;
+		return this.elementProperties.get(e) ?? se;
 	}
 	static _$Ei() {
-		if (this.hasOwnProperty(m("elementProperties"))) return;
+		if (this.hasOwnProperty(p("elementProperties"))) return;
 		let e = ne(this);
 		e.finalize(), e.l !== void 0 && (this.l = [...e.l]), this.elementProperties = new Map(e.elementProperties);
 	}
 	static finalize() {
-		if (this.hasOwnProperty(m("finalized"))) return;
-		if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(m("properties"))) {
+		if (this.hasOwnProperty(p("finalized"))) return;
+		if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(p("properties"))) {
 			let e = this.properties, t = [...ee(e), ...te(e)];
 			for (let n of t) this.createProperty(n, e[n]);
 		}
@@ -171,14 +171,14 @@ var g = class extends HTMLElement {
 	_$ET(e, t) {
 		let n = this.constructor.elementProperties.get(e), r = this.constructor._$Eu(e, n);
 		if (r !== void 0 && !0 === n.reflect) {
-			let i = (n.converter?.toAttribute === void 0 ? h : n.converter).toAttribute(t, n.type);
+			let i = (n.converter?.toAttribute === void 0 ? m : n.converter).toAttribute(t, n.type);
 			this._$Em = e, i == null ? this.removeAttribute(r) : this.setAttribute(r, i), this._$Em = null;
 		}
 	}
 	_$AK(e, t) {
 		let n = this.constructor, r = n._$Eh.get(e);
 		if (r !== void 0 && this._$Em !== r) {
-			let e = n.getPropertyOptions(r), i = typeof e.converter == "function" ? { fromAttribute: e.converter } : e.converter?.fromAttribute === void 0 ? h : e.converter;
+			let e = n.getPropertyOptions(r), i = typeof e.converter == "function" ? { fromAttribute: e.converter } : e.converter?.fromAttribute === void 0 ? m : e.converter;
 			this._$Em = r;
 			let a = i.fromAttribute(t, e.type);
 			this[r] = a ?? this._$Ej?.get(r) ?? a, this._$Em = null;
@@ -187,7 +187,7 @@ var g = class extends HTMLElement {
 	requestUpdate(e, t, n, r = !1, i) {
 		if (e !== void 0) {
 			let a = this.constructor;
-			if (!1 === r && (i = this[e]), n ??= a.getPropertyOptions(e), !((n.hasChanged ?? ae)(i, t) || n.useDefault && n.reflect && i === this._$Ej?.get(e) && !this.hasAttribute(a._$Eu(e, n)))) return;
+			if (!1 === r && (i = this[e]), n ??= a.getPropertyOptions(e), !((n.hasChanged ?? oe)(i, t) || n.useDefault && n.reflect && i === this._$Ej?.get(e) && !this.hasAttribute(a._$Eu(e, n)))) return;
 			this.C(e, t, n);
 		}
 		!1 === this.isUpdatePending && (this._$ES = this._$EP());
@@ -251,55 +251,55 @@ var g = class extends HTMLElement {
 	updated(e) {}
 	firstUpdated(e) {}
 };
-g.elementStyles = [], g.shadowRootOptions = { mode: "open" }, g[m("elementProperties")] = /* @__PURE__ */ new Map(), g[m("finalized")] = /* @__PURE__ */ new Map(), ie?.({ ReactiveElement: g }), (f.reactiveElementVersions ??= []).push("2.1.2");
+h.elementStyles = [], h.shadowRootOptions = { mode: "open" }, h[p("elementProperties")] = /* @__PURE__ */ new Map(), h[p("finalized")] = /* @__PURE__ */ new Map(), ae?.({ ReactiveElement: h }), (f.reactiveElementVersions ??= []).push("2.1.2");
 // node_modules/lit-html/lit-html.js
-var _ = globalThis, se = (e) => e, v = _.trustedTypes, ce = v ? v.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, le = "$lit$", y = `lit$${Math.random().toFixed(9).slice(2)}$`, b = "?" + y, ue = `<${b}>`, x = document, S = () => x.createComment(""), C = (e) => e === null || typeof e != "object" && typeof e != "function", w = Array.isArray, de = (e) => w(e) || typeof e?.[Symbol.iterator] == "function", T = "[ 	\n\f\r]", E = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, fe = /-->/g, pe = />/g, D = RegExp(`>|${T}(?:([^\\s"'>=/]+)(${T}*=${T}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), me = /'/g, he = /"/g, ge = /^(?:script|style|textarea|title)$/i, _e = (e) => (t, ...n) => ({
+var g = globalThis, ce = (e) => e, _ = g.trustedTypes, le = _ ? _.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, v = "$lit$", y = `lit$${Math.random().toFixed(9).slice(2)}$`, b = "?" + y, ue = `<${b}>`, x = document, S = () => x.createComment(""), C = (e) => e === null || typeof e != "object" && typeof e != "function", w = Array.isArray, de = (e) => w(e) || typeof e?.[Symbol.iterator] == "function", T = "[ 	\n\f\r]", E = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, D = /-->/g, fe = />/g, O = RegExp(`>|${T}(?:([^\\s"'>=/]+)(${T}*=${T}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), pe = /'/g, me = /"/g, he = /^(?:script|style|textarea|title)$/i, ge = (e) => (t, ...n) => ({
 	_$litType$: e,
 	strings: t,
 	values: n
-}), O = _e(1), k = _e(2), A = Symbol.for("lit-noChange"), j = Symbol.for("lit-nothing"), ve = /* @__PURE__ */ new WeakMap(), M = x.createTreeWalker(x, 129);
-function N(e, t) {
+}), k = ge(1), A = ge(2), j = Symbol.for("lit-noChange"), M = Symbol.for("lit-nothing"), _e = /* @__PURE__ */ new WeakMap(), N = x.createTreeWalker(x, 129);
+function P(e, t) {
 	if (!w(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
-	return ce === void 0 ? t : ce.createHTML(t);
+	return le === void 0 ? t : le.createHTML(t);
 }
-var ye = (e, t) => {
+var ve = (e, t) => {
 	let n = e.length - 1, r = [], i, a = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", o = E;
 	for (let t = 0; t < n; t++) {
 		let n = e[t], s, c, l = -1, u = 0;
-		for (; u < n.length && (o.lastIndex = u, c = o.exec(n), c !== null);) u = o.lastIndex, o === E ? c[1] === "!--" ? o = fe : c[1] === void 0 ? c[2] === void 0 ? c[3] !== void 0 && (o = D) : (ge.test(c[2]) && (i = RegExp("</" + c[2], "g")), o = D) : o = pe : o === D ? c[0] === ">" ? (o = i ?? E, l = -1) : c[1] === void 0 ? l = -2 : (l = o.lastIndex - c[2].length, s = c[1], o = c[3] === void 0 ? D : c[3] === "\"" ? he : me) : o === he || o === me ? o = D : o === fe || o === pe ? o = E : (o = D, i = void 0);
-		let d = o === D && e[t + 1].startsWith("/>") ? " " : "";
-		a += o === E ? n + ue : l >= 0 ? (r.push(s), n.slice(0, l) + le + n.slice(l) + y + d) : n + y + (l === -2 ? t : d);
+		for (; u < n.length && (o.lastIndex = u, c = o.exec(n), c !== null);) u = o.lastIndex, o === E ? c[1] === "!--" ? o = D : c[1] === void 0 ? c[2] === void 0 ? c[3] !== void 0 && (o = O) : (he.test(c[2]) && (i = RegExp("</" + c[2], "g")), o = O) : o = fe : o === O ? c[0] === ">" ? (o = i ?? E, l = -1) : c[1] === void 0 ? l = -2 : (l = o.lastIndex - c[2].length, s = c[1], o = c[3] === void 0 ? O : c[3] === "\"" ? me : pe) : o === me || o === pe ? o = O : o === D || o === fe ? o = E : (o = O, i = void 0);
+		let d = o === O && e[t + 1].startsWith("/>") ? " " : "";
+		a += o === E ? n + ue : l >= 0 ? (r.push(s), n.slice(0, l) + v + n.slice(l) + y + d) : n + y + (l === -2 ? t : d);
 	}
-	return [N(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
-}, P = class e {
+	return [P(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
+}, F = class e {
 	constructor({ strings: t, _$litType$: n }, r) {
 		let i;
 		this.parts = [];
-		let a = 0, o = 0, s = t.length - 1, c = this.parts, [l, u] = ye(t, n);
-		if (this.el = e.createElement(l, r), M.currentNode = this.el.content, n === 2 || n === 3) {
+		let a = 0, o = 0, s = t.length - 1, c = this.parts, [l, u] = ve(t, n);
+		if (this.el = e.createElement(l, r), N.currentNode = this.el.content, n === 2 || n === 3) {
 			let e = this.el.content.firstChild;
 			e.replaceWith(...e.childNodes);
 		}
-		for (; (i = M.nextNode()) !== null && c.length < s;) {
+		for (; (i = N.nextNode()) !== null && c.length < s;) {
 			if (i.nodeType === 1) {
-				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(le)) {
+				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(v)) {
 					let t = u[o++], n = i.getAttribute(e).split(y), r = /([.?@])?(.*)/.exec(t);
 					c.push({
 						type: 1,
 						index: a,
 						name: r[2],
 						strings: n,
-						ctor: r[1] === "." ? xe : r[1] === "?" ? Se : r[1] === "@" ? Ce : L
+						ctor: r[1] === "." ? be : r[1] === "?" ? xe : r[1] === "@" ? Se : R
 					}), i.removeAttribute(e);
 				} else e.startsWith(y) && (c.push({
 					type: 6,
 					index: a
 				}), i.removeAttribute(e));
-				if (ge.test(i.tagName)) {
+				if (he.test(i.tagName)) {
 					let e = i.textContent.split(y), t = e.length - 1;
 					if (t > 0) {
-						i.textContent = v ? v.emptyScript : "";
-						for (let n = 0; n < t; n++) i.append(e[n], S()), M.nextNode(), c.push({
+						i.textContent = _ ? _.emptyScript : "";
+						for (let n = 0; n < t; n++) i.append(e[n], S()), N.nextNode(), c.push({
 							type: 2,
 							index: ++a
 						});
@@ -327,12 +327,12 @@ var ye = (e, t) => {
 		return n.innerHTML = e, n;
 	}
 };
-function F(e, t, n = e, r) {
-	if (t === A) return t;
+function I(e, t, n = e, r) {
+	if (t === j) return t;
 	let i = r === void 0 ? n._$Cl : n._$Co?.[r], a = C(t) ? void 0 : t._$litDirective$;
-	return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, r)), r === void 0 ? n._$Cl = i : (n._$Co ??= [])[r] = i), i !== void 0 && (t = F(e, i._$AS(e, t.values), i, r)), t;
+	return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, r)), r === void 0 ? n._$Cl = i : (n._$Co ??= [])[r] = i), i !== void 0 && (t = I(e, i._$AS(e, t.values), i, r)), t;
 }
-var be = class {
+var ye = class {
 	constructor(e, t) {
 		this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = t;
 	}
@@ -344,27 +344,27 @@ var be = class {
 	}
 	u(e) {
 		let { el: { content: t }, parts: n } = this._$AD, r = (e?.creationScope ?? x).importNode(t, !0);
-		M.currentNode = r;
-		let i = M.nextNode(), a = 0, o = 0, s = n[0];
+		N.currentNode = r;
+		let i = N.nextNode(), a = 0, o = 0, s = n[0];
 		for (; s !== void 0;) {
 			if (a === s.index) {
 				let t;
-				s.type === 2 ? t = new I(i, i.nextSibling, this, e) : s.type === 1 ? t = new s.ctor(i, s.name, s.strings, this, e) : s.type === 6 && (t = new we(i, this, e)), this._$AV.push(t), s = n[++o];
+				s.type === 2 ? t = new L(i, i.nextSibling, this, e) : s.type === 1 ? t = new s.ctor(i, s.name, s.strings, this, e) : s.type === 6 && (t = new Ce(i, this, e)), this._$AV.push(t), s = n[++o];
 			}
-			a !== s?.index && (i = M.nextNode(), a++);
+			a !== s?.index && (i = N.nextNode(), a++);
 		}
-		return M.currentNode = x, r;
+		return N.currentNode = x, r;
 	}
 	p(e) {
 		let t = 0;
 		for (let n of this._$AV) n !== void 0 && (n.strings === void 0 ? n._$AI(e[t]) : (n._$AI(e, n, t), t += n.strings.length - 2)), t++;
 	}
-}, I = class e {
+}, L = class e {
 	get _$AU() {
 		return this._$AM?._$AU ?? this._$Cv;
 	}
 	constructor(e, t, n, r) {
-		this.type = 2, this._$AH = j, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = n, this.options = r, this._$Cv = r?.isConnected ?? !0;
+		this.type = 2, this._$AH = M, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = n, this.options = r, this._$Cv = r?.isConnected ?? !0;
 	}
 	get parentNode() {
 		let e = this._$AA.parentNode, t = this._$AM;
@@ -377,7 +377,7 @@ var be = class {
 		return this._$AB;
 	}
 	_$AI(e, t = this) {
-		e = F(this, e, t), C(e) ? e === j || e == null || e === "" ? (this._$AH !== j && this._$AR(), this._$AH = j) : e !== this._$AH && e !== A && this._(e) : e._$litType$ === void 0 ? e.nodeType === void 0 ? de(e) ? this.k(e) : this._(e) : this.T(e) : this.$(e);
+		e = I(this, e, t), C(e) ? e === M || e == null || e === "" ? (this._$AH !== M && this._$AR(), this._$AH = M) : e !== this._$AH && e !== j && this._(e) : e._$litType$ === void 0 ? e.nodeType === void 0 ? de(e) ? this.k(e) : this._(e) : this.T(e) : this.$(e);
 	}
 	O(e) {
 		return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -386,19 +386,19 @@ var be = class {
 		this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
 	}
 	_(e) {
-		this._$AH !== j && C(this._$AH) ? this._$AA.nextSibling.data = e : this.T(x.createTextNode(e)), this._$AH = e;
+		this._$AH !== M && C(this._$AH) ? this._$AA.nextSibling.data = e : this.T(x.createTextNode(e)), this._$AH = e;
 	}
 	$(e) {
-		let { values: t, _$litType$: n } = e, r = typeof n == "number" ? this._$AC(e) : (n.el === void 0 && (n.el = P.createElement(N(n.h, n.h[0]), this.options)), n);
+		let { values: t, _$litType$: n } = e, r = typeof n == "number" ? this._$AC(e) : (n.el === void 0 && (n.el = F.createElement(P(n.h, n.h[0]), this.options)), n);
 		if (this._$AH?._$AD === r) this._$AH.p(t);
 		else {
-			let e = new be(r, this), n = e.u(this.options);
+			let e = new ye(r, this), n = e.u(this.options);
 			e.p(t), this.T(n), this._$AH = e;
 		}
 	}
 	_$AC(e) {
-		let t = ve.get(e.strings);
-		return t === void 0 && ve.set(e.strings, t = new P(e)), t;
+		let t = _e.get(e.strings);
+		return t === void 0 && _e.set(e.strings, t = new F(e)), t;
 	}
 	k(t) {
 		w(this._$AH) || (this._$AH = [], this._$AR());
@@ -408,14 +408,14 @@ var be = class {
 	}
 	_$AR(e = this._$AA.nextSibling, t) {
 		for (this._$AP?.(!1, !0, t); e !== this._$AB;) {
-			let t = se(e).nextSibling;
-			se(e).remove(), e = t;
+			let t = ce(e).nextSibling;
+			ce(e).remove(), e = t;
 		}
 	}
 	setConnected(e) {
 		this._$AM === void 0 && (this._$Cv = e, this._$AP?.(e));
 	}
-}, L = class {
+}, R = class {
 	get tagName() {
 		return this.element.tagName;
 	}
@@ -423,47 +423,47 @@ var be = class {
 		return this._$AM._$AU;
 	}
 	constructor(e, t, n, r, i) {
-		this.type = 1, this._$AH = j, this._$AN = void 0, this.element = e, this.name = t, this._$AM = r, this.options = i, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(/* @__PURE__ */ new String()), this.strings = n) : this._$AH = j;
+		this.type = 1, this._$AH = M, this._$AN = void 0, this.element = e, this.name = t, this._$AM = r, this.options = i, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(/* @__PURE__ */ new String()), this.strings = n) : this._$AH = M;
 	}
 	_$AI(e, t = this, n, r) {
 		let i = this.strings, a = !1;
-		if (i === void 0) e = F(this, e, t, 0), a = !C(e) || e !== this._$AH && e !== A, a && (this._$AH = e);
+		if (i === void 0) e = I(this, e, t, 0), a = !C(e) || e !== this._$AH && e !== j, a && (this._$AH = e);
 		else {
 			let r = e, o, s;
-			for (e = i[0], o = 0; o < i.length - 1; o++) s = F(this, r[n + o], t, o), s === A && (s = this._$AH[o]), a ||= !C(s) || s !== this._$AH[o], s === j ? e = j : e !== j && (e += (s ?? "") + i[o + 1]), this._$AH[o] = s;
+			for (e = i[0], o = 0; o < i.length - 1; o++) s = I(this, r[n + o], t, o), s === j && (s = this._$AH[o]), a ||= !C(s) || s !== this._$AH[o], s === M ? e = M : e !== M && (e += (s ?? "") + i[o + 1]), this._$AH[o] = s;
 		}
 		a && !r && this.j(e);
 	}
 	j(e) {
-		e === j ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
+		e === M ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
 	}
-}, xe = class extends L {
+}, be = class extends R {
 	constructor() {
 		super(...arguments), this.type = 3;
 	}
 	j(e) {
-		this.element[this.name] = e === j ? void 0 : e;
+		this.element[this.name] = e === M ? void 0 : e;
 	}
-}, Se = class extends L {
+}, xe = class extends R {
 	constructor() {
 		super(...arguments), this.type = 4;
 	}
 	j(e) {
-		this.element.toggleAttribute(this.name, !!e && e !== j);
+		this.element.toggleAttribute(this.name, !!e && e !== M);
 	}
-}, Ce = class extends L {
+}, Se = class extends R {
 	constructor(e, t, n, r, i) {
 		super(e, t, n, r, i), this.type = 5;
 	}
 	_$AI(e, t = this) {
-		if ((e = F(this, e, t, 0) ?? j) === A) return;
-		let n = this._$AH, r = e === j && n !== j || e.capture !== n.capture || e.once !== n.once || e.passive !== n.passive, i = e !== j && (n === j || r);
+		if ((e = I(this, e, t, 0) ?? M) === j) return;
+		let n = this._$AH, r = e === M && n !== M || e.capture !== n.capture || e.once !== n.once || e.passive !== n.passive, i = e !== M && (n === M || r);
 		r && this.element.removeEventListener(this.name, this, n), i && this.element.addEventListener(this.name, this, e), this._$AH = e;
 	}
 	handleEvent(e) {
 		typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, e) : this._$AH.handleEvent(e);
 	}
-}, we = class {
+}, Ce = class {
 	constructor(e, t, n) {
 		this.element = e, this.type = 6, this._$AN = void 0, this._$AM = t, this.options = n;
 	}
@@ -471,18 +471,18 @@ var be = class {
 		return this._$AM._$AU;
 	}
 	_$AI(e) {
-		F(this, e);
+		I(this, e);
 	}
-}, Te = _.litHtmlPolyfillSupport;
-Te?.(P, I), (_.litHtmlVersions ??= []).push("3.3.3");
-var Ee = (e, t, n) => {
+}, we = g.litHtmlPolyfillSupport;
+we?.(F, L), (g.litHtmlVersions ??= []).push("3.3.3");
+var Te = (e, t, n) => {
 	let r = n?.renderBefore ?? t, i = r._$litPart$;
 	if (i === void 0) {
 		let e = n?.renderBefore ?? null;
-		r._$litPart$ = i = new I(t.insertBefore(S(), e), e, void 0, n ?? {});
+		r._$litPart$ = i = new L(t.insertBefore(S(), e), e, void 0, n ?? {});
 	}
 	return i._$AI(e), i;
-}, R = globalThis, z = class extends g {
+}, z = globalThis, B = class extends h {
 	constructor() {
 		super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
 	}
@@ -492,7 +492,7 @@ var Ee = (e, t, n) => {
 	}
 	update(e) {
 		let t = this.render();
-		this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = Ee(t, this.renderRoot, this.renderOptions);
+		this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = Te(t, this.renderRoot, this.renderOptions);
 	}
 	connectedCallback() {
 		super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -501,27 +501,27 @@ var Ee = (e, t, n) => {
 		super.disconnectedCallback(), this._$Do?.setConnected(!1);
 	}
 	render() {
-		return A;
+		return j;
 	}
 };
-z._$litElement$ = !0, z.finalized = !0, R.litElementHydrateSupport?.({ LitElement: z });
-var De = R.litElementPolyfillSupport;
-De?.({ LitElement: z }), (R.litElementVersions ??= []).push("4.2.2");
+B._$litElement$ = !0, B.finalized = !0, z.litElementHydrateSupport?.({ LitElement: B });
+var Ee = z.litElementPolyfillSupport;
+Ee?.({ LitElement: B }), (z.litElementVersions ??= []).push("4.2.2");
 // src/api.ts
-var B = (e, t, n = {}) => e.callWS({
+var V = (e, t, n = {}) => e.callWS({
 	type: `waipu_tv/${t}`,
 	...n
-}), Oe = (e) => B(e, "channels"), V = (e, t, n, r) => B(e, "guide", {
+}), De = (e) => V(e, "channels"), Oe = (e, t, n, r) => V(e, "guide", {
 	start: t.toISOString(),
 	end: n.toISOString(),
 	...r ? { channels: r } : {}
-}), ke = (e, t) => B(e, "program", { program_id: t }), Ae = (e) => B(e, "recordings"), je = (e) => B(e, "playlists"), H = (e, t, n = !1) => B(e, "record", {
+}), ke = (e, t) => V(e, "program", { program_id: t }), Ae = (e) => V(e, "recordings"), je = (e) => V(e, "playlists"), Me = (e, t, n = !1) => V(e, "record", {
 	program_id: t,
 	series: n
-}), Me = (e, t) => B(e, "delete_recordings", { recording_ids: t }), Ne = (e, t, n) => B(e, "set_favorite", {
+}), Ne = (e, t) => V(e, "cancel_series", { program_id: t }), Pe = (e, t) => V(e, "delete_recordings", { recording_ids: t }), Fe = (e, t, n) => V(e, "set_favorite", {
 	channel: t,
 	favorite: n
-}), Pe = {
+}), Ie = {
 	guide: "Guide",
 	favorites: "Favorites",
 	recordings: "Recordings",
@@ -573,6 +573,9 @@ var B = (e, t, n = {}) => e.callWS({
 	clear_selection: "Clear selection",
 	confirm_delete: "Delete {count} recordings? Scheduled ones are cancelled.",
 	deleted: "{count} recordings deleted",
+	stop_series: "Stop series",
+	confirm_stop_series: "Stop recording {title}? Scheduled episodes are cancelled, recorded ones are kept.",
+	series_stopped: "{title}: series recording stopped",
 	title: "Title",
 	channel: "Channel",
 	date: "Date",
@@ -616,7 +619,7 @@ var B = (e, t, n = {}) => e.callWS({
 	param_filter: "Channel selection of the guide: all, favorites, live or vod.",
 	needs_restart: "Needs instant restart, which your waipu.tv package doesn't include.",
 	error: "waipu.tv: {message}"
-}, Fe = {
+}, Le = {
 	guide: "Programm",
 	favorites: "Favoriten",
 	recordings: "Aufnahmen",
@@ -668,6 +671,9 @@ var B = (e, t, n = {}) => e.callWS({
 	clear_selection: "Auswahl aufheben",
 	confirm_delete: "{count} Aufnahmen löschen? Geplante werden abgebrochen.",
 	deleted: "{count} Aufnahmen gelöscht",
+	stop_series: "Serie beenden",
+	confirm_stop_series: "Aufnahme von {title} beenden? Geplante Folgen werden abgebrochen, aufgenommene bleiben erhalten.",
+	series_stopped: "{title}: Serienaufnahme beendet",
 	title: "Titel",
 	channel: "Sender",
 	date: "Datum",
@@ -712,17 +718,17 @@ var B = (e, t, n = {}) => e.callWS({
 	needs_restart: "Benötigt Instant Restart, das dein waipu.tv-Paket nicht enthält.",
 	error: "waipu.tv: {message}"
 };
-function U(e, t, n = {}) {
-	return (e.language?.startsWith("de") ? Fe : Pe)[t].replace(/\{(\w+)\}/g, (e, t) => String(n[t] ?? ""));
+function H(e, t, n = {}) {
+	return (e.language?.startsWith("de") ? Le : Ie)[t].replace(/\{(\w+)\}/g, (e, t) => String(n[t] ?? ""));
 }
-function W(e, t) {
+function U(e, t) {
 	return new Intl.DateTimeFormat(e.language, {
 		timeZone: e.config.time_zone,
 		...t
 	});
 }
 // src/icons.ts
-var G = (e, t = 20) => k`<svg class="i" viewBox="0 0 24 24" style="width:${t}px;height:${t}px" aria-hidden="true">${e}</svg>`, Ie = () => G(k`<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>`), K = (e = 20) => G(k`<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>`, e), q = () => G(k`<circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/>`), Le = () => G(k`<path d="M6 6l12 12M18 6 6 18"/>`), Re = () => G(k`<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>`), ze = () => G(k`<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>`), Be = () => G(k`<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/>`), J = (e = 14) => k`<svg class="i" viewBox="0 0 24 24" style="width:${e}px;height:${e}px;fill:currentColor;stroke:none" aria-hidden="true"><circle cx="12" cy="12" r="7"/></svg>`, Y = o`
+var W = (e, t = 20) => A`<svg class="i" viewBox="0 0 24 24" style="width:${t}px;height:${t}px" aria-hidden="true">${e}</svg>`, Re = () => W(A`<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>`), G = (e = 20) => W(A`<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>`, e), K = () => W(A`<circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/>`), ze = () => W(A`<path d="M6 6l12 12M18 6 6 18"/>`), Be = () => W(A`<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>`), Ve = () => W(A`<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>`), He = () => W(A`<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/>`), q = (e = 14) => A`<svg class="i" viewBox="0 0 24 24" style="width:${e}px;height:${e}px;fill:currentColor;stroke:none" aria-hidden="true"><circle cx="12" cy="12" r="7"/></svg>`, J = o`
   :host {
     --wt-card: var(--card-background-color, #fff);
     --wt-fg: var(--primary-text-color, #212121);
@@ -950,29 +956,29 @@ var G = (e, t = 20) => k`<svg class="i" viewBox="0 0 24 24" style="width:${t}px;
   }
 `;
 // src/util.ts
-function X(e, t) {
+function Y(e, t) {
 	e.dispatchEvent(new CustomEvent("waipu-changed", {
 		detail: { what: t },
 		bubbles: !0,
 		composed: !0
 	}));
 }
-function Z(e, t) {
+function X(e, t) {
 	e.dispatchEvent(new CustomEvent("waipu-toast", {
 		detail: { message: t },
 		bubbles: !0,
 		composed: !0
 	}));
 }
-async function Q(e, t, n) {
+async function Z(e, t, n) {
 	try {
 		return await n(), !0;
 	} catch (n) {
-		return Z(e, U(t, "error", { message: n?.message ?? String(n) })), !1;
+		return X(e, H(t, "error", { message: n?.message ?? String(n) })), !1;
 	}
 }
 // src/favorites-tab.ts
-var Ve = class extends z {
+var Ue = class extends B {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -987,12 +993,12 @@ var Ve = class extends z {
 	}
 	async _toggle(e) {
 		this._busy = e.id;
-		let t = await Q(this, this.hass, () => Ne(this.hass, e.id, !e.favorite));
-		this._busy = void 0, t && (X(this, "channels"), Z(this, U(this.hass, e.favorite ? "favorite_removed" : "favorite_added", { name: e.name })));
+		let t = await Z(this, this.hass, () => Fe(this.hass, e.id, !e.favorite));
+		this._busy = void 0, t && (Y(this, "channels"), X(this, H(this.hass, e.favorite ? "favorite_removed" : "favorite_added", { name: e.name })));
 	}
 	_star(e) {
-		let t = U(this.hass, e.favorite ? "remove_favorite" : "add_favorite");
-		return O`<button
+		let t = H(this.hass, e.favorite ? "remove_favorite" : "add_favorite");
+		return k`<button
       class="star-btn"
       aria-pressed=${e.favorite}
       title=${t}
@@ -1000,14 +1006,14 @@ var Ve = class extends z {
       ?disabled=${this._busy === e.id}
       @click=${() => this._toggle(e)}
     >
-      ${Be()}
+      ${He()}
     </button>`;
 	}
 	_kind(e) {
 		return [
 			`${e.number}`,
-			U(this.hass, e.vod ? "on_demand" : "live_tv"),
-			...e.visible ? [] : [U(this.hass, "hidden")]
+			H(this.hass, e.vod ? "on_demand" : "live_tv"),
+			...e.visible ? [] : [H(this.hass, "hidden")]
 		].join(" · ");
 	}
 	render() {
@@ -1022,17 +1028,17 @@ var Ve = class extends z {
 			vod: "on_demand",
 			hidden: "hidden"
 		};
-		return O`<div class="content">
+		return k`<div class="content">
       <div class="layout">
         <div class="card">
           <div class="card-h">
-            <h2>${U(this.hass, "your_favorites")}</h2>
+            <h2>${H(this.hass, "your_favorites")}</h2>
             <span class="chip">${t.length}</span>
           </div>
-          <div class="note">${Ie()}${U(this.hass, "favorites_note")}</div>
+          <div class="note">${Re()}${H(this.hass, "favorites_note")}</div>
           <div class="card-b">
             <ul class="list">
-              ${t.map((e) => O`<li>
+              ${t.map((e) => k`<li>
                   <img class="logo" src=${e.logo} alt="" loading="lazy" />
                   <div class="meta">
                     <div>${e.name}</div>
@@ -1045,18 +1051,18 @@ var Ve = class extends z {
         </div>
         <div class="card">
           <div class="card-h">
-            <h2>${U(this.hass, "all_channels")}</h2>
+            <h2>${H(this.hass, "all_channels")}</h2>
             <div class="toolbar">
               <div class="seg" role="group">
-                ${i.map((e) => O`<button aria-pressed=${e === this._filter} @click=${() => this._filter = e}>
-                    ${U(this.hass, a[e])}
+                ${i.map((e) => k`<button aria-pressed=${e === this._filter} @click=${() => this._filter = e}>
+                    ${H(this.hass, a[e])}
                   </button>`)}
               </div>
               <label class="search">
-                ${q()}
+                ${K()}
                 <input
                   type="search"
-                  placeholder=${U(this.hass, "filter_channels")}
+                  placeholder=${H(this.hass, "filter_channels")}
                   .value=${this._search}
                   @input=${(e) => this._search = e.target.value}
                 />
@@ -1065,7 +1071,7 @@ var Ve = class extends z {
           </div>
           <div class="card-b">
             <div class="grid">
-              ${r.map((e) => O`<div class="tile">
+              ${r.map((e) => k`<div class="tile">
                   <img class="logo" src=${e.logo} alt="" loading="lazy" />
                   <div class="meta">
                     <div>${e.name}</div>
@@ -1080,7 +1086,7 @@ var Ve = class extends z {
     </div>`;
 	}
 	static {
-		this.styles = [Y, o`
+		this.styles = [J, o`
       .layout {
         display: flex;
         flex-wrap: wrap;
@@ -1152,9 +1158,9 @@ var Ve = class extends z {
     `];
 	}
 };
-customElements.define("waipu-favorites-tab", Ve);
+customElements.define("waipu-favorites-tab", Ue);
 // src/program-dialog.ts
-var He = class extends z {
+var We = class extends B {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -1179,84 +1185,84 @@ var He = class extends z {
 	}
 	async _run(e, t, n) {
 		this._busy = !0;
-		let r = await Q(this, this.hass, e);
-		this._busy = !1, r && (X(this, n), Z(this, t), n === "recordings" && this._close());
+		let r = await Z(this, this.hass, e);
+		this._busy = !1, r && (Y(this, n), X(this, t), n === "recordings" && this._close());
 	}
 	render() {
-		let e = this.program, t = new Date(e.start).getTime(), n = new Date(e.stop).getTime(), r = Date.now(), i = W(this.hass, {
+		let e = this.program, t = new Date(e.start).getTime(), n = new Date(e.stop).getTime(), r = Date.now(), i = U(this.hass, {
 			hour: "2-digit",
 			minute: "2-digit"
-		}), a = W(this.hass, {
+		}), a = U(this.hass, {
 			weekday: "long",
 			day: "numeric",
 			month: "long"
 		}), o = t <= r && r < n, s = n <= r, c = this.recording, l = this.channel?.favorite ?? !1;
-		return O`<dialog
+		return k`<dialog
       @close=${() => this.dispatchEvent(new CustomEvent("closed"))}
       @click=${this._backdropClick}
     >
       <div class="dlg-h">
-        ${this.channel ? O`<img class="logo" src=${this.channel.logo} alt="" />` : j}
+        ${this.channel ? k`<img class="logo" src=${this.channel.logo} alt="" />` : M}
         <div class="meta">
           <div class="muted small">${this.channel?.name ?? e.channel_id}</div>
           <h3>${e.title}</h3>
           <div class="muted small">
             ${a.format(t)}, ${i.format(t)}–${i.format(n)}
-            ${e.episode_title ? O` · ${e.episode_title}` : j}
+            ${e.episode_title ? k` · ${e.episode_title}` : M}
           </div>
         </div>
-        ${this.channel ? O`<button
+        ${this.channel ? k`<button
               class="star-btn"
               aria-pressed=${l}
-              title=${U(this.hass, l ? "remove_favorite" : "add_favorite")}
-              aria-label=${U(this.hass, l ? "remove_favorite" : "add_favorite")}
+              title=${H(this.hass, l ? "remove_favorite" : "add_favorite")}
+              aria-label=${H(this.hass, l ? "remove_favorite" : "add_favorite")}
               ?disabled=${this._busy}
-              @click=${() => this._run(() => Ne(this.hass, this.channel.id, !l), U(this.hass, l ? "favorite_removed" : "favorite_added", { name: this.channel.name }), "channels")}
+              @click=${() => this._run(() => Fe(this.hass, this.channel.id, !l), H(this.hass, l ? "favorite_removed" : "favorite_added", { name: this.channel.name }), "channels")}
             >
-              ${Be()}
-            </button>` : j}
-        <button class="icon-btn" aria-label=${U(this.hass, "close")} @click=${this._close}>${Le()}</button>
+              ${He()}
+            </button>` : M}
+        <button class="icon-btn" aria-label=${H(this.hass, "close")} @click=${this._close}>${ze()}</button>
       </div>
       <div class="dlg-b">
         <div class="toolbar">
-          ${o ? O`<span class="chip live"><span class="dot"></span>${U(this.hass, "live")}</span>` : j}
-          ${s ? O`<span class="chip">${U(this.hass, "ended")}</span>` : j}
-          ${c?.status === "RECORDING" ? O`<span class="chip rec">${J()}${U(this.hass, "rec")}</span>` : j}
-          ${c?.status === "SCHEDULED" ? O`<span class="chip sched">${K(14)}${U(this.hass, "scheduled")}</span>` : j}
-          ${e.genre ? O`<span class="chip">${e.genre}</span>` : j}
+          ${o ? k`<span class="chip live"><span class="dot"></span>${H(this.hass, "live")}</span>` : M}
+          ${s ? k`<span class="chip">${H(this.hass, "ended")}</span>` : M}
+          ${c?.status === "RECORDING" ? k`<span class="chip rec">${q()}${H(this.hass, "rec")}</span>` : M}
+          ${c?.status === "SCHEDULED" ? k`<span class="chip sched">${G(14)}${H(this.hass, "scheduled")}</span>` : M}
+          ${e.genre ? k`<span class="chip">${e.genre}</span>` : M}
         </div>
-        ${o ? O`<div class="progress"><div style="width:${(r - t) / (n - t) * 100}%"></div></div>` : j}
-        ${e.image ? O`<img class="still" src=${e.image} alt="" />` : j}
-        <p>${this._description ?? U(this.hass, "loading")}</p>
-        ${e.recordable ? j : O`<p class="muted small">${U(this.hass, "not_recordable")}</p>`}
+        ${o ? k`<div class="progress"><div style="width:${(r - t) / (n - t) * 100}%"></div></div>` : M}
+        ${e.image ? k`<img class="still" src=${e.image} alt="" />` : M}
+        <p>${this._description ?? H(this.hass, "loading")}</p>
+        ${e.recordable ? M : k`<p class="muted small">${H(this.hass, "not_recordable")}</p>`}
       </div>
       <div class="dlg-a">
-        ${c ? O`<button
+        ${c ? k`<button
               class="btn danger"
               ?disabled=${this._busy}
-              @click=${() => this._run(() => Me(this.hass, [c.id]), U(this.hass, "recording_cancelled"), "recordings")}
+              @click=${() => this._run(() => Pe(this.hass, [c.id]), H(this.hass, "recording_cancelled"), "recordings")}
             >
-              ${U(this.hass, "cancel_recording")}
-            </button>` : j}
-        ${!c && !s && e.recordable && e.series_id ? O`<button
+              ${H(this.hass, "cancel_recording")}
+            </button>` : M}
+        ${!c && !s && e.recordable && e.series_id ? k`<button
               class="btn"
               ?disabled=${this._busy}
-              @click=${() => this._run(() => H(this.hass, e.id, !0), U(this.hass, "series_started", { title: e.title }), "recordings")}
+              @click=${() => this._run(() => Me(this.hass, e.id, !0), H(this.hass, "series_started", { title: e.title }), "recordings")}
             >
-              ${U(this.hass, "record_series")}
-            </button>` : j}
-        ${!c && !s && e.recordable ? O`<button
+              ${H(this.hass, "record_series")}
+            </button>` : M}
+        ${!c && !s && e.recordable ? k`<button
               class="btn primary"
               ?disabled=${this._busy}
-              @click=${() => this._run(() => H(this.hass, e.id), U(this.hass, "recording_started", { title: e.title }), "recordings")}
+              @click=${() => this._run(() => Me(this.hass, e.id), H(this.hass, "recording_started", { title: e.title }), "recordings")}
             >
-              ${J()}${U(this.hass, "record")}
-            </button>` : j}
+              ${q()}${H(this.hass, "record")}
+            </button>` : M}
       </div>
     </dialog>`;
 	}
 	static {
-		this.styles = [Y, o`
+		this.styles = [J, o`
       dialog {
         border: 0;
         border-radius: 20px;
@@ -1337,9 +1343,9 @@ var He = class extends z {
     `];
 	}
 };
-customElements.define("waipu-program-dialog", He);
+customElements.define("waipu-program-dialog", We);
 // src/guide-tab.ts
-var Ue = 4, $ = 6e4, We = class extends z {
+var Ge = 4, Q = 6e4, Ke = class extends B {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -1357,7 +1363,7 @@ var Ue = 4, $ = 6e4, We = class extends z {
 		super(), this._days = [], this._scrollToNow = !0, this._day = 0, this._all = !1, this._search = "", this._now = Date.now();
 	}
 	connectedCallback() {
-		super.connectedCallback(), this._clock = window.setInterval(() => this._now = Date.now(), $);
+		super.connectedCallback(), this._clock = window.setInterval(() => this._now = Date.now(), Q);
 	}
 	disconnectedCallback() {
 		super.disconnectedCallback(), window.clearInterval(this._clock);
@@ -1374,12 +1380,12 @@ var Ue = 4, $ = 6e4, We = class extends z {
 		try {
 			if (!this._days.length) {
 				let e = /* @__PURE__ */ new Date();
-				this._days = (await V(this.hass, e, e)).days;
+				this._days = (await Oe(this.hass, e, e)).days;
 			}
 			let e = new Date(this._days[this._day]), t = this._day + 1 < this._days.length ? new Date(this._days[this._day + 1]) : null;
-			this._guide = await V(this.hass, e, t ?? new Date(e.getTime() + 1440 * $), this._all ? void 0 : this._favoriteIds);
+			this._guide = await Oe(this.hass, e, t ?? new Date(e.getTime() + 1440 * Q), this._all ? void 0 : this._favoriteIds);
 		} catch (e) {
-			Z(this, U(this.hass, "error", { message: e.message ?? String(e) }));
+			X(this, H(this.hass, "error", { message: e.message ?? String(e) }));
 		}
 	}
 	updated() {
@@ -1387,10 +1393,10 @@ var Ue = 4, $ = 6e4, We = class extends z {
 	}
 	_dayRange() {
 		let e = new Date(this._days[this._day]).getTime(), t = this._days[this._day + 1];
-		return [e, t ? new Date(t).getTime() : e + 1440 * $];
+		return [e, t ? new Date(t).getTime() : e + 1440 * Q];
 	}
 	_x(e, t) {
-		return (e - t) / $ * Ue;
+		return (e - t) / Q * Ge;
 	}
 	_jumpToNow() {
 		let e = this.renderRoot.querySelector(".epg-box");
@@ -1404,35 +1410,35 @@ var Ue = 4, $ = 6e4, We = class extends z {
 		return e;
 	}
 	render() {
-		let e = W(this.hass, {
+		let e = U(this.hass, {
 			weekday: "short",
 			day: "numeric"
 		});
-		return O`
+		return k`
       <div class="content">
         <div class="card">
           <div class="card-h">
-            <h2>${U(this.hass, "tv_guide")}</h2>
+            <h2>${H(this.hass, "tv_guide")}</h2>
             <div class="toolbar">
               <div class="seg" role="group">
-                ${this._days.map((t, n) => O`<button aria-pressed=${n === this._day} @click=${() => this._selectDay(n)}>
-                    ${n === 0 ? U(this.hass, "today") : e.format(new Date(t))}
+                ${this._days.map((t, n) => k`<button aria-pressed=${n === this._day} @click=${() => this._selectDay(n)}>
+                    ${n === 0 ? H(this.hass, "today") : e.format(new Date(t))}
                   </button>`)}
               </div>
               <div class="seg" role="group">
                 <button aria-pressed=${!this._all} @click=${() => this._all = !1}>
-                  ${U(this.hass, "favorites")}
+                  ${H(this.hass, "favorites")}
                 </button>
                 <button aria-pressed=${this._all} @click=${() => this._all = !0}>
-                  ${U(this.hass, "all_channels")}
+                  ${H(this.hass, "all_channels")}
                 </button>
               </div>
-              <button class="btn" @click=${this._now_clicked}>${K()}${U(this.hass, "now")}</button>
+              <button class="btn" @click=${this._now_clicked}>${G()}${H(this.hass, "now")}</button>
               <label class="search">
-                ${q()}
+                ${K()}
                 <input
                   type="search"
-                  placeholder=${U(this.hass, "search_programs")}
+                  placeholder=${H(this.hass, "search_programs")}
                   .value=${this._search}
                   @input=${(e) => this._search = e.target.value}
                 />
@@ -1441,20 +1447,20 @@ var Ue = 4, $ = 6e4, We = class extends z {
           </div>
           ${this._renderGrid()}
           <div class="legend">
-            <span><span class="chip live"><span class="dot"></span>${U(this.hass, "live")}</span>${U(this.hass, "legend_live")}</span>
-            <span><span class="chip rec">${J()}${U(this.hass, "rec")}</span>${U(this.hass, "legend_rec")}</span>
-            <span><span class="chip sched">${K(14)}${U(this.hass, "scheduled")}</span>${U(this.hass, "legend_sched")}</span>
-            <span>${U(this.hass, "legend_hint")}</span>
+            <span><span class="chip live"><span class="dot"></span>${H(this.hass, "live")}</span>${H(this.hass, "legend_live")}</span>
+            <span><span class="chip rec">${q()}${H(this.hass, "rec")}</span>${H(this.hass, "legend_rec")}</span>
+            <span><span class="chip sched">${G(14)}${H(this.hass, "scheduled")}</span>${H(this.hass, "legend_sched")}</span>
+            <span>${H(this.hass, "legend_hint")}</span>
           </div>
         </div>
       </div>
-      ${this._selected ? O`<waipu-program-dialog
+      ${this._selected ? k`<waipu-program-dialog
             .hass=${this.hass}
             .program=${this._selected}
             .channel=${this.channels.find((e) => e.id === this._selected.channel_id)}
             .recording=${this._recordingsByProgram().get(this._selected.id)}
             @closed=${() => this._selected = void 0}
-          ></waipu-program-dialog>` : j}
+          ></waipu-program-dialog>` : M}
     `;
 	}
 	_selectDay(e) {
@@ -1464,25 +1470,25 @@ var Ue = 4, $ = 6e4, We = class extends z {
 		this._day === 0 ? this._jumpToNow() : this._selectDay(0);
 	}
 	_renderGrid() {
-		if (!this._guide || !this._days.length) return O`<p class="card-b muted">${U(this.hass, "loading")}</p>`;
+		if (!this._guide || !this._days.length) return k`<p class="card-b muted">${H(this.hass, "loading")}</p>`;
 		let e = this._all ? Object.keys(this._guide.programs) : this._favoriteIds, t = this.channels.filter((t) => e.includes(t.id));
-		if (!t.length) return O`<p class="card-b muted">${U(this.hass, "no_favorites")}</p>`;
-		let [n, r] = this._dayRange(), i = this._x(r, n), a = W(this.hass, {
+		if (!t.length) return k`<p class="card-b muted">${H(this.hass, "no_favorites")}</p>`;
+		let [n, r] = this._dayRange(), i = this._x(r, n), a = U(this.hass, {
 			hour: "2-digit",
 			minute: "2-digit"
 		}), o = [];
-		for (let e = n; e < r; e += 30 * $) o.push(e);
+		for (let e = n; e < r; e += 30 * Q) o.push(e);
 		let s = this._now >= n && this._now < r, c = this._recordingsByProgram(), l = this._search.trim().toLowerCase();
-		return O`
+		return k`
       <div class="epg-box">
         <div class="epg" style="--track:${i}px">
           <div class="epg-head">
-            <div class="epg-corner">${U(this.hass, "channel")}</div>
+            <div class="epg-corner">${H(this.hass, "channel")}</div>
             <div class="epg-ticks" style="width:${i}px">
-              ${o.map((e) => O`<span style="left:${this._x(e, n)}px">${a.format(e)}</span>`)}
+              ${o.map((e) => k`<span style="left:${this._x(e, n)}px">${a.format(e)}</span>`)}
             </div>
           </div>
-          ${t.map((e) => O`<div class="epg-row">
+          ${t.map((e) => k`<div class="epg-row">
               <div class="epg-ch">
                 <span class="num">${e.number}</span>
                 <img class="logo" src=${e.logo} alt="" loading="lazy" />
@@ -1492,16 +1498,16 @@ var Ue = 4, $ = 6e4, We = class extends z {
                 ${(this._guide.programs[e.id] ?? []).map((e) => this._renderProgram(e, n, r, a, c.get(e.id), l))}
               </div>
             </div>`)}
-          ${s ? O`<div class="now-line" style="left:calc(var(--ch) + ${this._x(this._now, n)}px)">
+          ${s ? k`<div class="now-line" style="left:calc(var(--ch) + ${this._x(this._now, n)}px)">
                 <span>${a.format(this._now)}</span>
-              </div>` : j}
+              </div>` : M}
         </div>
       </div>
     `;
 	}
 	_renderProgram(e, t, n, r, i, a) {
 		let o = new Date(e.start).getTime(), s = new Date(e.stop).getTime(), c = this._x(Math.max(o, t), t), l = this._x(Math.min(s, n), t), u = o <= this._now && this._now < s;
-		return O`<button
+		return k`<button
       class=${[
 			"prog",
 			s <= this._now ? "past" : "",
@@ -1514,16 +1520,16 @@ var Ue = 4, $ = 6e4, We = class extends z {
       @click=${() => this._selected = e}
     >
       <span class="t">
-        ${i?.status === "RECORDING" ? O`<span class="flag">${J()}</span>` : j}
-        ${i?.status === "SCHEDULED" ? O`<span class="flag">${K(14)}</span>` : j}
+        ${i?.status === "RECORDING" ? k`<span class="flag">${q()}</span>` : M}
+        ${i?.status === "SCHEDULED" ? k`<span class="flag">${G(14)}</span>` : M}
         <span>${e.title}</span>
       </span>
       <span class="s">${r.format(o)}${e.episode_title ? ` · ${e.episode_title}` : ""}</span>
-      ${u ? O`<span class="bar" style="width:${(this._now - o) / (s - o) * 100}%"></span>` : j}
+      ${u ? k`<span class="bar" style="width:${(this._now - o) / (s - o) * 100}%"></span>` : M}
     </button>`;
 	}
 	static {
-		this.styles = [Y, o`
+		this.styles = [J, o`
       .epg-box {
         overflow: auto;
         max-height: calc(100vh - 260px);
@@ -1727,16 +1733,16 @@ var Ue = 4, $ = 6e4, We = class extends z {
     `];
 	}
 };
-customElements.define("waipu-guide-tab", We);
+customElements.define("waipu-guide-tab", Ke);
 // src/playlists-tab.ts
-var Ge = [
+var qe = [
 	"favorites",
 	"all",
 	"live",
 	"vod",
 	"recordings",
 	"epg"
-], Ke = class extends z {
+], Je = class extends B {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -1744,117 +1750,117 @@ var Ge = [
 		};
 	}
 	firstUpdated() {
-		je(this.hass).then((e) => this._data = e).catch((e) => Z(this, U(this.hass, "error", { message: e.message ?? String(e) })));
+		je(this.hass).then((e) => this._data = e).catch((e) => X(this, H(this.hass, "error", { message: e.message ?? String(e) })));
 	}
 	async _copy(e) {
 		try {
-			await navigator.clipboard.writeText(e), Z(this, U(this.hass, "copied"));
+			await navigator.clipboard.writeText(e), X(this, H(this.hass, "copied"));
 		} catch {
-			Z(this, U(this.hass, "copy_failed"));
+			X(this, H(this.hass, "copy_failed"));
 		}
 	}
 	render() {
 		let e = this._data;
-		return O`<div class="content">
+		return k`<div class="content">
       <div class="card">
         <div class="card-h">
-          <h2>${U(this.hass, "playlist_server")}</h2>
-          <span class="chip">${U(this.hass, "admins_only")}</span>
-          ${e ? e.enabled ? O`<span class="chip live"><span class="dot"></span>${U(this.hass, "running")}</span>` : O`<span class="chip">${U(this.hass, "off")}</span>` : j}
+          <h2>${H(this.hass, "playlist_server")}</h2>
+          <span class="chip">${H(this.hass, "admins_only")}</span>
+          ${e ? e.enabled ? k`<span class="chip live"><span class="dot"></span>${H(this.hass, "running")}</span>` : k`<span class="chip">${H(this.hass, "off")}</span>` : M}
         </div>
         <div class="card-b">
-          ${e ? e.enabled ? O`<ul class="urls">
-                  ${Ge.map((t) => {
+          ${e ? e.enabled ? k`<ul class="urls">
+                  ${qe.map((t) => {
 			let n = location.origin + e.urls[t];
-			return O`<li>
+			return k`<li>
                       <div class="meta">
-                        <div>${U(this.hass, `url_${t}`)}</div>
+                        <div>${H(this.hass, `url_${t}`)}</div>
                         <div class="mono">${n}</div>
                       </div>
                       <button class="btn" @click=${() => this._copy(n)}>
-                        ${ze()}${U(this.hass, "copy")}
+                        ${Ve()}${H(this.hass, "copy")}
                       </button>
                     </li>`;
 		})}
-                </ul>` : O`<p>${U(this.hass, "playlists_off")}</p>` : O`<p class="muted">${U(this.hass, "loading")}</p>`}
+                </ul>` : k`<p>${H(this.hass, "playlists_off")}</p>` : k`<p class="muted">${H(this.hass, "loading")}</p>`}
         </div>
-        ${e ? O`<div class="card-b actions">
-              <a class="btn" href="/config/integrations/integration/waipu_tv">${U(this.hass, "open_options")}</a>
-            </div>` : j}
+        ${e ? k`<div class="card-b actions">
+              <a class="btn" href="/config/integrations/integration/waipu_tv">${H(this.hass, "open_options")}</a>
+            </div>` : M}
       </div>
-      ${e?.enabled ? this._renderOptions(e) : j}
-      <p class="muted note">${U(this.hass, "playlists_note")}</p>
+      ${e?.enabled ? this._renderOptions(e) : M}
+      <p class="muted note">${H(this.hass, "playlists_note")}</p>
     </div>`;
 	}
 	_renderOptions(e) {
-		let t = (e) => U(this.hass, e ? "on" : "off_value"), n = (e) => U(this.hass, "from_options", { value: t(e) }), r = U(this.hass, "m3u_playlists"), i = e.instant_restart ? "" : ` ${U(this.hass, "needs_restart")}`, a = [
+		let t = (e) => H(this.hass, e ? "on" : "off_value"), n = (e) => H(this.hass, "from_options", { value: t(e) }), r = H(this.hass, "m3u_playlists"), i = e.instant_restart ? "" : ` ${H(this.hass, "needs_restart")}`, a = [
 			[
 				"hidden",
 				"0 | 1",
 				t(!1),
 				`${r}, epg.xml`,
-				U(this.hass, "param_hidden")
+				H(this.hass, "param_hidden")
 			],
 			[
 				"drm",
 				"0 | 1",
 				t(!0),
 				`${r}, epg.xml`,
-				U(this.hass, "param_drm")
+				H(this.hass, "param_drm")
 			],
 			[
 				"protocol",
 				"auto | hls | dash",
 				"auto",
 				`${r}, recordings.m3u`,
-				U(this.hass, "param_protocol")
+				H(this.hass, "param_protocol")
 			],
 			[
 				"catchup",
 				"0 | 1",
 				n(e.defaults.catchup),
 				r,
-				U(this.hass, "param_catchup") + i
+				H(this.hass, "param_catchup") + i
 			],
 			[
 				"timeshift",
 				"0 | 1",
 				n(e.defaults.timeshift),
 				r,
-				U(this.hass, "param_timeshift") + i
+				H(this.hass, "param_timeshift") + i
 			],
 			[
 				"hls_proxy",
 				"0 | 1",
 				n(e.defaults.hls_proxy),
 				r,
-				U(this.hass, "param_hls_proxy")
+				H(this.hass, "param_hls_proxy")
 			],
 			[
 				"filter",
 				"all | favorites | live | vod",
 				"all",
 				"epg.xml",
-				U(this.hass, "param_filter")
+				H(this.hass, "param_filter")
 			]
 		];
-		return O`<div class="card">
-      <div class="card-h"><h2>${U(this.hass, "options_title")}</h2></div>
+		return k`<div class="card">
+      <div class="card-h"><h2>${H(this.hass, "options_title")}</h2></div>
       <div class="card-b">
-        <p class="intro">${U(this.hass, "options_intro")}</p>
+        <p class="intro">${H(this.hass, "options_intro")}</p>
         <div class="table-box">
           <table>
             <thead>
               <tr>
-                <th>${U(this.hass, "parameter")}</th>
-                <th>${U(this.hass, "values")}</th>
-                <th>${U(this.hass, "default")}</th>
-                <th>${U(this.hass, "applies_to")}</th>
-                <th>${U(this.hass, "meaning")}</th>
+                <th>${H(this.hass, "parameter")}</th>
+                <th>${H(this.hass, "values")}</th>
+                <th>${H(this.hass, "default")}</th>
+                <th>${H(this.hass, "applies_to")}</th>
+                <th>${H(this.hass, "meaning")}</th>
               </tr>
             </thead>
             <tbody>
-              ${a.map(([e, t, n, r, i]) => O`<tr>
+              ${a.map(([e, t, n, r, i]) => k`<tr>
                   <td class="mono">${e}</td>
                   <td class="mono">${t}</td>
                   <td>${n}</td>
@@ -1868,7 +1874,7 @@ var Ge = [
     </div>`;
 	}
 	static {
-		this.styles = [Y, o`
+		this.styles = [J, o`
       .card,
       .note {
         max-width: 1000px;
@@ -1941,21 +1947,21 @@ var Ge = [
     `];
 	}
 };
-customElements.define("waipu-playlists-tab", Ke);
+customElements.define("waipu-playlists-tab", Je);
 // src/recordings-tab.ts
-var qe = {
+var $ = {
 	RECORDING: 0,
 	SCHEDULED: 1,
 	FINISHED: 2,
 	FAILED: 3
 };
-function Je(e, t) {
-	let n = (qe[e.status] ?? 9) - (qe[t.status] ?? 9);
+function Ye(e, t) {
+	let n = ($[e.status] ?? 9) - ($[t.status] ?? 9);
 	if (n) return n;
 	let r = (e.start ?? "").localeCompare(t.start ?? "");
 	return e.status === "SCHEDULED" ? r : -r;
 }
-var Ye = class extends z {
+var Xe = class extends B {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -1972,7 +1978,7 @@ var Ye = class extends z {
 	}
 	_shown() {
 		let e = this._search.trim().toLowerCase();
-		return (this.data?.recordings ?? []).filter((t) => (this._filter === "all" || t.status === this._filter) && (!e || `${t.title} ${t.episode_title ?? ""}`.toLowerCase().includes(e))).sort(Je);
+		return (this.data?.recordings ?? []).filter((t) => (this._filter === "all" || t.status === this._filter) && (!e || `${t.title} ${t.episode_title ?? ""}`.toLowerCase().includes(e))).sort(Ye);
 	}
 	_rows(e) {
 		let t = [], n = /* @__PURE__ */ new Map();
@@ -1990,10 +1996,16 @@ var Ye = class extends z {
 		this._selected = n;
 	}
 	async _delete(e) {
-		if (!e.length || !confirm(U(this.hass, "confirm_delete", { count: e.length }))) return;
+		if (!e.length || !confirm(H(this.hass, "confirm_delete", { count: e.length }))) return;
 		this._busy = !0;
-		let t = await Q(this, this.hass, () => Me(this.hass, e));
-		this._busy = !1, t && (this._toggle(e, !1), X(this, "recordings"), Z(this, U(this.hass, "deleted", { count: e.length })));
+		let t = await Z(this, this.hass, () => Pe(this.hass, e));
+		this._busy = !1, t && (this._toggle(e, !1), Y(this, "recordings"), X(this, H(this.hass, "deleted", { count: e.length })));
+	}
+	async _stopSeries(e, t) {
+		if (!confirm(H(this.hass, "confirm_stop_series", { title: t }))) return;
+		this._busy = !0;
+		let n = await Z(this, this.hass, () => Ne(this.hass, e));
+		this._busy = !1, n && (Y(this, "recordings"), X(this, H(this.hass, "series_stopped", { title: t })));
 	}
 	render() {
 		let e = this.data?.recordings ?? [], t = (t) => e.filter((e) => e.status === t).length, n = this.data?.recorded_hours ?? 0, r = this.data?.booked_hours ?? 0, i = this._shown(), a = i.map((e) => e.id), o = [
@@ -2008,57 +2020,57 @@ var Ye = class extends z {
 			SCHEDULED: "scheduled",
 			FAILED: "all"
 		};
-		return O`<div class="content">
+		return k`<div class="content">
       <div class="stats">
         <div class="card stat">
-          <div class="k">${U(this.hass, "storage_used")}</div>
+          <div class="k">${H(this.hass, "storage_used")}</div>
           <div class="v">
             ${n.toFixed(1)} h
-            ${r ? O`<span class="muted of">${U(this.hass, "of_hours", { hours: r })}</span>` : j}
+            ${r ? k`<span class="muted of">${H(this.hass, "of_hours", { hours: r })}</span>` : M}
           </div>
-          ${r ? O`<div class="meter" role="meter" aria-valuemin="0" aria-valuemax=${r} aria-valuenow=${n}>
+          ${r ? k`<div class="meter" role="meter" aria-valuemin="0" aria-valuemax=${r} aria-valuenow=${n}>
                 <div style="width:${Math.min(100, n / r * 100)}%"></div>
-              </div>` : j}
+              </div>` : M}
         </div>
-        <div class="card stat"><div class="k">${U(this.hass, "recorded")}</div><div class="v">${t("FINISHED")}</div></div>
+        <div class="card stat"><div class="k">${H(this.hass, "recorded")}</div><div class="v">${t("FINISHED")}</div></div>
         <div class="card stat">
-          <div class="k">${U(this.hass, "recording_now")}</div>
+          <div class="k">${H(this.hass, "recording_now")}</div>
           <div class="v rec">${t("RECORDING")}</div>
         </div>
         <div class="card stat">
-          <div class="k">${U(this.hass, "scheduled")}</div>
+          <div class="k">${H(this.hass, "scheduled")}</div>
           <div class="v sched">${t("SCHEDULED")}</div>
         </div>
       </div>
       <div class="card">
         <div class="card-h">
-          <h2>${U(this.hass, "recordings")}</h2>
+          <h2>${H(this.hass, "recordings")}</h2>
           <div class="toolbar">
             <div class="seg" role="group">
-              ${o.map((e) => O`<button aria-pressed=${e === this._filter} @click=${() => this._filter = e}>
-                  ${U(this.hass, s[e])}
+              ${o.map((e) => k`<button aria-pressed=${e === this._filter} @click=${() => this._filter = e}>
+                  ${H(this.hass, s[e])}
                 </button>`)}
             </div>
             <label class="search">
-              ${q()}
+              ${K()}
               <input
                 type="search"
-                placeholder=${U(this.hass, "search_recordings")}
+                placeholder=${H(this.hass, "search_recordings")}
                 .value=${this._search}
                 @input=${(e) => this._search = e.target.value}
               />
             </label>
           </div>
         </div>
-        ${this._selected.size ? O`<div class="bulk">
-              <span>${U(this.hass, "selected", { count: this._selected.size })}</span>
+        ${this._selected.size ? k`<div class="bulk">
+              <span>${H(this.hass, "selected", { count: this._selected.size })}</span>
               <button class="btn danger" ?disabled=${this._busy} @click=${() => this._delete([...this._selected])}>
-                ${Re()}${U(this.hass, "delete_selected")}
+                ${Be()}${H(this.hass, "delete_selected")}
               </button>
-              <button class="btn" @click=${() => this._selected = /* @__PURE__ */ new Set()}>${U(this.hass, "clear_selection")}</button>
-            </div>` : j}
+              <button class="btn" @click=${() => this._selected = /* @__PURE__ */ new Set()}>${H(this.hass, "clear_selection")}</button>
+            </div>` : M}
         <div class="table-box">
-          ${i.length ? O`<table>
+          ${i.length ? k`<table>
                 <thead>
                   <tr>
                     <th class="check">
@@ -2069,25 +2081,25 @@ var Ye = class extends z {
                       />
                     </th>
                     <th class="thumb-col"></th>
-                    <th>${U(this.hass, "title")}</th>
-                    <th>${U(this.hass, "channel")}</th>
-                    <th>${U(this.hass, "date")}</th>
-                    <th>${U(this.hass, "length")}</th>
-                    <th>${U(this.hass, "status")}</th>
+                    <th>${H(this.hass, "title")}</th>
+                    <th>${H(this.hass, "channel")}</th>
+                    <th>${H(this.hass, "date")}</th>
+                    <th>${H(this.hass, "length")}</th>
+                    <th>${H(this.hass, "status")}</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   ${this._rows(i).map((e) => Array.isArray(e) ? this._renderGroup(e) : this._renderRecording(e, !1))}
                 </tbody>
-              </table>` : O`<p class="card-b muted">${this.data ? U(this.hass, "no_recordings") : U(this.hass, "loading")}</p>`}
+              </table>` : k`<p class="card-b muted">${this.data ? H(this.hass, "no_recordings") : H(this.hass, "loading")}</p>`}
         </div>
       </div>
     </div>`;
 	}
 	_renderGroup(e) {
-		let t = e.map((e) => e.id);
-		return O`<tr class="group">
+		let t = e.map((e) => e.id), n = e.find((e) => e.program_id)?.program_id;
+		return k`<tr class="group">
         <td class="check">
           <input
             type="checkbox"
@@ -2096,18 +2108,23 @@ var Ye = class extends z {
           />
         </td>
         <td></td>
-        <td colspan="6">${e[0].title} <span class="muted">· ${U(this.hass, "episodes", { count: e.length })}</span></td>
+        <td colspan="5">${e[0].title} <span class="muted">· ${H(this.hass, "episodes", { count: e.length })}</span></td>
+        <td>
+          ${n ? k`<button class="btn" ?disabled=${this._busy} @click=${() => this._stopSeries(n, e[0].title)}>
+                ${H(this.hass, "stop_series")}
+              </button>` : M}
+        </td>
       </tr>
       ${e.map((e) => this._renderRecording(e, !0))}`;
 	}
 	_renderRecording(e, t) {
-		let n = W(this.hass, {
+		let n = U(this.hass, {
 			day: "2-digit",
 			month: "2-digit",
 			hour: "2-digit",
 			minute: "2-digit"
 		}), r = this.channels.find((t) => t.id === e.channel_id), i = [e.season && e.episode ? `S${e.season}E${e.episode}` : "", e.episode_title ?? ""].filter(Boolean).join(" · ");
-		return O`<tr class=${t ? "child" : ""}>
+		return k`<tr class=${t ? "child" : ""}>
       <td class="check">
         <input
           type="checkbox"
@@ -2115,32 +2132,32 @@ var Ye = class extends z {
           @change=${(t) => this._toggle([e.id], t.target.checked)}
         />
       </td>
-      <td>${e.image ? O`<img class="thumb" src=${e.image} alt="" loading="lazy" />` : O`<div class="thumb"></div>`}</td>
+      <td>${e.image ? k`<img class="thumb" src=${e.image} alt="" loading="lazy" />` : k`<div class="thumb"></div>`}</td>
       <td class="title">
         <div>${t && i ? i : e.title}</div>
-        ${!t && i ? O`<div>${i}</div>` : j}
+        ${!t && i ? k`<div>${i}</div>` : M}
       </td>
       <td>${r?.name ?? e.channel_id}</td>
       <td>${e.start ? n.format(new Date(e.start)) : ""}</td>
       <td>${Math.round(e.duration / 60)} min</td>
       <td>${this._status(e.status)}</td>
       <td>
-        <button class="icon-btn" aria-label=${U(this.hass, "delete")} title=${U(this.hass, "delete")} ?disabled=${this._busy} @click=${() => this._delete([e.id])}>
-          ${Re()}
+        <button class="icon-btn" aria-label=${H(this.hass, "delete")} title=${H(this.hass, "delete")} ?disabled=${this._busy} @click=${() => this._delete([e.id])}>
+          ${Be()}
         </button>
       </td>
     </tr>`;
 	}
 	_status(e) {
 		switch (e) {
-			case "RECORDING": return O`<span class="chip rec">${J()}${U(this.hass, "rec")}</span>`;
-			case "SCHEDULED": return O`<span class="chip sched">${K(14)}${U(this.hass, "scheduled")}</span>`;
-			case "FINISHED": return O`<span class="chip">${U(this.hass, "recorded")}</span>`;
-			default: return O`<span class="chip">${e}</span>`;
+			case "RECORDING": return k`<span class="chip rec">${q()}${H(this.hass, "rec")}</span>`;
+			case "SCHEDULED": return k`<span class="chip sched">${G(14)}${H(this.hass, "scheduled")}</span>`;
+			case "FINISHED": return k`<span class="chip">${H(this.hass, "recorded")}</span>`;
+			default: return k`<span class="chip">${e}</span>`;
 		}
 	}
 	static {
-		this.styles = [Y, o`
+		this.styles = [J, o`
       .stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -2257,9 +2274,9 @@ var Ye = class extends z {
     `];
 	}
 };
-customElements.define("waipu-recordings-tab", Ye);
+customElements.define("waipu-recordings-tab", Xe);
 // src/waipu-tv-panel.ts
-var Xe = class extends z {
+var Ze = class extends B {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -2278,55 +2295,55 @@ var Xe = class extends z {
 	}
 	async _reload(e) {
 		try {
-			e === "channels" ? this._channels = await Oe(this.hass) : this._recordings = await Ae(this.hass);
+			e === "channels" ? this._channels = await De(this.hass) : this._recordings = await Ae(this.hass);
 		} catch (e) {
-			this._showToast(U(this.hass, "error", { message: e.message ?? String(e) }));
+			this._showToast(H(this.hass, "error", { message: e.message ?? String(e) }));
 		}
 	}
 	_showToast(e) {
 		this._toast = e, window.clearTimeout(this._toastTimer), this._toastTimer = window.setTimeout(() => this._toast = void 0, 4e3);
 	}
 	async _refresh() {
-		this._showToast(U(this.hass, "refreshing")), await this.hass.callService("button", "press", { entity_id: "button.waipu_tv_refresh" }), await Promise.all([this._reload("channels"), this._reload("recordings")]);
+		this._showToast(H(this.hass, "refreshing")), await this.hass.callService("button", "press", { entity_id: "button.waipu_tv_refresh" }), await Promise.all([this._reload("channels"), this._reload("recordings")]);
 	}
 	render() {
-		if (!this.hass) return j;
+		if (!this.hass) return M;
 		let e = [
 			"guide",
 			"favorites",
 			"recordings"
 		];
-		return this.hass.user?.is_admin && e.push("playlists"), O`
+		return this.hass.user?.is_admin && e.push("playlists"), k`
       <header>
         <div class="row">
           <ha-menu-button .hass=${this.hass} .narrow=${this.narrow}></ha-menu-button>
           <h1>waipu.tv</h1>
-          ${this._channels?.subscription ? O`<span class="pill">${this._channels.subscription}</span>` : j}
-          <button class="icon-btn" title=${U(this.hass, "refresh")} aria-label=${U(this.hass, "refresh")} @click=${this._refresh}>
-            ${Ie()}
+          ${this._channels?.subscription ? k`<span class="pill">${this._channels.subscription}</span>` : M}
+          <button class="icon-btn" title=${H(this.hass, "refresh")} aria-label=${H(this.hass, "refresh")} @click=${this._refresh}>
+            ${Re()}
           </button>
         </div>
         <div class="tabs" role="tablist">
-          ${e.map((e) => O`<button role="tab" aria-selected=${e === this._tab} @click=${() => this._tab = e}>
-              ${U(this.hass, e)}
+          ${e.map((e) => k`<button role="tab" aria-selected=${e === this._tab} @click=${() => this._tab = e}>
+              ${H(this.hass, e)}
             </button>`)}
         </div>
       </header>
       ${this._renderTab()}
-      ${this._toast ? O`<div class="toast" role="status">${this._toast}</div>` : j}
+      ${this._toast ? k`<div class="toast" role="status">${this._toast}</div>` : M}
     `;
 	}
 	_renderTab() {
 		let e = this._channels?.channels ?? [], t = this._recordings?.recordings ?? [];
 		switch (this._tab) {
-			case "guide": return O`<waipu-guide-tab .hass=${this.hass} .channels=${e} .recordings=${t}></waipu-guide-tab>`;
-			case "favorites": return O`<waipu-favorites-tab .hass=${this.hass} .channels=${e}></waipu-favorites-tab>`;
-			case "recordings": return O`<waipu-recordings-tab .hass=${this.hass} .channels=${e} .data=${this._recordings}></waipu-recordings-tab>`;
-			case "playlists": return O`<waipu-playlists-tab .hass=${this.hass}></waipu-playlists-tab>`;
+			case "guide": return k`<waipu-guide-tab .hass=${this.hass} .channels=${e} .recordings=${t}></waipu-guide-tab>`;
+			case "favorites": return k`<waipu-favorites-tab .hass=${this.hass} .channels=${e}></waipu-favorites-tab>`;
+			case "recordings": return k`<waipu-recordings-tab .hass=${this.hass} .channels=${e} .data=${this._recordings}></waipu-recordings-tab>`;
+			case "playlists": return k`<waipu-playlists-tab .hass=${this.hass}></waipu-playlists-tab>`;
 		}
 	}
 	static {
-		this.styles = [Y, o`
+		this.styles = [J, o`
       :host {
         display: block;
         min-height: 100vh;
@@ -2413,4 +2430,4 @@ var Xe = class extends z {
     `];
 	}
 };
-customElements.define("waipu-tv-panel", Xe);
+customElements.define("waipu-tv-panel", Ze);

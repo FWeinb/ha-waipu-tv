@@ -34,6 +34,9 @@
     "record_series": {
       "service": "mdi:record-circle-outline"
     },
+    "cancel_series": {
+      "service": "mdi:playlist-remove"
+    },
     "delete_recordings": {
       "service": "mdi:delete"
     },

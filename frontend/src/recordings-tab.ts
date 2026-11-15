@@ -1,8 +1,9 @@
-// Recordings: storage meter, status filter, series groups, single and bulk delete.
+// Recordings: storage meter, status filter, series groups (stoppable), single and bulk delete.
 
 import { LitElement, css, html, nothing } from "lit";
 
 import {
+  cancelSeries,
   deleteRecordings,
   type Channel,
   type HomeAssistant,
@@ -99,6 +100,17 @@ class WaipuRecordingsTab extends LitElement {
       this._toggle(ids, false);
       changed(this, "recordings");
       toast(this, t(this.hass, "deleted", { count: ids.length }));
+    }
+  }
+
+  private async _stopSeries(programId: string, title: string) {
+    if (!confirm(t(this.hass, "confirm_stop_series", { title }))) return;
+    this._busy = true;
+    const ok = await attempt(this, this.hass, () => cancelSeries(this.hass, programId));
+    this._busy = false;
+    if (ok) {
+      changed(this, "recordings");
+      toast(this, t(this.hass, "series_stopped", { title }));
     }
   }
 
@@ -208,6 +220,8 @@ class WaipuRecordingsTab extends LitElement {
 
   private _renderGroup(group: Recording[]) {
     const ids = group.map((r) => r.id);
+    // the series is looked up from any of its episodes
+    const programId = group.find((r) => r.program_id)?.program_id;
     return html`<tr class="group">
         <td class="check">
           <input
@@ -217,7 +231,14 @@ class WaipuRecordingsTab extends LitElement {
           />
         </td>
         <td></td>
-        <td colspan="6">${group[0].title} <span class="muted">· ${t(this.hass, "episodes", { count: group.length })}</span></td>
+        <td colspan="5">${group[0].title} <span class="muted">· ${t(this.hass, "episodes", { count: group.length })}</span></td>
+        <td>
+          ${programId
+            ? html`<button class="btn" ?disabled=${this._busy} @click=${() => this._stopSeries(programId, group[0].title)}>
+                ${t(this.hass, "stop_series")}
+              </button>`
+            : nothing}
+        </td>
       </tr>
       ${group.map((r) => this._renderRecording(r, true))}`;
   }

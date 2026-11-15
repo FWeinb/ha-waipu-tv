@@ -34,6 +34,7 @@ def async_setup_websocket(hass: HomeAssistant) -> None:
         ws_program,
         ws_recordings,
         ws_record,
+        ws_cancel_series,
         ws_delete_recordings,
         ws_set_favorite,
         ws_playlists,
@@ -138,6 +139,20 @@ async def ws_record(hass: HomeAssistant, connection: Connection, msg: dict[str, 
         await data.async_record_series(msg["program_id"])
     else:
         await data.async_record_program(msg["program_id"])
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/cancel_series",
+        probatio.Required("program_id"): cv.string,
+    }
+)
+@websocket_api.async_response
+async def ws_cancel_series(
+    hass: HomeAssistant, connection: Connection, msg: dict[str, Any]
+) -> None:
+    await loaded_data(hass).async_cancel_series(msg["program_id"])
     connection.send_result(msg["id"])
 
 
