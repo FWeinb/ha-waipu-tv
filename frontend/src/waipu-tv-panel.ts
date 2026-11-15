@@ -149,7 +149,7 @@ class WaipuTvPanel extends LitElement {
       .pill {
         padding: 2px 10px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.18);
+        background: var(--wt-chip);
         font-size: 12px;
         font-weight: 500;
       }

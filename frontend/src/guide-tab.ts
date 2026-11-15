@@ -460,9 +460,10 @@ class WaipuGuideTab extends LitElement {
       .now-line span {
         position: absolute;
         top: 8px;
-        left: -20px;
-        width: 42px;
-        text-align: center;
+        left: 1px;
+        transform: translateX(-50%);
+        padding: 0 4px;
+        white-space: nowrap;
         font-size: 11px;
         font-weight: 700;
         color: #fff;

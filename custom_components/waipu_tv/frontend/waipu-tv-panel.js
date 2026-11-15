@@ -942,7 +942,8 @@ var W = (e, t = 20) => A`<svg class="i" viewBox="0 0 24 24" style="width:${t}px;
     border-radius: 8px;
     flex: none;
     object-fit: contain;
-    background: var(--wt-chip);
+    /* waipu.tv's logos are white on transparent, so the tile stays dark in both themes */
+    background: #2b2f36;
   }
   input[type="checkbox"] {
     width: 18px;
@@ -1700,9 +1701,10 @@ var Ge = 4, Q = 6e4, Ke = class extends B {
       .now-line span {
         position: absolute;
         top: 8px;
-        left: -20px;
-        width: 42px;
-        text-align: center;
+        left: 1px;
+        transform: translateX(-50%);
+        padding: 0 4px;
+        white-space: nowrap;
         font-size: 11px;
         font-weight: 700;
         color: #fff;
@@ -2372,7 +2374,7 @@ var Ze = class extends B {
       .pill {
         padding: 2px 10px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.18);
+        background: var(--wt-chip);
         font-size: 12px;
         font-weight: 500;
       }

@@ -217,7 +217,8 @@ export const shared = css`
     border-radius: 8px;
     flex: none;
     object-fit: contain;
-    background: var(--wt-chip);
+    /* waipu.tv's logos are white on transparent, so the tile stays dark in both themes */
+    background: #2b2f36;
   }
   input[type="checkbox"] {
     width: 18px;
