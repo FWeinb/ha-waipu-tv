@@ -159,7 +159,7 @@ Options per playlist, added to the URL:
 | `drm=0` | leave out DRM channels, for players without Widevine |
 | `protocol=hls` / `protocol=dash` | force a protocol instead of choosing per channel |
 | `hls_proxy=1` / `hls_proxy=0` | serve HLS playlists through Home Assistant, for ffmpeg-based players such as VLC or Jellyfin |
-| `timeshift=1` / `timeshift=0` | open live channels at the start of the running program |
+| `timeshift=1` / `timeshift=0` | live channels can be rewound to the start of the running program; on-demand channels always can |
 
 Time-shift needs waipu.tv's instant restart in your package. waipu.tv can't play programs that
 already ended, so the playlists offer no catch-up.

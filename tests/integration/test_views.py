@@ -82,10 +82,11 @@ async def test_all_playlist(client):
     m3u = await (await get(client, "all.m3u", hidden="1")).text()
     filmtastic = m3u.split("#EXTINF")[3]
     assert f"license_key={BASE}/license?key={KEY}||R{{SSM}}|" in filmtastic
-    assert f"\n{BASE}/stream/filmtastic.mpd?key={KEY}\n" in filmtastic
+    # on-demand channels always restart the running program, live ones only with the option
+    assert f"\n{BASE}/stream/filmtastic.mpd?timeshift=1&key={KEY}\n" in filmtastic
+    assert m3u.count("timeshift=1") == 1
     # no catch-up: waipu.tv can't play past programs
     assert "catchup" not in m3u
-    assert "timeshift=1" not in m3u
 
 
 async def test_playlist_options(client):
@@ -100,7 +101,8 @@ async def test_hls_proxy_per_playlist(client):
     m3u = await (await get(client, "all.m3u", hls_proxy="1", hidden="1")).text()
 
     assert f"\n{BASE}/stream/ard.m3u8?proxy=1&key={KEY}\n" in m3u
-    assert f"\n{BASE}/stream/filmtastic.mpd?key={KEY}\n" in m3u  # DASH unaffected
+    # DASH unaffected (the on-demand channel's restart stays)
+    assert f"\n{BASE}/stream/filmtastic.mpd?timeshift=1&key={KEY}\n" in m3u
 
 
 async def test_bad_option(client):

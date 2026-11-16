@@ -211,7 +211,9 @@ port is complete and the old package is deleted.
     per playlist, serves HLS playlists through Home Assistant. Segments always come from the CDN.
     Proxied URLs are HMAC-signed so the proxy can't fetch arbitrary URLs.
 39. **Time-shift uses waipu.tv's instant restart** and is only offered when the account has it:
-    live streams start at the running program's start, falling back to live. **No catch-up:**
+    the stream reaches back to the running program's start, falling back to live. It's an option
+    for live channels (`timeshift=1` per playlist); on-demand channels always get it. IPTV players
+    still open the stream at its live edge, so the program's start is there to rewind to. **No catch-up:**
     waipu.tv can't play programs that already ended (confirmed on an LG C9), so playlists carry no
     catch-up attributes.
 40. **Unexpected errors answer HTTP 500** and are logged instead of dropping the connection.
@@ -275,8 +277,11 @@ port is complete and the old package is deleted.
     vertical slider on hover or focus, remembered per browser; mute on click; iOS has no slider, it
     doesn't let pages set the volume), picture in picture and full screen (of the player, controls included); space pauses, ↑/↓ switch
     channels. Live shows when playback is more than 30 s behind live. From start (time-shift,
-    decision 39; needs instant restart) only on on-demand channels: tested by hand, it was unreliable
-    on live channels, and on on-demand channels worked with HLS (Safari) but not with DASH (Chrome).
+    decision 39; needs instant restart) only on on-demand channels. waipu.tv's time-shifted stream
+    is still a live stream whose window reaches back to the program's start, and players open live
+    streams at their live edge, so the player loads it with start time 0, which Shaka clamps to the
+    earliest playable point: measured on Das Erste (HLS) and ZDF (DASH), it opens at the program's
+    start instead of live. IPTV players still open at the live edge and have to be rewound.
     No watch progress in v1.
 55. **Audio:** every stream checked carries AAC stereo next to Dolby Digital (AC-3) 5.1 in the main
     language; some add audio description (`qad`), clear language (`qks`), other languages or the
@@ -382,6 +387,7 @@ Still open:
 - Kodi and TiviMate (only the LG C9 player was tried);
 - the player in Firefox, Edge, and in the Android and iOS companion apps (FairPlay inside the iOS
   app's web view); Chrome and Safari played DRM and non-DRM channels and on-demand channels;
-- why From start fails with DASH on on-demand channels and is unreliable on live channels;
+- From start on live channels in the panel, now that it opens at the program's start (only
+  offered on on-demand channels so far);
 - what the cast `role` of the program API holds (character or job); XMLTV writes it as the actor's
   role.

@@ -65,7 +65,7 @@
         },
         "data_description": {
           "access_key": "Added to every playlist URL as ?key=…. Anyone with the key can watch on your account. Clear the field to generate a new key; it locks out old links.",
-          "timeshift": "Live channels open at the start of the running program so you can rewind.",
+          "timeshift": "Live channels can be rewound to the start of the running program; on-demand channels always can.",
           "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist.",
           "audio_language": "For the player in the panel, when a program has it; everyone can pick their own in the player's audio menu. IPTV players choose their own track.",
           "parallel_streams": "How many streams can play at once, in the panel and IPTV players together, up to what your waipu.tv package includes. Each one is a device of its own for waipu.tv."
@@ -112,7 +112,7 @@
         },
         "data_description": {
           "access_key": "Added to every playlist URL as ?key=…. Anyone with the key can watch on your account. Clear the field to generate a new key; it locks out old links.",
-          "timeshift": "Live channels open at the start of the running program so you can rewind.",
+          "timeshift": "Live channels can be rewound to the start of the running program; on-demand channels always can.",
           "hls_proxy": "Only needed for ffmpeg-based players (VLC, Jellyfin); can also be set per playlist.",
           "audio_language": "For the player in the panel, when a program has it; everyone can pick their own in the player's audio menu. IPTV players choose their own track.",
           "parallel_streams": "How many streams can play at once, in the panel and IPTV players together, up to what your waipu.tv package includes. Each one is a device of its own for waipu.tv."

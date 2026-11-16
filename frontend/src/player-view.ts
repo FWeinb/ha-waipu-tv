@@ -431,7 +431,9 @@ class WaipuPlayer extends LitElement {
         this._text = player.getTextTracks();
       };
       for (const event of ["trackschanged", "variantchanged", "textchanged", "adaptation"]) player.addEventListener(event, tracks);
-      await player.load(url);
+      // time-shift: waipu.tv's stream reaches back to the program's start, but a live stream opens at
+      // its live edge; 0 makes Shaka start at the earliest point it can play, the program's start
+      await player.load(url, "channel" in target && target.fromStart ? 0 : undefined);
       await this._start();
       pickAudio(player, settings.audio_language ?? this.audioLanguage);
       tracks();

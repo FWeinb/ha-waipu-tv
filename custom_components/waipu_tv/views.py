@@ -175,6 +175,7 @@ class _Request:
             protocol,
             hls_proxy=hls_proxy,
             timeshift=restart and _flag(self.query, "timeshift", self.options[CONF_TIMESHIFT]),
+            restart=restart,
         )
         return web.Response(
             text=body,

@@ -97,7 +97,14 @@ def test_timeshift():
     assert f"\n{BASE}/stream/ard.m3u8?timeshift=1&key=k\n" in m3u
     assert f"\n{BASE}/stream/pro7.mpd?timeshift=1&key=k\n" in m3u
     vod_block = m3u.split("#EXTINF")[3]
-    assert "/stream/vodch.mpd?key=k" in vod_block  # on-demand channels have no restart
+    assert "/stream/vodch.mpd?key=k" in vod_block  # without instant restart, nothing restarts
+
+
+def test_on_demand_channels_always_restart():
+    m3u = render_m3u([ARD, VOD], BASE, "k", EPG, timeshift=False, restart=True)
+
+    assert f"\n{BASE}/stream/ard.m3u8?key=k\n" in m3u
+    assert f"\n{BASE}/stream/vodch.mpd?timeshift=1&key=k\n" in m3u
 
 
 def test_force_protocol():

@@ -98,7 +98,7 @@ const en = {
   param_drm: "0: only channels without DRM (HLS), for players without Widevine.",
   param_protocol:
     "auto: HLS for channels pvr.waipu plays without DRM, DASH + Widevine for all others. Recordings: dash or hls.",
-  param_timeshift: "Live channels open at the start of the running program so you can rewind.",
+  param_timeshift: "Live channels can be rewound to the start of the running program; on-demand channels always can.",
   param_hls_proxy: "Serve HLS playlists through Home Assistant, for ffmpeg-based players (VLC, Jellyfin).",
   param_filter: "Channel selection of the guide: all, favorites, live or vod.",
   needs_restart: "Needs instant restart, which your waipu.tv package doesn't include.",
@@ -232,7 +232,7 @@ const de: Record<Key, string> = {
   param_drm: "0: nur Sender ohne DRM (HLS), für Player ohne Widevine.",
   param_protocol:
     "auto: HLS für Sender, die pvr.waipu ohne DRM abspielt, DASH + Widevine für alle anderen. Aufnahmen: dash oder hls.",
-  param_timeshift: "Live-Sender starten am Beginn der laufenden Sendung, sodass du zurückspulen kannst.",
+  param_timeshift: "Live-Sender lassen sich bis zum Beginn der laufenden Sendung zurückspulen; On-Demand-Sender immer.",
   param_hls_proxy: "HLS-Playlists über Home Assistant ausliefern, für ffmpeg-basierte Player (VLC, Jellyfin).",
   param_filter: "Senderauswahl des Programms: all, favorites, live oder vod.",
   needs_restart: "Benötigt Instant Restart, das dein waipu.tv-Paket nicht enthält.",

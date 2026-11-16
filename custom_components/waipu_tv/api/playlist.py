@@ -66,9 +66,11 @@ def render_m3u(
     protocol: str = "auto",
     hls_proxy: bool | None = None,
     timeshift: bool = False,
+    restart: bool = False,
 ) -> str:
     """hls_proxy: True/False adds proxy=1/0 to HLS stream URLs, None keeps the server default.
-    timeshift: live streams start at the beginning of the running program (rewind buffer).
+    timeshift: live channels' streams reach back to the start of the running program; on-demand
+    channels always do when restart, the account's instant restart, allows it.
     No catch-up attributes: waipu.tv can't play programs from the guide's past."""
     epg_url = _with_key(epg_url, key)
     lines = [f'#EXTM3U url-tvg="{epg_url}" x-tvg-url="{epg_url}"']
@@ -85,7 +87,8 @@ def render_m3u(
         lines.append(f"#EXTINF:-1 {attrs},{name}")
         if is_dash:
             lines += _dash_props(base_url, key)
-        live = {"proxy": proxy, "timeshift": "1" if timeshift and not ch.vod else None}
+        shift = restart if ch.vod else timeshift
+        live = {"proxy": proxy, "timeshift": "1" if shift else None}
         lines.append(_with_key(_with_params(stream, live), key))
     return "\n".join(lines) + "\n"
 
