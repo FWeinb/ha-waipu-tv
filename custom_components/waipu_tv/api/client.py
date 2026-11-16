@@ -47,13 +47,14 @@ URL_DELETE_REQUESTS = "https://recording-scheduler.waipu.tv/api/delete-requests"
 ACCEPT_RECORDINGS = "application/vnd.waipu.recordings-v4+json"
 EPG_WINDOW = timedelta(hours=4)  # the grid API serves 4 h windows aligned to UTC
 
-# fixed stream quality: up to 1080p50 H.264 with AAC audio, no HEVC/UHD
+# fixed stream quality: up to 1080p50 H.264 and HEVC up to 2160p50, with AAC audio
 DEVICE_CAPABILITIES = {
     "type": "receiver",
-    "model": "Kodi 21.2",
-    "manufacturer": "Team Kodi",
-    "platform": "Kodi 21.2-pvr.waipu",
-    "appVersion": "22.10.4",
+    "model": "Home Assistant",
+    "manufacturer": "ha-waipu-tv",
+    "platform": "Home Assistant-ha-waipu-tv",
+    # required: without it waipu.tv answers HTTP 400; a fixed value, not the integration's version
+    "appVersion": "1.0.0",
     "capabilities": {
         "audio": {"aac": True},
         "video": {
@@ -63,16 +64,13 @@ DEVICE_CAPABILITIES = {
             "hd720p50": True,
             "hd1080p25": True,
             "hd1080p50": True,
-            "hevc1080p50": False,
-            "hevc2160p50": False,
+            "hevc1080p50": True,
+            "hevc2160p50": True,
         },
     },
 }
 
-USER_AGENT = (
-    "Kodi/21.2 (Linux; Android 12) pvr.waipu/22.10.4 "
-    "App_Bitness/64 Version/21.2-(21.2.0)-Git:20250101-nogitfound"
-)
+USER_AGENT = "ha-waipu-tv (Home Assistant)"
 TIMEOUT = aiohttp.ClientTimeout(total=20)
 
 

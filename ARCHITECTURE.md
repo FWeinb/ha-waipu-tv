@@ -107,7 +107,8 @@ port is complete and the old package is deleted.
 15. **Changes made through the integration reload the affected data immediately**: recording,
     deleting, setting a favorite. The intervals only apply to changes made elsewhere.
 16. **Stream quality is fixed:** the device capabilities sent to waipu.tv are up to 1080p50 H.264
-    with AAC audio. No HEVC/UHD setting in v1.
+    plus HEVC up to 2160p50, with AAC audio; players pick the variants they can decode. No quality
+    setting in v1.
 
 ## Guide
 

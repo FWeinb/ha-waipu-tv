@@ -88,7 +88,11 @@ async def test_stream_url_with_restart(aioclient_mock, client):
 
     (caps,) = calls(aioclient_mock, "POST", URL_DEVICE_CAPS)  # token is reused
     video = sent_json(caps)["capabilities"]["video"]
-    assert video["hd1080p50"] and not video["hevc1080p50"] and not video["hevc2160p50"]
+    assert video["hd1080p50"] and video["hevc1080p50"] and video["hevc2160p50"]
+    assert sent_json(caps)["manufacturer"] == "ha-waipu-tv"
+    assert sent_json(caps)["platform"] == "Home Assistant-ha-waipu-tv"
+    assert sent_json(caps)["model"] == "Home Assistant"
+    assert sent_json(caps)["appVersion"]  # waipu.tv answers HTTP 400 without it
     assert caps[3]["X-USERCONTEXT-USERHANDLE"] == "00000000-0000-0000-0000-000000000001"
     first, second = calls(aioclient_mock, "POST", URL_STREAM)
     assert sent_json(first) == {
