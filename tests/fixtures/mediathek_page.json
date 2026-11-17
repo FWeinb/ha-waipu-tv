@@ -1,0 +1,56 @@
+{
+  "content": [
+    {
+      "trackingContentId": "vod/mediathek-kabeleinsclassics:kabeleinsclassics-filme:987e1c07084c4e949f7389bc2fe7cf6c",
+      "url": "https://app.waipu.tv/waiputhek?contentId=mediathek-kabeleinsclassics:kabeleinsclassics-filme:987e1c07084c4e949f7389bc2fe7cf6c",
+      "title": "Otto - Der Film",
+      "img": "https://images.wpstr.tv/vod/78/987e1c07084c4e949f7389bc2fe7cf6c_0_MOVIE.png",
+      "genre": "Komödie",
+      "duration": 83,
+      "autoplay": false,
+      "channelDisplay": "Kabel Eins CLASSICS",
+      "series": false,
+      "locked": false
+    },
+    {
+      "trackingContentId": "vod/filmlegenden:legenden-feed:leonine_vierfustegegenrio_waipu",
+      "url": "https://app.waipu.tv/waiputhek?contentId=filmlegenden:legenden-feed:leonine_vierfustegegenrio_waipu",
+      "title": "Vier Fäuste gegen Rio",
+      "img": "https://images.wpstr.tv/vod/43/322e4233dc586a9a1703b1b7af956ddf_thumbnail.jpg",
+      "genre": "Comedy",
+      "duration": 100,
+      "autoplay": false,
+      "channelDisplay": "Filmlegenden",
+      "series": false,
+      "locked": false,
+      "expiresAt": "2026-11-21T00:59:59+01:00"
+    },
+    {
+      "trackingContentId": "vod/mediathek-13thstreet:f30512196_1",
+      "url": "https://app.waipu.tv/waiputhek?channelId=mediathek-13thstreet&categoryId=f30512196_1",
+      "title": "CIA Staffel 1",
+      "img": "https://images.wpstr.tv/vod/CIA_S01_KA_3840x2160_jpg_9if_G286_F_Mk3n_Q_Flg_Bk_A_N_Qr_Zb6_UF_Qt_f8d1da368a.jpg",
+      "genre": "Crimeserie",
+      "autoplay": false,
+      "channelDisplay": "13th Street",
+      "series": true,
+      "season": 1,
+      "locked": false
+    },
+    {
+      "trackingContentId": "endcard/more",
+      "url": "https://app.waipu.tv/waiputhek/category/spielfilme/all?sortBy=mostWatched",
+      "title": "Mehr davon!",
+      "series": false,
+      "locked": false,
+      "cardType": "end"
+    }
+  ],
+  "page": {
+    "size": 50,
+    "number": 0,
+    "totalElements": 4,
+    "totalPages": 1
+  },
+  "responseId": "waiputhek/00000000-0000-0000-0000-000000000000"
+}

@@ -17,6 +17,7 @@ GRID = re.compile(r"^https://epg-cache\.waipu\.tv/api/grid/")
 URL_DEVICE_CAPS = "https://device-capabilities.waipu.tv/api/device-capabilities"
 URL_STREAM = "https://stream-url-provider.waipu.tv/api/stream-url"
 URL_LICENSE = "https://drm.wpstr.tv/license-proxy-widevine/cenc/"
+URL_MEDIATHEK = "https://waiputhek.waipu.tv/api"
 
 
 @pytest.fixture(autouse=True)
@@ -82,9 +83,9 @@ async def test_all_playlist(client):
     m3u = await (await get(client, "all.m3u", hidden="1")).text()
     filmtastic = m3u.split("#EXTINF")[3]
     assert f"license_key={BASE}/license?key={KEY}||R{{SSM}}|" in filmtastic
-    # on-demand channels always restart the running program, live ones only with the option
-    assert f"\n{BASE}/stream/filmtastic.mpd?timeshift=1&key={KEY}\n" in filmtastic
-    assert m3u.count("timeshift=1") == 1
+    # on-demand channels already begin at the running program's start: no time-shift
+    assert f"\n{BASE}/stream/filmtastic.mpd?key={KEY}\n" in filmtastic
+    assert "timeshift=1" not in m3u
     # no catch-up: waipu.tv can't play past programs
     assert "catchup" not in m3u
 
@@ -101,8 +102,7 @@ async def test_hls_proxy_per_playlist(client):
     m3u = await (await get(client, "all.m3u", hls_proxy="1", hidden="1")).text()
 
     assert f"\n{BASE}/stream/ard.m3u8?proxy=1&key={KEY}\n" in m3u
-    # DASH unaffected (the on-demand channel's restart stays)
-    assert f"\n{BASE}/stream/filmtastic.mpd?timeshift=1&key={KEY}\n" in m3u
+    assert f"\n{BASE}/stream/filmtastic.mpd?key={KEY}\n" in m3u  # DASH unaffected
 
 
 async def test_bad_option(client):
@@ -160,6 +160,35 @@ async def test_recordings_playlist(client, mock_waipu):
 
     resp = await get(client, "recording/1000000001.mpd")
     assert resp.headers["Location"] == "https://cdn.example.com/rec/1000000001/manifest.mpd"
+
+
+async def test_mediathek_playlist_and_stream(client, mock_waipu):
+    otto = "mediathek-kabeleinsclassics:kabeleinsclassics-filme:987e1c07084c4e949f7389bc2fe7cf6c"
+    provider = "https://stream-url-provider.waipu.tv/api/v1/microsites/x/categories/y/videos/z"
+    mock_waipu.get(
+        f"{URL_MEDIATHEK}/category/spielfilme/all?sortBy=mostWatched&page=0&size=50",
+        json=load_json("mediathek_page.json"),
+    )
+    mock_waipu.get(
+        f"{URL_MEDIATHEK}/v1/tuner/contents/{otto}",
+        json={"title": "Otto - Der Film", "streamUrlProvider": provider},
+    )
+    mock_waipu.get(re.compile("^" + re.escape(provider)), json=load_json("mediathek_stream.json"))
+
+    m3u = await (await get(client, "mediathek/spielfilme.m3u")).text()
+    assert m3u.count("#EXTINF") == 2
+    stream = f"{BASE}/mediathek/{otto.replace(':', '%3A')}.m3u8?key={KEY}"
+    assert stream in m3u
+
+    resp = await get(client, f"mediathek/{otto.replace(':', '%3A')}.m3u8")
+    assert resp.headers["Location"] == "https://cdn.example.com/vod/otto/manifest.m3u8"
+
+
+@pytest.mark.parametrize(
+    "params", [{"sort": "random"}, {"limit": "0"}, {"limit": "many"}, {"protocol": "auto"}]
+)
+async def test_mediathek_bad_option(client, params):
+    assert (await get(client, "mediathek/spielfilme.m3u", **params)).status == 400
 
 
 async def test_epg(client):

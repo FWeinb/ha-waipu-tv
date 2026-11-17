@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
-from .api import Program, Recording
+from .api import MediathekItem, Program, Recording
+from .api.client import MEDIATHEK_SORTS
 from .api.playlist import FILTERS
 from .const import (
     AUDIO_DEFAULT,
@@ -40,6 +41,10 @@ def async_setup_websocket(hass: HomeAssistant) -> None:
         ws_delete_recordings,
         ws_set_favorite,
         ws_playlists,
+        ws_mediathek_categories,
+        ws_mediathek,
+        ws_mediathek_series,
+        ws_mediathek_content,
         ws_stream,
         ws_license,
         ws_fairplay_certificate,
@@ -63,6 +68,14 @@ def _recording(r: Recording) -> dict[str, Any]:
     }
 
 
+def _mediathek_item(i: MediathekItem) -> dict[str, Any]:
+    return {
+        **asdict(i),
+        "duration": int(i.duration.total_seconds()),
+        "expires": _time(i.expires),
+    }
+
+
 @websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/channels"})
 @callback
 def ws_channels(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]) -> None:
@@ -75,7 +88,6 @@ def ws_channels(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]
         msg["id"],
         {
             "subscription": data.account.subscription,
-            "instant_restart": data.account.instant_restart,
             "channels": [asdict(c) for c in data.channels],
             "audio_language": None if language == AUDIO_DEFAULT else language,
         },
@@ -197,7 +209,8 @@ async def ws_set_favorite(hass: HomeAssistant, connection: Connection, msg: dict
 @callback
 def ws_playlists(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]) -> None:
     """Playlist and guide paths; they contain the access key, hence admins only. The panel
-    prefixes its own address, the same one players on that network reach."""
+    prefixes its own address, the same one players on that network reach. base and key let it
+    put together other playlists: one per Mediathek category, and custom ones."""
     data = loaded_data(hass)
     entry = data.channels.config_entry
     base = f"/api/{DOMAIN}"
@@ -213,12 +226,124 @@ def ws_playlists(hass: HomeAssistant, connection: Connection, msg: dict[str, Any
             "enabled": entry.options[CONF_PLAYLISTS],
             "entry_id": entry.entry_id,
             "urls": urls,
+            "base": base,
+            "key": key,
             # defaults of the per-playlist options, for the panel's explanation
             "defaults": {
                 "timeshift": entry.options[CONF_TIMESHIFT],
                 "hls_proxy": entry.options[CONF_HLS_PROXY],
             },
             "instant_restart": data.channels.data.account.instant_restart,
+        },
+    )
+
+
+# --- Mediathek: the on-demand library ---------------------------------------------------------
+
+
+@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/mediathek_categories"})
+@websocket_api.async_response
+async def ws_mediathek_categories(
+    hass: HomeAssistant, connection: Connection, msg: dict[str, Any]
+) -> None:
+    categories = await loaded_data(hass).async_mediathek_categories()
+    connection.send_result(
+        msg["id"],
+        {
+            "categories": [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "genres": [{"id": id_, "name": name} for id_, name in c.genres],
+                }
+                for c in categories
+            ]
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/mediathek",
+        probatio.Required("category"): cv.string,
+        probatio.Optional("sort", default="mostWatched"): probatio.In(MEDIATHEK_SORTS),
+        probatio.Optional("genre"): cv.string,
+        probatio.Optional("page", default=0): probatio.All(int, probatio.Range(min=0)),
+    }
+)
+@websocket_api.async_response
+async def ws_mediathek(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]) -> None:
+    """One page of a category's cards (titles and seasons of series) and whether more follow."""
+    items, more = await loaded_data(hass).async_mediathek_page(
+        msg["category"], msg["sort"], msg.get("genre"), msg["page"]
+    )
+    connection.send_result(
+        msg["id"], {"items": [_mediathek_item(i) for i in items], "more": more}
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/mediathek_series",
+        probatio.Required("season_id"): cv.string,
+    }
+)
+@websocket_api.async_response
+async def ws_mediathek_series(
+    hass: HomeAssistant, connection: Connection, msg: dict[str, Any]
+) -> None:
+    """The series of a season: all its seasons with their episodes, so the panel switches
+    seasons without asking again."""
+    series = await loaded_data(hass).async_mediathek_series(msg["season_id"])
+    connection.send_result(
+        msg["id"],
+        {
+            "channel": series.channel,
+            "title": series.title,
+            "seasons": [
+                {
+                    "id": season.id,
+                    "title": season.title,
+                    "season": season.number,
+                    "episodes": [
+                        {
+                            **asdict(e),
+                            "duration": int(e.duration.total_seconds()),
+                            "expires": _time(e.expires),
+                        }
+                        for e in season.episodes
+                    ],
+                }
+                for season in series.seasons
+            ],
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/mediathek_content",
+        probatio.Required("content_id"): cv.string,
+    }
+)
+@websocket_api.async_response
+async def ws_mediathek_content(
+    hass: HomeAssistant, connection: Connection, msg: dict[str, Any]
+) -> None:
+    """A title's details for the player's info card."""
+    doc = await loaded_data(hass).async_mediathek_content(msg["content_id"])
+    images = doc.get("previewImages") or []
+    connection.send_result(
+        msg["id"],
+        {
+            "id": msg["content_id"],
+            "title": doc.get("title") or "",
+            "description": doc.get("description") or "",
+            "channel": doc.get("channelDisplay"),
+            "station_id": doc.get("stationId"),
+            "genre": doc.get("genreDisplayName") or doc.get("genre"),
+            "duration": int(doc.get("duration") or 0) * 60,
+            "image": images[0] if images else None,
         },
     )
 
@@ -233,46 +358,64 @@ PROTOCOL = probatio.In(["dash", "hls"])
         probatio.Required("type"): f"{DOMAIN}/stream",
         probatio.Exclusive("channel", "target"): cv.string,
         probatio.Exclusive("recording_id", "target"): cv.string,
+        probatio.Exclusive("mediathek", "target"): cv.string,
         probatio.Required("protocol"): PROTOCOL,
-        probatio.Optional("from_start", default=False): cv.boolean,
     }
 )
 @websocket_api.async_response
 async def ws_stream(hass: HomeAssistant, connection: Connection, msg: dict[str, Any]) -> None:
     """A subscription for as long as the player plays: it holds a parallel-stream slot (see
-    streams.py), and its first event is a fresh URL from that slot's device. from_start plays
-    the running program from its start (time-shift). An "ended" event means the integration
+    streams.py), and its first event is a fresh URL from that slot's device. Live channels play
+    time-shifted when the account has instant restart: the stream reaches back to the running
+    program's start, and the player opens it at its live edge (or at its start, From start).
+    On-demand channels' events also carry "start", the clock time at the stream's position 0
+    (see Data.asset_start), when the guide has it. An "ended" event means the integration
     unloaded and the slot is gone."""
     data = loaded_data(hass)
     recording_id = msg.get("recording_id")
-    if recording_id is None:
-        if "channel" not in msg:
-            connection.send_error(msg["id"], "invalid_format", "channel or recording_id")
-            return
+    content_id = msg.get("mediathek")
+    if content_id is not None:
+        content = await data.async_mediathek_content(content_id)
+        kind, title = "mediathek", str(content.get("title") or content_id)
+    elif recording_id is not None:
+        kind, title = "recording", data.recording_title(recording_id)
+    elif "channel" in msg:
         channel = data.channel(msg["channel"])
+        kind, title = "live", channel.name
+    else:
+        connection.send_error(msg["id"], "invalid_format", "channel, recording_id or mediathek")
+        return
     holder = f"panel:{id(connection)}:{msg['id']}"
     slot = data.streams.acquire(
         holder,
         connection.user.name or "",
-        "recording" if recording_id else "live",
-        data.recording_title(recording_id) if recording_id else channel.name,
+        kind,
+        title,
         on_end=lambda: connection.send_message(
             websocket_api.event_message(msg["id"], {"ended": True})
         ),
     )
     # registered first: a connection that closes meanwhile still gives the slot back
     connection.subscriptions[msg["id"]] = lambda: data.streams.release(holder)
+    event: dict[str, Any] = {}
     try:
-        if recording_id:
+        if content_id is not None:
+            url = await data.async_mediathek_url(
+                content["streamUrlProvider"], msg["protocol"], slot
+            )
+        elif recording_id is not None:
             url = await data.async_recording_url(recording_id, msg["protocol"], slot)
         else:
-            url = await data.async_stream_url(channel, msg["protocol"], msg["from_start"], slot)
+            if channel.vod and (start := await data.asset_start(channel)):
+                event["start"] = start.isoformat()
+            timeshift = data.channels.data.account.instant_restart
+            url = await data.async_stream_url(channel, msg["protocol"], timeshift, slot)
     except Exception:
         connection.subscriptions.pop(msg["id"], None)
         data.streams.release(holder)
         raise
     connection.send_result(msg["id"])
-    connection.send_message(websocket_api.event_message(msg["id"], {"url": url}))
+    connection.send_message(websocket_api.event_message(msg["id"], {"url": url, **event}))
 
 
 @websocket_api.websocket_command(

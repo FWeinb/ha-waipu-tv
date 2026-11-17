@@ -15,6 +15,9 @@ GRID = re.compile(r"^https://epg-cache\.waipu\.tv/api/grid/")
 KEY = "aaaa-bbbb-cccc-dddd"
 URL_STREAM = "https://stream-url-provider.waipu.tv/api/stream-url"
 URL_DEVICE_CAPS = "https://device-capabilities.waipu.tv/api/device-capabilities"
+URL_MEDIATHEK = "https://waiputhek.waipu.tv/api"
+OTTO = "mediathek-kabeleinsclassics:kabeleinsclassics-filme:987e1c07084c4e949f7389bc2fe7cf6c"
+PROVIDER = "https://stream-url-provider.waipu.tv/api/v1/microsites/x/categories/y/videos/z"
 
 
 @pytest.fixture(autouse=True)
@@ -132,7 +135,15 @@ async def test_playlists_for_admins(ws):
     base = "/api/waipu_tv"
     assert result["urls"]["favorites"] == f"{base}/favorites.m3u?key={KEY}"
     assert result["urls"]["epg"] == f"{base}/epg.xml?key={KEY}"
-    assert set(result["urls"]) == {"all", "favorites", "live", "vod", "recordings", "epg"}
+    assert (result["base"], result["key"]) == (base, KEY)
+    assert set(result["urls"]) == {
+        "all",
+        "favorites",
+        "live",
+        "vod",
+        "recordings",
+        "epg",
+    }
     assert result["defaults"] == {"timeshift": False, "hls_proxy": False}
     assert result["instant_restart"] is True
 
@@ -193,18 +204,25 @@ async def unsubscribe(ws, subscription):
     assert (await ws.receive_json())["success"]
 
 
-async def test_stream_live_and_from_start(ws, streams):
-    live, event = await subscribe_stream(ws, channel="ARD", protocol="dash")
-    assert event == {"url": "https://cdn.example.com/rtl.mpd"}
-    await unsubscribe(ws, live["id"])
-    shifted, _ = await subscribe_stream(ws, channel="ard", protocol="hls", from_start=True)
+async def test_live_stream_is_time_shifted(ws, streams):
+    # the account has instant restart: the player can rewind to the running program's start
+    _, event = await subscribe_stream(ws, channel="ARD", protocol="dash")
 
-    assert shifted["success"]
-    first, second = stream_requests(streams)
-    assert first["protocol"] == "dash" and "startTime" not in first
+    assert event == {"url": "https://cdn.example.com/rtl.mpd"}
+    (request,) = stream_requests(streams)
+    assert request["protocol"] == "dash"
     # the program running at 12:30 UTC started at 12:00 UTC
-    assert second["protocol"] == "hls"
-    assert second["startTime"] == int(datetime(2026, 11, 14, 12, tzinfo=UTC).timestamp())
+    assert request["startTime"] == int(datetime(2026, 11, 14, 12, tzinfo=UTC).timestamp())
+
+
+async def test_on_demand_channel_gets_no_start_time(ws, streams):
+    # its stream begins at the running program's start; a start time would begin a program earlier
+    _, event = await subscribe_stream(ws, channel="filmtastic", protocol="dash")
+
+    (request,) = stream_requests(streams)
+    assert "startTime" not in request
+    # the player learns which clock time the stream's position 0 is
+    assert event == {"url": "https://cdn.example.com/rtl.mpd", "start": "2026-11-14T12:00:00+00:00"}
 
 
 async def test_stream_unknown_channel(ws):
@@ -222,6 +240,105 @@ async def test_recording_stream(ws, mock_waipu):
     _, event = await subscribe_stream(ws, recording_id="1000000001", protocol="dash")
 
     assert event == {"url": "https://cdn.example.com/rec/1000000001/manifest.mpd"}
+
+
+async def test_mediathek_categories_and_titles(ws, mock_waipu):
+    mock_waipu.get(
+        f"{URL_MEDIATHEK}/filter",
+        json={
+            "categories": [
+                {"categoryId": "serien", "displayName": "Serien", "rank": 1},
+                {
+                    "categoryId": "spielfilme",
+                    "displayName": "Spielfilme",
+                    "rank": 0,
+                    "genres": [{"genreId": "krimi", "displayName": "Krimi"}],
+                },
+            ]
+        },
+    )
+    mock_waipu.get(
+        f"{URL_MEDIATHEK}/category/spielfilme/all?sortBy=latest&page=2&size=50&genreId=krimi",
+        json=load_json("mediathek_page.json"),
+    )
+
+    categories = (await command(ws, "mediathek_categories"))["result"]["categories"]
+    assert categories == [
+        {"id": "spielfilme", "name": "Spielfilme", "genres": [{"id": "krimi", "name": "Krimi"}]},
+        {"id": "serien", "name": "Serien", "genres": []},
+    ]
+    result = (
+        await command(
+            ws, "mediathek", category="spielfilme", sort="latest", genre="krimi", page=2
+        )
+    )["result"]
+    # the fixture's last page is its first
+    assert result["more"] is False
+    first, second, season = result["items"]
+    assert first["id"] == OTTO and first["duration"] == 83 * 60 and first["expires"] is None
+    assert second["expires"] == "2026-11-21T00:59:59+01:00"
+    assert season["series"] is True and season["season"] == 1
+
+
+async def test_mediathek_series(ws, mock_waipu):
+    mock_waipu.get(
+        f"{URL_MEDIATHEK}/v1/tuner/microsites/mediathek-13thstreet/contents",
+        json=load_json("mediathek_microsite.json"),
+    )
+
+    result = (
+        await command(ws, "mediathek_series", season_id="mediathek-13thstreet:f30512196_1")
+    )["result"]
+
+    assert (result["title"], result["channel"]) == ("CIA", "13th Street")
+    assert [s["season"] for s in result["seasons"]] == [1, 2]
+    first = result["seasons"][0]["episodes"][0]
+    assert first["episode"] == 1 and first["duration"] == 2498
+    assert first["expires"] == "2030-01-01T00:59:00+01:00"
+
+
+async def test_mediathek_content(ws, mock_waipu):
+    mock_waipu.get(
+        f"{URL_MEDIATHEK}/v1/tuner/contents/{OTTO}",
+        json={
+            "title": "Otto - Der Film",
+            "description": "Otto in der Großstadt.",
+            "channelDisplay": "Kabel Eins CLASSICS",
+            "stationId": "kabeleinsclassics",
+            "genreDisplayName": "Komödie",
+            "duration": 82,
+            "previewImages": ["https://img/otto.png"],
+            "streamUrlProvider": PROVIDER,
+        },
+    )
+
+    result = (await command(ws, "mediathek_content", content_id=OTTO))["result"]
+
+    assert result == {
+        "id": OTTO,
+        "title": "Otto - Der Film",
+        "description": "Otto in der Großstadt.",
+        "channel": "Kabel Eins CLASSICS",
+        "station_id": "kabeleinsclassics",
+        "genre": "Komödie",
+        "duration": 82 * 60,
+        "image": "https://img/otto.png",
+    }
+
+
+async def test_mediathek_stream(hass, ws, mock_waipu):
+    mock_waipu.post(URL_DEVICE_CAPS, json={"token": token_response()["access_token"]})
+    mock_waipu.get(
+        f"{URL_MEDIATHEK}/v1/tuner/contents/{OTTO}",
+        json={"title": "Otto - Der Film", "streamUrlProvider": PROVIDER},
+    )
+    mock_waipu.get(re.compile("^" + re.escape(PROVIDER)), json=load_json("mediathek_stream.json"))
+
+    _, event = await subscribe_stream(ws, mediathek=OTTO, protocol="dash")
+
+    assert event == {"url": "https://cdn.example.com/vod/otto/manifest.mpd"}
+    (stream,) = hass.states.get("sensor.waipu_tv_active_streams").attributes["streams"]
+    assert stream["type"] == "mediathek" and stream["title"] == "Otto - Der Film"
 
 
 async def test_streams_hold_a_slot_until_unsubscribed(hass, ws, streams):

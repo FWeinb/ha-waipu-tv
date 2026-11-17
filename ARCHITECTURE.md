@@ -135,15 +135,17 @@ port is complete and the old package is deleted.
 
 ## Panel
 
-23. **A sidebar panel visible to all users**, with four tabs:
+23. **A sidebar panel visible to all users**, with five tabs:
     - **Guide:** timeline grid (favorites or all channels), live/recording/scheduled markers, program
       dialog with Watch (running programs), Record, Record series, Cancel and
       add-channel-to-favorites;
-    - **Watch:** the player (decisions 51–57), which is also where favorites are managed; there is no
-      Favorites tab;
+    - **TV:** the player for channels and recordings (decisions 51–57), which is also where
+      favorites are managed; there is no Favorites tab;
+    - **Mediathek:** the on-demand library and a player page per title (decision 67);
     - **Recordings:** status filters, series groups, bulk delete, storage meter, Play on finished
       recordings;
-    - **Playlists (admins only):** playlist and guide URLs with Copy buttons, link to the options.
+    - **Playlists (admins only):** playlist and guide URLs with Copy buttons (one per Mediathek
+      category too), a custom playlist builder (decision 68), link to the options.
 24. **The panel talks to the integration through Home Assistant's websocket API** (commands such as
     `waipu_tv/guide`, `waipu_tv/recordings`, `waipu_tv/record`, `waipu_tv/set_favorite`), so Home
     Assistant handles login and permissions.
@@ -193,7 +195,8 @@ port is complete and the old package is deleted.
 32. **Access key is mandatory** and generated during setup: IPTV players can't log in to Home
     Assistant, so these views bypass Home Assistant's auth and check `?key=` instead. A new key
     locks out old links.
-33. **Endpoints:** `all.m3u`, `favorites.m3u`, `live.m3u`, `vod.m3u`, `recordings.m3u`, `epg.xml`
+33. **Endpoints:** `all.m3u`, `favorites.m3u`, `live.m3u`, `vod.m3u`, `recordings.m3u`,
+    `mediathek/<category>.m3u` (decision 64), `epg.xml`
     (gzipped on request), stream redirects and the Widevine license relay. Playlist options
     `hidden=1`, `drm=0`, `protocol=`, `hls_proxy=`, `timeshift=1` as today. Each
     playlist's `url-tvg` points to the guide for the same channel selection.
@@ -206,6 +209,10 @@ port is complete and the old package is deleted.
 36. **Protocol choice:** HLS only for channels in pvr.waipu's `hls_allowlist.txt` (no DRM), DASH +
     Widevine for everything else, including on-demand channels. This diverges from pvr.waipu, which
     uses HLS for `google_vod` channels; on-demand channels were confirmed to play via DASH.
+    Channels on that list have no DRM in their DASH streams either (checked on six), so with
+    `protocol=dash` their entries carry no license properties: a player told about Widevine may
+    take its DRM path for them (webos-iptv-player switches to Shaka, which can't rewind live
+    streams on TVs without MediaSource's live seekable range, such as the LG C9).
 37. **On-demand channels stay in the playlists.**
 38. **HLS playlist proxy is off by default.** waipu.tv's edge reportedly rejects playlist requests
     without gzip, which ffmpeg-based players (VLC, Jellyfin) don't send; the option, or `hls_proxy=1`
@@ -213,8 +220,11 @@ port is complete and the old package is deleted.
     Proxied URLs are HMAC-signed so the proxy can't fetch arbitrary URLs.
 39. **Time-shift uses waipu.tv's instant restart** and is only offered when the account has it:
     the stream reaches back to the running program's start, falling back to live. It's an option
-    for live channels (`timeshift=1` per playlist); on-demand channels always get it. IPTV players
-    still open the stream at its live edge, so the program's start is there to rewind to. **No catch-up:**
+    for live channels (`timeshift=1` per playlist). IPTV players still open the stream at its live
+    edge, so the program's start is there to rewind to. **On-demand channels don't stream live:**
+    waipu.tv sends an on-demand asset of about 7 hours that begins at the running program's start
+    and goes on with the next programs, so players open them at that start. They never get a start
+    time (it makes the asset begin a program earlier) and need no instant restart. **No catch-up:**
     waipu.tv can't play programs that already ended (confirmed on an LG C9), so playlists carry no
     catch-up attributes.
 40. **Unexpected errors answer HTTP 500** and are logged instead of dropping the connection.
@@ -236,9 +246,11 @@ port is complete and the old package is deleted.
     coordinator right away. With "favorites only" imports a favorite change also refreshes the guide.
 46. **Websocket commands:** `waipu_tv/channels`, `guide` (returns the guide's days as local midnights,
     so the panel needs no time-zone arithmetic), `program`, `recordings`, `record` (`series` flag),
-    `cancel_series`, `delete_recordings`, `set_favorite`, `playlists` (admins only; URLs, option
-    defaults, instant restart), and for the player `stream` (a subscription, decision 59; it took
-    over `recording_stream`), `license`, `fairplay_certificate`.
+    `cancel_series`, `delete_recordings`, `set_favorite`, `playlists` (admins only; URLs, their
+    base path and the access key, option defaults, instant restart), `mediathek_categories` (with
+    their genres), `mediathek` (a page of a category), `mediathek_series` (a season's series: all
+    its seasons and episodes) and `mediathek_content` (decision 67), and for the player `stream` (a subscription, decision 59, for a channel, a recording or a
+    Mediathek title; it took over `recording_stream`), `license`, `fairplay_certificate`.
 47. **Panel registration:** registered while the account is loaded, removed on unload; the bundle is
     served from `/waipu_tv_static/` with a content hash in the URL. Vite's library mode leaves the
     bundle unminified. Shaka Player is a separate,
@@ -257,7 +269,7 @@ port is complete and the old package is deleted.
 
 ## Player
 
-51. **Playback in the panel with Shaka Player 5.3.2**, in the Watch tab, also opened with Watch from
+51. **Playback in the panel with Shaka Player 5.3.2**, in the TV tab, also opened with Watch from
     the program dialog (running programs) and Play on finished recordings; other tabs leave it. Revisited after a
     first attempt was dropped: a spike on 2026-11-15 (branch `prototype/drm-spike`, never merged)
     showed with a real account that waipu.tv licenses browser DRM. Chrome's Widevine played RTL at
@@ -276,14 +288,28 @@ port is complete and the old package is deleted.
     recording) showing how far back the stream reaches and where live is, play/pause, channel up/down
     through the sidebar list shown, audio track (when there is more than one), subtitles, volume (a
     vertical slider on hover or focus, remembered per browser; mute on click; iOS has no slider, it
-    doesn't let pages set the volume), picture in picture and full screen (of the player, controls included); space pauses, ↑/↓ switch
-    channels. Live shows when playback is more than 30 s behind live. From start (time-shift,
-    decision 39; needs instant restart) only on on-demand channels. waipu.tv's time-shifted stream
+    doesn't let pages set the volume), picture in picture and full screen (of the player, controls
+    included); space pauses, ↑/↓ switch channels, ←/→ jump 30 s back or ahead (within what can be
+    played; ahead to the live edge is live again). The play position can be dragged: a label over
+    the knob shows the time it would go to (the clock time live and time-shifted, the position in
+    recordings and Mediathek titles), and it seeks only when let go; a click jumps. Live shows when
+    playback is more than 30 s behind live. Live channels always play time-shifted when the account
+    has instant restart (decision 39), opened at the live edge, so the running program can be
+    rewound to its start; without instant restart the stream reaches back about 2 minutes. On-demand channels' assets (decision 39) come with the
+    clock time at their position 0, the start of the program running when the URL was asked for
+    (from the guide); with it the player treats the asset as live: it opens at what's on now, the
+    timeline runs on the clock and reaches back to the asset's start, Live seeks to now, and
+    dragging and ←/→ stay within what has aired, though the asset goes on past now. When the asset
+    ends, the player asks for a new one. Without the guide it plays as a stream with a length,
+    from its start. From start only on on-demand channels, where it opens the asset at 0. waipu.tv's time-shifted stream
     is still a live stream whose window reaches back to the program's start, and players open live
     streams at their live edge, so the player loads it with start time 0, which Shaka clamps to the
     earliest playable point: measured on Das Erste (HLS) and ZDF (DASH), it opens at the program's
     start instead of live. IPTV players still open at the live edge and have to be rewound.
-    No watch progress in v1.
+    No watch progress in v1. Under the player, the running program's details (no separate details
+    dialog, unlike the guide; no picture, the player shows the picture): title, date and times,
+    episode title, progress, genre and recording status, the description, "not recordable", and
+    Record, Record series or Cancel recording; for a recording its details and Delete.
 55. **Audio:** every stream checked carries AAC stereo next to Dolby Digital (AC-3) 5.1 in the main
     language; some add audio description (`qad`), clear language (`qks`), other languages or the
     original language (`qaa`, arte). At each start the player takes the preferred language when the
@@ -292,10 +318,11 @@ port is complete and the old package is deleted.
     preference is the user's, else the integration option: a language picked in the audio menu is
     stored in the user's Home Assistant frontend data (`frontend/set_user_data`, key `waipu_tv`), so
     it follows the user to every device. waipu.tv's CDN sends `Access-Control-Allow-Origin: *`.
-56. **Deep links:** the player follows the URL: `/waipu-tv/watch/<channel>` (plus `/from-start`) and
-    `/waipu-tv/recording/<id>`, set with Home Assistant's own navigation (`pushState` and
-    `location-changed`), so links can be bookmarked or shared and Back leaves the player. Switching
-    channels inside the player replaces the history entry. The Watch tab is `/waipu-tv/watch`: it
+56. **Deep links:** the player follows the URL: `/waipu-tv/watch/<channel>` (plus `/from-start`),
+    `/waipu-tv/recording/<id>` and `/waipu-tv/mediathek/watch/<content id>`, set with Home
+    Assistant's own navigation (`pushState` and `location-changed`), so links can be bookmarked or
+    shared and Back leaves the player. Switching channels inside the player replaces the history
+    entry. The TV tab is `/waipu-tv/watch` (the path kept from when it was called Watch): it
     resumes what this browser watched last (local storage), else the first favorite.
 57. **Favorites live in the player:** a star in the player's top bar for the current channel and on
     every channel in its sidebar, which lists favorites, all visible channels or on-demand channels
@@ -316,10 +343,11 @@ port is complete and the old package is deleted.
     number of slots is an option (default 1, the old behavior; 1–8), up to what the package
     includes. If it's set higher, waipu.tv's own error shows when the extra stream starts.
 59. **Panel players hold their slot through a websocket subscription**, `waipu_tv/stream`, with
-    `channel` (plus `from_start`) or `recording_id`. Its first event is the stream URL from the
-    slot's device; it holds the slot while the player has a stream loaded, paused included, and is
+    `channel` (time-shifted when the account has instant restart, decision 54), `recording_id` or `mediathek` (a content id). Its first event is the stream URL from the
+    slot's device, for on-demand channels with `start`, the clock time at the asset's position 0
+    (decision 54); it holds the slot while the player has a stream loaded, paused included, and is
     released when the player switches channels (released before the next one is asked for, so a
-    switch never needs a second slot), leaves the Watch tab, or the connection drops. The release
+    switch never needs a second slot), leaves its page, or the connection drops. The release
     is registered before the URL is fetched, so a connection closing meanwhile can't leak a slot.
     When the frontend renews the subscription after a reconnect, the player loads the new URL.
 60. **IPTV clients are known by address and User-Agent** and keep their slot while zapping. Home
@@ -341,6 +369,79 @@ port is complete and the old package is deleted.
     loads), with a short rebuffer: renewing only the slot would ask for a new URL anyway, and on
     the same device that would end the stream playing. IPTV streams keep playing and are counted
     again on their next request.
+
+## Mediathek
+
+waipu.tv's on-demand library, which waipu.tv calls waiputhek (`waiputhek.waipu.tv`).
+
+
+64. **One playlist per Mediathek category**, `mediathek/<category>.m3u`, read from the app's
+    "all" list (`waiputhek.waipu.tv/api/category/<category>/all`, 50 titles per page) with the
+    app's `sortBy` (`mostWatched` by default, `latest`, `titleAsc`, `vanishingSoon`), an optional
+    genre (`genreId`) and `limit` (100 by default, at most 500, so a playlist costs at most
+    ten requests). Fetched on each playlist request, not cached. Entries are grouped by the
+    title's channel. Only the categories' ids are in the README and the panel; the category list
+    (`/api/filter`) isn't read.
+65. **Series come as seasons.** A series card (`series: true`) is one season: the app link in its
+    `url` names the collection and the season (`channelId`, `categoryId`; its tracking id
+    doesn't always, e.g. `hawaii-five-0` for `hawaii-five-0-hawaii-five-0-staffel-9`), so a
+    season's id is `<collection>:<category>`. The collection's microsite
+    (`v1/tuner/microsites/<collection>/contents`) lists its categories with their episodes; the
+    season is the category with that id, and the series' other seasons are the categories whose
+    episodes share its `seriesId` (a collection holds several series). Episodes are content ids
+    like films and play the same way (decision 66). The microsite is read whole, about 0.5 MB for
+    a large collection, so a season's request (`mediathek_series`) answers with the whole series,
+    every season with its episodes; the panel keeps it for 10 minutes under each of its seasons,
+    so switching seasons, the player's episode list and Back don't ask again (the integration
+    doesn't cache it). Playlists leave seasons out: a season isn't a stream, and an episode list
+    per playlist would grow without bound.
+66. **A Mediathek stream** (`mediathek/<content id>.m3u8` or `.mpd`) reads the title's details
+    (`v1/tuner/contents/<id>`) for its name and `streamUrlProvider`, then asks that URL with
+    `?uh=<user handle>` and the slot's device token (decision 58) for `player.hls` or
+    `player.mpd`, and redirects like a channel. It takes a parallel-stream slot of type
+    `mediathek`. HLS is the default; DASH entries carry the Widevine KODIPROPs like recordings.
+67. **Mediathek is a tab of its own**, not a list in the TV tab's sidebar (tried first; a sidebar
+    is too narrow to explore a library):
+    - **Library** (`/waipu-tv/mediathek`): the categories from `/api/filter` as tabs in the app's
+      order, their genres as chips, the app's sort orders, and a grid of covers with channel,
+      genre, length and "until" for titles about to leave. Pages of 50 come from the app's "all"
+      list (`mediathek`, with `genre` and `page`), more with Load more. What's shown, loaded
+      pages and scroll position stay while the panel is open, and a title opened from the library
+      returns with Back, so leaving a title continues where the library was.
+    - **Title page** (`/waipu-tv/mediathek/watch/<content id>`): the shared player and the title's
+      details (`mediathek_content`: title, channel, genre, length, description), no sidebar. A
+      title plays like a recording: from its start, with its length on the timeline, no zapping,
+      live or time-shift. The details' `stationId` finds the channel for the logo when it's in the
+      account. The stream subscription resolves the title like the playlist server (decision 66).
+      Titles are protected (played with Widevine in Chrome); the player uses the browser's DRM
+      system where it has one and plain HLS otherwise, instead of refusing to play as for DRM
+      channels.
+    - **One player for both tabs:** `player.ts` (`waipu-player`) holds the video, Shaka, DRM, the
+      parallel-stream slot, controls, timeline, audio, subtitles and keys; the TV tab
+      (`tv-view.ts`) and the title page (`mediathek-view.ts`) say what to play, whether it's live,
+      and put their own buttons into its slots (the favorite star, From start, the
+      watch-a-channel-without-DRM button).
+    - **Season page** (`/waipu-tv/mediathek/series/<season id>`, decision 65): the series'
+      title and collection, its seasons as chips (switching replaces the history entry), and the
+      season's episodes with number, title, length, description and "until" when an episode
+      leaves within 30 days (most stay for years). Library cards of seasons carry a Series badge.
+    - **Episode page** (`/waipu-tv/mediathek/series/<season id>/<content id>`): the title page
+      with the season in the route, since an episode's content id looks like a film's and can't
+      name its series. Beside the player, like the TV tab's sidebar, a season menu (preset to the
+      episode's season) and that season's episodes, the playing one marked and scrolled into
+      view; the player has Next episode, on into the next season. Picking an episode replaces
+      the page in the history, so Back still goes to where the series was opened.
+    - **Back** on the season, episode and title pages is the browser's Back while the page
+      before was a Mediathek page (the panel keeps a trail of them), so the library keeps its
+      place; opened from a link, it goes to the library.
+
+68. **Custom playlists are URLs, put together in the Playlists tab.** Every playlist is fully
+    described by its path and options, so the playlist server stays as it is: a builder picks
+    what a playlist holds (channels, a Mediathek category, recordings) and shows only the options
+    that apply, writing only those that differ from the defaults into the URL, which updates as
+    it changes, to copy. Nothing is saved: it's a one-off to get a URL into a player. The access
+    key comes with `waipu_tv/playlists`, so a new key changes every URL shown. The Mediathek's
+    category playlists are listed from `/api/filter`, one per category.
 
 ## Rejected
 
@@ -366,7 +467,11 @@ instance; recording, deleting (pvr.waipu's `{"ids": [...]}` body), favorites, re
 stopping a series from the panel. On an LG C9 with
 [webos-iptv-player](https://github.com/lennylxx/webos-iptv-player), `favorites.m3u` played DRM
 (DASH + Widevine through the license relay), non-DRM (HLS) and on-demand channels, and time-shift
-worked.
+worked. With `protocol=dash`, time-shift on the C9 works for channels without DRM (they play
+through webOS's own DASH player, decision 36). DRM channels play through the app's Shaka, which on
+webOS 4.x reports a live stream's length as 2^32 seconds, so the app offers no rewinding until it
+reads Shaka's seek range instead (fixed in a fork of the app, not upstream yet). Rewinding live
+channels in the panel worked in Chrome.
 
 Parallel streams: two streams on two derived devices played at the same time in the panel
 (the experiment behind decision 58; the token for slot 1 carried its own `waipuDeviceId`). With
@@ -390,5 +495,9 @@ Still open:
   app's web view); Chrome and Safari played DRM and non-DRM channels and on-demand channels;
 - From start on live channels in the panel, now that it opens at the program's start (only
   offered on on-demand channels so far);
+- whether on-demand channels' HLS streams (Safari) are the same asset as their DASH streams,
+  beginning at the running program's start; only DASH was checked;
+- whether the Mediathek stream URL provider needs the device token (it gets it; titles played in
+  the panel) or ignores the app's `gdprConsent`; the playlists weren't tried in an IPTV player yet;
 - what the cast `role` of the program API holds (character or job); XMLTV writes it as the actor's
   role.

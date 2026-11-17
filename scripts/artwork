@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# Screenshots of the panel's Guide, Watch and Recordings tabs for the README, in Home Assistant's
-# dark theme.
+# Screenshots of the panel's Guide, TV, Mediathek and Recordings tabs for the README, in Home
+# Assistant's dark theme.
 #
 # The panel is the committed bundle; its data is today's real guide, read from waipu.tv's public
 # channel and guide APIs (no login, no account, no Home Assistant), for a fixed set of channels
-# with fixed favorites and example recordings picked from that guide. No actual content is shown:
-# program images, shrunk to a few pixels and blurred into their colors, stand in for the video
-# (which loads a generated test stream) and the recordings' thumbnails.
+# with fixed favorites, and example recordings and Mediathek titles picked from that guide (the
+# Mediathek's own API needs a login). No actual content is shown: program images, shrunk to a few
+# pixels and blurred into their colors, stand in for the video (which loads a generated test
+# stream), the recordings' thumbnails and the Mediathek's covers.
 #
 # Needs ffmpeg, ImageMagick, python3 and Google Chrome (or CHROME=/path/to/chrome). Writes
-# docs/screenshots/guide.png, watch.png and recordings.png.
+# docs/screenshots/guide.png, tv.png, mediathek.png and recordings.png.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -35,6 +36,7 @@ mkdir -p "$WORK/sample"
 python3 -I - "$WORK" custom_components/waipu_tv/api/hls_allowlist.txt <<'PY'
 import json
 from pathlib import Path
+import re
 import sys
 import urllib.request
 from datetime import UTC, datetime, timedelta
@@ -155,6 +157,40 @@ for status, group, p in picks:
         "season": None, "episode": None,
     })
 
+# the Mediathek: its API needs a login, so its categories are the names the app shows and its
+# titles are today's films from the guide above, as covers they get their program's image
+CATEGORIES = [
+    ("spielfilme", "Spielfilme", ["Krimi", "Drama", "Action & Abenteuer", "Komödie", "Romantik", "Fantasy & SciFi", "Thriller", "Horror"]),
+    ("serien", "Serien", []),
+    ("dokumentationen", "Dokumentationen", []),
+    ("unterhaltung", "Unterhaltung", []),
+    ("kids", "Kids", []),
+    ("aktuelles-regionales", "Aktuelles & Regionales", []),
+]
+categories = [
+    {"id": cid, "name": name, "genres": [{"id": g.lower(), "name": g} for g in genres]}
+    for cid, name, genres in CATEGORIES
+]
+names = {c["id"]: c["name"] for c in channels}
+films = [
+    p
+    for ps in programs.values()
+    for p in ps
+    if p["preview"] and re.search(r"film|krimi|thriller|komödie|drama", p["genre"] or "", re.I)
+]
+titles = []
+for p in sorted(films, key=lambda p: p["start"]):
+    if len(titles) >= 24 or any(t["title"] == p["title"] for t in titles):
+        continue
+    n = len(titles)
+    preview(p, f"thek-{n}")
+    start, stop = (datetime.fromisoformat(p[k].replace("Z", "+00:00")) for k in ("start", "stop"))
+    titles.append({
+        "id": p["id"], "title": p["title"], "image": f"/sample/thek-{n}.png", "genre": p["genre"],
+        "duration": int((stop - start).total_seconds()), "channel": names[p["channel_id"]],
+        "expires": (start + timedelta(days=7)).isoformat() if n % 5 == 2 else None,
+    })
+
 for ps in programs.values():
     for p in ps:
         del p["preview"]
@@ -165,6 +201,8 @@ for ps in programs.values():
     "recordings": recordings,
     "recorded_hours": round(recorded / 3600, 1),
     "details": {watched["id"]: {"textContent": details.get("textContent") or {}}},
+    "categories": categories,
+    "titles": titles,
 }))
 PY
 
@@ -180,7 +218,7 @@ if [[ -f "$WORK/sample/preview.jpg" ]]; then
 else
   magick -size 1280x720 gradient:'#26323a-#101e24' "$WORK/sample/poster.png"
 fi
-for image in "$WORK"/sample/rec-*.jpg; do
+for image in "$WORK"/sample/rec-*.jpg "$WORK"/sample/thek-*.jpg; do
   [[ -f $image ]] && blur "$image" 320x180 12 "${image%.jpg}.png"
 done
 # a test stream for the player to load; headless Chrome doesn't draw it in time, the poster shows
@@ -234,6 +272,8 @@ const answers = {
     };
   },
   "waipu_tv/program": ({ program_id }) => data.details[program_id] ?? { textContent: {} },
+  "waipu_tv/mediathek_categories": () => ({ categories: data.categories }),
+  "waipu_tv/mediathek": () => ({ items: data.titles, more: true }),
   "frontend/get_user_data": () => ({ value: null }),
 };
 
@@ -271,7 +311,7 @@ const expand = setInterval(() => {
   }
 }, 50);
 const poster = setInterval(() => {
-  const player = panel.shadowRoot.querySelector("waipu-player");
+  const player = panel.shadowRoot.querySelector("waipu-tv-view")?.shadowRoot.querySelector("waipu-player");
   const video = player?.shadowRoot.querySelector("video");
   if (video) {
     player._fade = () => undefined; // the bars over the picture stay for the screenshot
@@ -297,5 +337,6 @@ shot() {
   echo "$OUT/$1.png"
 }
 shot guide ""
-shot watch "path=/watch/zdf"
+shot tv "path=/watch/zdf"
+shot mediathek "path=/mediathek"
 shot recordings "tab=recordings"

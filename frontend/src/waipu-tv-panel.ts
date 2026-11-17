@@ -1,5 +1,6 @@
-// The waipu.tv sidebar panel: guide, watch (the player, also for favorites), recordings and (for
-// admins) playlists.
+// The waipu.tv sidebar panel: guide, TV (the player for channels and recordings, also for
+// favorites), Mediathek (the on-demand library and its titles' player), recordings and (for admins)
+// playlists.
 
 import { LitElement, css, html, nothing } from "lit";
 
@@ -13,13 +14,16 @@ import {
 import { t } from "./i18n";
 import { refreshIcon } from "./icons";
 import { shared } from "./styles";
-import type { WatchTarget } from "./util";
+import { thekPath, type ThekTarget, type WatchTarget } from "./util";
 import "./guide-tab";
 import "./playlists-tab";
-import "./player-view";
 import "./recordings-tab";
+import "./tv-view";
+import "./mediathek-series";
+import "./mediathek-tab";
+import "./mediathek-view";
 
-type Tab = "guide" | "watch" | "recordings" | "playlists";
+type Tab = "guide" | "tv" | "mediathek" | "recordings" | "playlists";
 
 const LAST_WATCHED = "waipu-tv.last-watched";
 
@@ -32,6 +36,7 @@ class WaipuTvPanel extends LitElement {
     _channels: { state: true },
     _recordings: { state: true },
     _watch: { state: true },
+    _thek: { state: true },
     _toast: { state: true },
   };
 
@@ -42,9 +47,12 @@ class WaipuTvPanel extends LitElement {
   declare _tab: Tab;
   declare _channels?: ChannelsResult;
   declare _recordings?: RecordingsResult;
-  declare _watch?: WatchTarget; // the player replaces the tab while set; follows the URL
+  declare _watch?: WatchTarget; // the TV tab's player; follows the URL
+  declare _thek?: ThekTarget; // a mediathek page; follows the URL
   declare _toast?: string;
   private _loaded = false;
+  /** The Mediathek pages opened, oldest first, so a page's back button can be Back. */
+  private _thekTrail: string[] = [];
   private _watchPath?: string;
   private _toastTimer?: number;
 
@@ -64,6 +72,18 @@ class WaipuTvPanel extends LitElement {
       this._navigate(path, !!target && !!this._watch);
       window.scrollTo(0, 0);
     });
+    this.addEventListener("waipu-thek", (e) => {
+      const { target, replace }: { target: ThekTarget; replace: boolean } = (e as CustomEvent).detail;
+      const path = thekPath(target);
+      if (replace) this._thekTrail[this._thekTrail.length - 1] = path;
+      this._navigate(path, replace);
+      if (!("browse" in target)) window.scrollTo(0, 0);
+    });
+    // Back, so the page before keeps its place (the library its list and scroll position)
+    this.addEventListener("waipu-thek-back", () => {
+      if (this._thekTrail.length > 1) history.back();
+      else this._navigate("/mediathek");
+    });
   }
 
   protected willUpdate() {
@@ -75,10 +95,24 @@ class WaipuTvPanel extends LitElement {
     this._followRoute();
   }
 
-  /** Deep links: /waipu-tv/watch/<channel>[/from-start] and /waipu-tv/recording/<id>; the Watch
-   * tab's /waipu-tv/watch resumes what this browser watched last, else the first favorite. */
+  /** Deep links: /waipu-tv/watch/<channel>[/from-start], /waipu-tv/recording/<id>,
+   * /waipu-tv/mediathek, /waipu-tv/mediathek/series/<season id>[/<episode content id>] and
+   * /waipu-tv/mediathek/watch/<content id>; the TV tab's /waipu-tv/watch resumes what this browser
+   * watched last, else the first favorite. */
   private _followRoute() {
     const path = this.route?.path ?? "";
+    const thek = path.match(/^\/mediathek(?:\/watch\/([^/]+)|\/series\/([^/]+)(?:\/([^/]+))?)?$/);
+    const [, title, season, episode] = thek ?? [];
+    this._thek = !thek
+      ? undefined
+      : title
+        ? { title: decodeURIComponent(title) }
+        : season
+          ? { series: decodeURIComponent(season), ...(episode ? { episode: decodeURIComponent(episode) } : {}) }
+          : { browse: true };
+    if (!this._thek) this._thekTrail = [];
+    else if (this._thekTrail.at(-2) === path) this._thekTrail.pop(); // Back
+    else if (this._thekTrail.at(-1) !== path) this._thekTrail.push(path);
     if (path === "/watch") {
       if (!this._channels) return;
       let last: string | null = null;
@@ -149,7 +183,9 @@ class WaipuTvPanel extends LitElement {
 
   protected render() {
     if (!this.hass) return nothing;
-    const tabs: Tab[] = ["guide", "watch", "recordings"];
+    const tabs: Tab[] = ["guide", "tv", "mediathek", "recordings"];
+    // the TV and Mediathek tabs follow the URL, the others are chosen in the panel
+    const selected: Tab = this._watch ? "tv" : this._thek ? "mediathek" : this._tab;
     if (this.hass.user?.is_admin) tabs.push("playlists");
     return html`
       <header>
@@ -167,14 +203,16 @@ class WaipuTvPanel extends LitElement {
           ${tabs.map(
             (tab) => html`<button
               role="tab"
-              aria-selected=${tab === "watch" ? !!this._watch : !this._watch && tab === this._tab}
+              aria-selected=${tab === selected}
               @click=${() => {
-                if (tab === "watch") {
+                if (tab === "tv") {
                   if (!this._watch) this._navigate("/watch");
-                  return;
+                } else if (tab === "mediathek") {
+                  if (!this._thek || !("browse" in this._thek)) this._navigate("/mediathek");
+                } else {
+                  this._tab = tab;
+                  if (this._watch || this._thek) this._navigate("");
                 }
-                this._tab = tab;
-                if (this._watch) this._navigate("");
               }}
             >
               ${t(this.hass, tab)}
@@ -183,19 +221,34 @@ class WaipuTvPanel extends LitElement {
         </div>
       </header>
       ${this._watch
-        ? html`<waipu-player
+        ? html`<waipu-tv-view
             .hass=${this.hass}
             .channels=${this._channels?.channels ?? []}
             .recordings=${this._recordings?.recordings ?? []}
-            .instantRestart=${this._channels?.instant_restart ?? false}
             .audioLanguage=${this._channels?.audio_language ?? null}
             .target=${this._watch}
-          ></waipu-player>`
-        : this._linkPending()
+          ></waipu-tv-view>`
+        : this._thek
+          ? this._renderThek(this._thek)
+          : this._linkPending()
           ? html`<p class="pending">${t(this.hass, "loading")}</p>`
           : this._renderTab()}
       ${this._toast ? html`<div class="toast" role="status">${this._toast}</div>` : nothing}
     `;
+  }
+
+  private _renderThek(target: ThekTarget) {
+    if ("series" in target && !target.episode)
+      return html`<waipu-mediathek-series .hass=${this.hass} .seasonId=${target.series}></waipu-mediathek-series>`;
+    if ("series" in target || "title" in target)
+      return html`<waipu-mediathek-view
+        .hass=${this.hass}
+        .contentId=${"title" in target ? target.title : target.episode}
+        .seasonId=${"series" in target ? target.series : undefined}
+        .channels=${this._channels?.channels ?? []}
+        .audioLanguage=${this._channels?.audio_language ?? null}
+      ></waipu-mediathek-view>`;
+    return html`<waipu-mediathek-tab .hass=${this.hass}></waipu-mediathek-tab>`;
   }
 
   private _renderTab() {

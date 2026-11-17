@@ -6,7 +6,7 @@ import re
 from urllib.parse import quote, urljoin
 from xml.sax.saxutils import escape, quoteattr
 
-from .models import Channel, Program, ProgramDetails, Recording
+from .models import Channel, MediathekItem, Program, ProgramDetails, Recording
 
 FILTERS = ("all", "favorites", "live", "vod")
 
@@ -44,14 +44,21 @@ def _with_params(url: str, params: dict[str, str | None]) -> str:
     return url + ("?" + query if query else "")
 
 
-def _dash_props(base_url: str, key: str) -> list[str]:
-    # Widevine protected MPEG-DASH: the player decrypts with its own CDM; Home Assistant only
-    # relays the license request (adding waipu.tv's custom data header and unwrapping JSON)
-    license_url = _with_key(base_url + "/license", key)
-    return [
+def _dash_props(base_url: str, key: str, drm: bool = True) -> list[str]:
+    """drm: Widevine protected MPEG-DASH: the player decrypts with its own CDM; Home Assistant
+    only relays the license request (adding waipu.tv's custom data header and unwrapping JSON).
+    Without it, players may pick their DRM path for a clear stream: webos-iptv-player then
+    plays through Shaka, which on older TVs (no live seekable range) can't rewind."""
+    props = [
         "#KODIPROP:inputstream=inputstream.adaptive",
         "#KODIPROP:inputstream.adaptive.manifest_type=mpd",
         "#KODIPROP:mimetype=application/dash+xml",
+    ]
+    if not drm:
+        return props
+    license_url = _with_key(base_url + "/license", key)
+    return [
+        *props,
         "#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha",
         f"#KODIPROP:inputstream.adaptive.license_key={license_url}||R{{SSM}}|",
         f"#KODIPROP:inputstream.adaptive.drm_legacy=com.widevine.alpha|{license_url}",
@@ -66,11 +73,10 @@ def render_m3u(
     protocol: str = "auto",
     hls_proxy: bool | None = None,
     timeshift: bool = False,
-    restart: bool = False,
 ) -> str:
     """hls_proxy: True/False adds proxy=1/0 to HLS stream URLs, None keeps the server default.
-    timeshift: live channels' streams reach back to the start of the running program; on-demand
-    channels always do when restart, the account's instant restart, allows it.
+    timeshift: live channels' streams reach back to the start of the running program. On-demand
+    channels never get it: their stream already begins at the running program's start.
     No catch-up attributes: waipu.tv can't play programs from the guide's past."""
     epg_url = _with_key(epg_url, key)
     lines = [f'#EXTM3U url-tvg="{epg_url}" x-tvg-url="{epg_url}"']
@@ -86,9 +92,9 @@ def render_m3u(
         )
         lines.append(f"#EXTINF:-1 {attrs},{name}")
         if is_dash:
-            lines += _dash_props(base_url, key)
-        shift = restart if ch.vod else timeshift
-        live = {"proxy": proxy, "timeshift": "1" if shift else None}
+            # channels on pvr.waipu's HLS list have no DRM in their DASH streams either
+            lines += _dash_props(base_url, key, drm=not ch.hls)
+        live = {"proxy": proxy, "timeshift": "1" if timeshift and not ch.vod else None}
         lines.append(_with_key(_with_params(stream, live), key))
     return "\n".join(lines) + "\n"
 
@@ -115,6 +121,31 @@ def render_recordings_m3u(
         if protocol == "dash":
             lines += _dash_props(base_url, key)
         lines.append(_with_key(f"{base_url}/recording/{quote(rec.id, safe='')}.{ext}", key))
+    return "\n".join(lines) + "\n"
+
+
+def render_mediathek_m3u(
+    items: Iterable[MediathekItem],
+    base_url: str,
+    key: str,
+    protocol: str = "hls",
+    hls_proxy: bool | None = None,
+) -> str:
+    """hls_proxy as in render_m3u."""
+    lines = ["#EXTM3U"]
+    is_dash = protocol == "dash"
+    proxy = None if is_dash or hls_proxy is None else ("1" if hls_proxy else "0")
+    for item in items:
+        group = (item.channel or "mediathek").replace('"', "")
+        lines.append(
+            f"#EXTINF:{int(item.duration.total_seconds()) or -1} "
+            f'tvg-logo="{item.image or ""}" group-title="{group}",'
+            + (item.title or item.id).replace(",", " ")
+        )
+        if is_dash:
+            lines += _dash_props(base_url, key)
+        stream = f"{base_url}/mediathek/{quote(item.id, safe='')}.{'mpd' if is_dash else 'm3u8'}"
+        lines.append(_with_key(_with_params(stream, {"proxy": proxy}), key))
     return "\n".join(lines) + "\n"
 
 

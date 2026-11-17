@@ -3,7 +3,7 @@
 from collections.abc import Awaitable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import override
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -15,7 +15,18 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .api import Account, Channel, Guide, Recording, WaipuAuthError, WaipuClient, WaipuError
+from .api import (
+    Account,
+    Channel,
+    Guide,
+    MediathekCategory,
+    MediathekItem,
+    MediathekSeries,
+    Recording,
+    WaipuAuthError,
+    WaipuClient,
+    WaipuError,
+)
 from .const import (
     CHANNELS_FAVORITES,
     CHANNELS_LIVE,
@@ -103,8 +114,10 @@ class WaipuTvData:
     ) -> str:
         """A fresh stream URL from the slot's device (see streams.py). from_start: time-shift,
         the running program from its start (pvr.waipu's "timeshift from program start"); falls
-        back to plain live."""
-        if from_start:
+        back to plain live. On-demand channels ignore it: their stream is an on-demand asset
+        that already begins at the running program's start, while a start time makes it begin a
+        program earlier."""
+        if from_start and not channel.vod:
             program = await self.guide.guide.current_program(channel.id, dt_util.utcnow())
             if program:
                 try:
@@ -118,8 +131,36 @@ class WaipuTvData:
     ) -> str:
         return await _call(self.stream_url(channel, protocol, from_start, slot))
 
+    async def asset_start(self, channel: Channel) -> datetime | None:
+        """On-demand channels: the clock time at their stream's position 0. Their stream is an
+        on-demand asset that begins at the start of the program running when it's asked for;
+        None without a guide for the channel."""
+        try:
+            program = await self.guide.guide.current_program(channel.id, dt_util.utcnow())
+        except WaipuError as err:
+            LOGGER.debug("No guide for %s (%s)", channel.id, err)
+            return None
+        return program.start if program else None
+
     async def async_recording_url(self, recording_id: str, protocol: str, slot: int) -> str:
         return await _call(self.client.recording_url(recording_id, protocol, slot))
+
+    async def async_mediathek_categories(self) -> list[MediathekCategory]:
+        return await _call(self.client.mediathek_categories())
+
+    async def async_mediathek_page(
+        self, category: str, sort: str, genre: str | None, page: int
+    ) -> tuple[list[MediathekItem], bool]:
+        return await _call(self.client.mediathek_page(category, sort, genre, page))
+
+    async def async_mediathek_series(self, season_id: str) -> MediathekSeries:
+        return await _call(self.client.mediathek_series(season_id))
+
+    async def async_mediathek_content(self, content_id: str) -> dict[str, Any]:
+        return await _call(self.client.mediathek_content(content_id))
+
+    async def async_mediathek_url(self, provider: str, protocol: str, slot: int) -> str:
+        return await _call(self.client.mediathek_url(provider, protocol, slot))
 
     def recording_title(self, recording_id: str) -> str:
         for recording in self.recordings.data.recordings:

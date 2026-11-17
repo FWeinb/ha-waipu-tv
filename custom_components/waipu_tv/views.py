@@ -20,10 +20,12 @@ from homeassistant.helpers.http import KEY_HASS, HomeAssistantView
 from homeassistant.util import dt as dt_util
 
 from .api import Channel, WaipuError
+from .api.client import MEDIATHEK_SORTS
 from .api.playlist import (
     FILTERS,
     channel_protocol,
     render_m3u,
+    render_mediathek_m3u,
     render_recordings_m3u,
     render_xmltv,
     rewrite_hls,
@@ -43,6 +45,7 @@ from .streams import HLS_PROXY_TIMEOUT, IPTV_TIMEOUT, StreamsBusy
 M3U = "audio/x-mpegurl"
 HLS = "application/vnd.apple.mpegurl"
 EXTENSIONS = {"mpd": "dash", "m3u8": "hls"}
+MEDIATHEK_LIMIT = 500  # each 50 titles are a request to waipu.tv
 
 
 class BadRequest(ValueError):
@@ -128,6 +131,12 @@ class _Request:
             return self.playlist(name)
         if path == "recordings.m3u":
             return self.recordings()
+        if name.startswith("mediathek/") and ext == "m3u":
+            return await self.mediathek(name.removeprefix("mediathek/"))
+        if name.startswith("mediathek/") and ext in EXTENSIONS:
+            return await self.mediathek_stream(
+                unquote(name.removeprefix("mediathek/")), EXTENSIONS[ext]
+            )
         if path == "epg.xml":
             return await self.epg()
         if path == "license":
@@ -175,7 +184,6 @@ class _Request:
             protocol,
             hls_proxy=hls_proxy,
             timeshift=restart and _flag(self.query, "timeshift", self.options[CONF_TIMESHIFT]),
-            restart=restart,
         )
         return web.Response(
             text=body,
@@ -193,6 +201,27 @@ class _Request:
             text=render_recordings_m3u(finished, self.base_url, self.key, protocol),
             content_type=M3U,
             headers={"Content-Disposition": 'inline; filename="waipu-recordings.m3u"'},
+        )
+
+    async def mediathek(self, category: str) -> web.Response:
+        protocol = self.query.get("protocol", "hls")
+        if protocol not in ("hls", "dash"):
+            raise BadRequest("protocol must be hls or dash")
+        sort = self.query.get("sort", "mostWatched")
+        if sort not in MEDIATHEK_SORTS:
+            raise BadRequest(f"sort must be one of {', '.join(MEDIATHEK_SORTS)}")
+        try:
+            limit = int(self.query.get("limit", "100"))
+        except ValueError:
+            limit = 0
+        if not 1 <= limit <= MEDIATHEK_LIMIT:
+            raise BadRequest(f"limit must be a number from 1 to {MEDIATHEK_LIMIT}")
+        hls_proxy = _flag(self.query, "hls_proxy", False) if "hls_proxy" in self.query else None
+        items = await self.data.client.mediathek(category, sort, self.query.get("genre"), limit)
+        return web.Response(
+            text=render_mediathek_m3u(items, self.base_url, self.key, protocol, hls_proxy),
+            content_type=M3U,
+            headers={"Content-Disposition": f'inline; filename="mediathek-{category}.m3u"'},
         )
 
     async def epg(self) -> web.Response:
@@ -254,6 +283,25 @@ class _Request:
         )
         try:
             upstream = await self.data.client.recording_url(recording_id, protocol, slot)
+        except WaipuError:
+            self.data.streams.release(self._client)
+            raise
+        return await self._serve(upstream, protocol)
+
+    async def mediathek_stream(self, content_id: str, protocol: str) -> web.StreamResponse:
+        content = await self.data.client.mediathek_content(content_id)
+        # a title's playlist is fetched once, so it always gets the long timeout
+        slot = self.data.streams.acquire(
+            self._client,
+            self.request.remote or "",
+            "mediathek",
+            str(content.get("title") or content_id),
+            IPTV_TIMEOUT,
+        )
+        try:
+            upstream = await self.data.client.mediathek_url(
+                content["streamUrlProvider"], protocol, slot
+            )
         except WaipuError:
             self.data.streams.release(self._client)
             raise

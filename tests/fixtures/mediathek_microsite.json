@@ -1,0 +1,133 @@
+{
+  "$schema": "https://waiputhek.waipu.tv/api/v1/tuner/schemas/Microsite.json",
+  "bouquet": false,
+  "categories": [
+    {
+      "contents": [
+        {
+          "publicationWindow": {
+            "publishFrom": "2026-09-10T02:00:00+02:00",
+            "publishedUntil": "2026-12-31T23:59:00+01:00"
+          },
+          "trackingContentId": "vod/mediathek-13thstreet:f30511118_13:13th13th0000000000110954",
+          "type": "tvfuse:video",
+          "video": {
+            "description": "Folge 1.",
+            "duration": 2519120,
+            "episode": 1,
+            "genre": "Crimeserie",
+            "id": "mediathek-13thstreet:f30511118_13:13th13th0000000000110954",
+            "img": "https://images.wpstr.tv/vod/139/13TH13TH0000000000110954.jpg",
+            "parentalGuidance": "fsk-12",
+            "pinRequired": false,
+            "programID": "mediathek-13thstreet:f30511118_13:13th13th0000000000110954",
+            "season": 13,
+            "seriesId": "law-order-special-victims-unit",
+            "seriesTitle": "Law & Order: Special Victims Unit",
+            "source": "https://stream-url-provider.waipu.tv/api/v1/microsites/mediathek-13thstreet/categories/f30511118_13/videos/13th13th0000000000110954",
+            "title": "Hausarrest",
+            "locked": false,
+            "trackingContentId": "vod/mediathek-13thstreet:f30511118_13:13th13th0000000000110954"
+          }
+        }
+      ],
+      "description": "",
+      "id": "f30511118_13",
+      "title": "Law & Order: Special Victims Unit - Staffel - 13"
+    },
+    {
+      "contents": [
+        {
+          "publicationWindow": {
+            "publishFrom": "2026-09-10T02:00:00+02:00",
+            "publishedUntil": "2030-01-01T00:59:00+01:00"
+          },
+          "trackingContentId": "vod/mediathek-13thstreet:f30512196_2:13thnbcu0000213500000001",
+          "type": "tvfuse:video",
+          "video": {
+            "description": "Folge 1.",
+            "duration": 2480000,
+            "episode": 1,
+            "genre": "Crimeserie",
+            "id": "mediathek-13thstreet:f30512196_2:13thnbcu0000213500000001",
+            "img": "https://images.wpstr.tv/vod/139/13THNBCU0000213500000001.jpg",
+            "parentalGuidance": "fsk-12",
+            "pinRequired": false,
+            "programID": "mediathek-13thstreet:f30512196_2:13thnbcu0000213500000001",
+            "season": 2,
+            "seriesId": "cia",
+            "seriesTitle": "CIA",
+            "source": "https://stream-url-provider.waipu.tv/api/v1/microsites/mediathek-13thstreet/categories/f30512196_2/videos/13thnbcu0000213500000001",
+            "title": "Neue Spuren",
+            "locked": false,
+            "trackingContentId": "vod/mediathek-13thstreet:f30512196_2:13thnbcu0000213500000001"
+          }
+        }
+      ],
+      "description": "",
+      "id": "f30512196_2",
+      "title": "CIA - Staffel - 2"
+    },
+    {
+      "contents": [
+        {
+          "publicationWindow": {
+            "publishFrom": "2026-09-10T02:00:00+02:00",
+            "publishedUntil": "2030-01-01T00:59:00+01:00"
+          },
+          "trackingContentId": "vod/mediathek-13thstreet:f30512196_1:13thnbcu0000213478834422",
+          "type": "tvfuse:video",
+          "video": {
+            "description": "Folge 2.",
+            "duration": 2505880,
+            "episode": 2,
+            "genre": "Crimeserie",
+            "id": "mediathek-13thstreet:f30512196_1:13thnbcu0000213478834422",
+            "img": "https://images.wpstr.tv/vod/139/13THNBCU0000213478834422.jpg",
+            "parentalGuidance": "fsk-12",
+            "pinRequired": false,
+            "programID": "mediathek-13thstreet:f30512196_1:13thnbcu0000213478834422",
+            "season": 1,
+            "seriesId": "cia",
+            "seriesTitle": "CIA",
+            "source": "https://stream-url-provider.waipu.tv/api/v1/microsites/mediathek-13thstreet/categories/f30512196_1/videos/13thnbcu0000213478834422",
+            "title": "Die Überläuferin",
+            "locked": false,
+            "trackingContentId": "vod/mediathek-13thstreet:f30512196_1:13thnbcu0000213478834422"
+          }
+        },
+        {
+          "publicationWindow": {
+            "publishFrom": "2026-09-10T02:00:00+02:00",
+            "publishedUntil": "2030-01-01T00:59:00+01:00"
+          },
+          "trackingContentId": "vod/mediathek-13thstreet:f30512196_1:13thnbcu0000213478834421",
+          "type": "tvfuse:video",
+          "video": {
+            "description": "Folge 1.",
+            "duration": 2498200,
+            "episode": 1,
+            "genre": "Crimeserie",
+            "id": "mediathek-13thstreet:f30512196_1:13thnbcu0000213478834421",
+            "img": "https://images.wpstr.tv/vod/139/13THNBCU0000213478834421.jpg",
+            "parentalGuidance": "fsk-12",
+            "pinRequired": false,
+            "programID": "mediathek-13thstreet:f30512196_1:13thnbcu0000213478834421",
+            "season": 1,
+            "seriesId": "cia",
+            "seriesTitle": "CIA",
+            "source": "https://stream-url-provider.waipu.tv/api/v1/microsites/mediathek-13thstreet/categories/f30512196_1/videos/13thnbcu0000213478834421",
+            "title": "Strahlenwaffe",
+            "locked": false,
+            "trackingContentId": "vod/mediathek-13thstreet:f30512196_1:13thnbcu0000213478834421"
+          }
+        }
+      ],
+      "description": "",
+      "id": "f30512196_1",
+      "title": "CIA - Staffel - 1"
+    }
+  ],
+  "channel": "mediathek-13thstreet",
+  "title": "13th Street"
+}

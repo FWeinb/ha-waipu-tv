@@ -15,12 +15,14 @@ browser or player, which decrypts protected channels itself.
 <table>
   <tr>
     <th>Guide</th>
-    <th>Watch</th>
+    <th>TV</th>
+    <th>Mediathek</th>
     <th>Recordings</th>
   </tr>
   <tr>
     <td><a href="docs/screenshots/guide.png"><img src="docs/screenshots/guide.png" width="260" alt="The Guide tab: a timeline of favorite channels with the running programs and a now-line"></a></td>
-    <td><a href="docs/screenshots/watch.png"><img src="docs/screenshots/watch.png" width="260" alt="The Watch tab: the player with its controls next to the list of favorite channels"></a></td>
+    <td><a href="docs/screenshots/tv.png"><img src="docs/screenshots/tv.png" width="260" alt="The TV tab: the player with its controls next to the list of favorite channels"></a></td>
+    <td><a href="docs/screenshots/mediathek.png"><img src="docs/screenshots/mediathek.png" width="260" alt="The Mediathek tab: categories, genres and a grid of movies to play"></a></td>
     <td><a href="docs/screenshots/recordings.png"><img src="docs/screenshots/recordings.png" width="260" alt="The Recordings tab: storage used and recorded series and programs"></a></td>
   </tr>
 </table>
@@ -78,16 +80,23 @@ A **waipu.tv** entry in the sidebar, for all users:
 
 - **Guide:** a timeline of your favorites or all channels. Open a program to watch it, record it or
   its series, cancel a recording or add the channel to your favorites.
-- **Watch:** the player, starting with the channel you watched last. Its sidebar lists your
+- **TV:** the player, starting with the channel you watched last. Its sidebar lists your
   favorites, all channels, on-demand channels or finished recordings; star channels there or in the
   player to add them to your favorites, which are stored in your waipu.tv account, so the waipu.tv
-  apps see them too. Rewind within what the stream offers, switch channels with ↑/↓, pick the audio
+  apps see them too. Rewind within what the stream offers (drag the position, or jump 30 seconds
+  with ←/→), switch channels with ↑/↓, pick the audio
   track or subtitles, and go full screen or picture in picture. On-demand channels can also start
   from the beginning of the running program. Each channel has its own link, such as
   `/waipu-tv/watch/ard`, to bookmark or share.
+- **Mediathek:** waipu.tv's on-demand library by category and genre, most watched, recently
+  added, A–Z or about to leave. A film opens a page with the player and its description; a series
+  opens its seasons and episodes, and an episode plays with the series' episodes beside the
+  player, any season's, and a Next episode button.
 - **Recordings:** finished, running and scheduled recordings grouped by series, storage used, play,
   delete (single or several at once) and stop series recordings.
-- **Playlists** (admins only): the playlist and guide URLs to copy into your IPTV player.
+- **Playlists** (admins only): the playlist and guide URLs to copy into your IPTV player, one per
+  Mediathek category too, and a builder for a custom playlist (channels, a Mediathek category or
+  recordings with their options) that shows its URL as you go, to copy.
 
 Channels protected with DRM (most private channels) play in Chrome, Edge, Firefox and Android
 (Widevine) and in Safari and on iOS (FairPlay), but browsers only allow this over **HTTPS**, for
@@ -146,6 +155,7 @@ your account, so treat it like a password. A new key, set in the options, locks 
 | `/api/waipu_tv/live.m3u` | live TV channels |
 | `/api/waipu_tv/vod.m3u` | on-demand channels |
 | `/api/waipu_tv/recordings.m3u` | finished recordings |
+| `/api/waipu_tv/mediathek/<category>.m3u` | titles of a Mediathek category: `spielfilme`, `dokumentationen`, `unterhaltung`, `kids`, `aktuelles-regionales` |
 | `/api/waipu_tv/epg.xml` | XMLTV guide; each playlist links the guide for its channels |
 
 The URLs in a playlist use the address the player requested it from, so players in different
@@ -159,7 +169,20 @@ Options per playlist, added to the URL:
 | `drm=0` | leave out DRM channels, for players without Widevine |
 | `protocol=hls` / `protocol=dash` | force a protocol instead of choosing per channel |
 | `hls_proxy=1` / `hls_proxy=0` | serve HLS playlists through Home Assistant, for ffmpeg-based players such as VLC or Jellyfin |
-| `timeshift=1` / `timeshift=0` | live channels can be rewound to the start of the running program; on-demand channels always can |
+| `timeshift=1` / `timeshift=0` | live channels can be rewound to the start of the running program; on-demand channels always start there, without it |
+
+Options for the Mediathek playlists:
+
+| Option | Effect |
+| --- | --- |
+| `sort=mostWatched` / `latest` / `titleAsc` / `vanishingSoon` | order of the titles, as in the app (default `mostWatched`) |
+| `genre=krimi` | only one genre of the category, using the app's genre ids |
+| `limit=100` | how many titles, 1 to 500 (default 100) |
+| `protocol=hls` / `protocol=dash` | HLS (default) or DASH with Widevine |
+| `hls_proxy=1` / `hls_proxy=0` | as for the channel playlists |
+
+The playlists list films and other single titles; series, which come as seasons of episodes, are
+only in the panel, so `serien` stays mostly empty.
 
 Time-shift needs waipu.tv's instant restart in your package. waipu.tv can't play programs that
 already ended, so the playlists offer no catch-up.

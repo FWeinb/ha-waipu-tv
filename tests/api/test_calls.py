@@ -16,6 +16,10 @@ URL_USER_STATIONS = "https://user-stations.waipu.tv/api/stations?omitted=false"
 URL_DEVICE_CAPS = "https://device-capabilities.waipu.tv/api/device-capabilities"
 URL_STREAM = "https://stream-url-provider.waipu.tv/api/stream-url"
 URL_RECORDINGS = "https://recording.waipu.tv/api/recordings"
+URL_MEDIATHEK = "https://waiputhek.waipu.tv/api"
+URL_PROVIDER = (
+    "https://stream-url-provider.waipu.tv/api/v1/microsites/mk/categories/filme/videos/otto"
+)
 
 
 @pytest.fixture
@@ -322,3 +326,103 @@ async def test_fairplay_license_errors(aioclient_mock, client, status, text):
 
     with pytest.raises(WaipuError):
         await client.fairplay_license(b"SPC")
+
+
+async def test_mediathek_titles_leave_out_seasons_and_end_cards(aioclient_mock, client):
+    aioclient_mock.get(
+        f"{URL_MEDIATHEK}/category/spielfilme/all?sortBy=latest&page=0&size=50&genreId=krimi",
+        json=load_json("mediathek_page.json"),
+    )
+    items = await client.mediathek("spielfilme", "latest", "krimi")
+
+    assert [i.id for i in items] == [
+        "mediathek-kabeleinsclassics:kabeleinsclassics-filme:987e1c07084c4e949f7389bc2fe7cf6c",
+        "filmlegenden:legenden-feed:leonine_vierfustegegenrio_waipu",
+    ]
+    assert items[0].duration == timedelta(minutes=83)
+    assert items[0].channel == "Kabel Eins CLASSICS"
+    assert items[1].expires == datetime(2026, 11, 20, 23, 59, 59, tzinfo=UTC)
+
+
+async def test_mediathek_page_has_seasons(aioclient_mock, client):
+    aioclient_mock.get(
+        f"{URL_MEDIATHEK}/category/serien/all?sortBy=mostWatched&page=0&size=50",
+        json=load_json("mediathek_page.json"),
+    )
+    items, more = await client.mediathek_page("serien")
+
+    # the season's id comes from the app link: collection and category
+    season = items[2]
+    assert season.id == "mediathek-13thstreet:f30512196_1"
+    assert season.series and season.season == 1
+    assert len(items) == 3 and not more
+
+
+async def test_mediathek_series(aioclient_mock, client):
+    aioclient_mock.get(
+        f"{URL_MEDIATHEK}/v1/tuner/microsites/mediathek-13thstreet/contents",
+        json=load_json("mediathek_microsite.json"),
+    )
+    series = await client.mediathek_series("mediathek-13thstreet:f30512196_1")
+
+    assert (series.title, series.channel) == ("CIA", "13th Street")
+    # the series' seasons in order; another series in the same collection is left out
+    assert [(s.id, s.title, s.number) for s in series.seasons] == [
+        ("mediathek-13thstreet:f30512196_1", "CIA - Staffel - 1", 1),
+        ("mediathek-13thstreet:f30512196_2", "CIA - Staffel - 2", 2),
+    ]
+    assert len(series.seasons[1].episodes) == 1
+    first, second = series.seasons[0].episodes
+    assert (first.episode, first.title) == (1, "Strahlenwaffe")
+    assert first.id == "mediathek-13thstreet:f30512196_1:13thnbcu0000213478834421"
+    assert first.duration == timedelta(milliseconds=2498200)
+    assert second.expires == datetime(2029, 12, 31, 23, 59, tzinfo=UTC)
+
+
+async def test_mediathek_unknown_season(aioclient_mock, client):
+    aioclient_mock.get(
+        f"{URL_MEDIATHEK}/v1/tuner/microsites/mediathek-13thstreet/contents",
+        json=load_json("mediathek_microsite.json"),
+    )
+
+    with pytest.raises(WaipuError):
+        await client.mediathek_series("mediathek-13thstreet:nope")
+
+
+async def test_mediathek_pages_up_to_the_limit(aioclient_mock, client):
+    page = load_json("mediathek_page.json")
+    page["page"]["totalPages"] = 9
+    for n in range(2):
+        aioclient_mock.get(
+            f"{URL_MEDIATHEK}/category/serien/all?sortBy=mostWatched&page={n}&size=50", json=page
+        )
+
+    assert len(await client.mediathek("serien", limit=3)) == 3
+    assert len(aioclient_mock.mock_calls) == 3  # token and two pages
+
+
+@pytest.mark.parametrize(
+    ("protocol", "url"),
+    [
+        ("hls", "https://cdn.example.com/vod/otto/manifest.m3u8"),
+        ("dash", "https://cdn.example.com/vod/otto/manifest.mpd"),
+    ],
+)
+async def test_mediathek_url(aioclient_mock, client, protocol, url):
+    aioclient_mock.post(URL_DEVICE_CAPS, json={"token": token_response()["access_token"]})
+    aioclient_mock.get(
+        f"{URL_PROVIDER}?uh=00000000-0000-0000-0000-000000000001",
+        json=load_json("mediathek_stream.json"),
+    )
+
+    assert await client.mediathek_url(URL_PROVIDER, protocol) == url
+    url = f"{URL_PROVIDER}?uh=00000000-0000-0000-0000-000000000001"
+    (call,) = calls(aioclient_mock, "GET", url)
+    assert "X-Device-Token" in call[3]
+
+
+async def test_mediathek_unknown_title(aioclient_mock, client):
+    aioclient_mock.get(f"{URL_MEDIATHEK}/v1/tuner/contents/a:b:c", status=404, json={})
+
+    with pytest.raises(WaipuError):
+        await client.mediathek_content("a:b:c")

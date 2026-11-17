@@ -17,9 +17,15 @@ import aiohttp
 
 from .models import (
     Channel,
+    MediathekCategory,
+    MediathekItem,
+    MediathekSeries,
     Program,
     Recording,
     parse_channels,
+    parse_mediathek_category,
+    parse_mediathek_item,
+    parse_mediathek_series,
     parse_program,
     parse_recording,
 )
@@ -43,8 +49,11 @@ URL_RECORDINGS = "https://recording.waipu.tv/api/recordings"
 URL_RECORDING_SUMMARY = "https://recording.waipu.tv/api/recordings/summary"
 URL_SERIALS = "https://recording-scheduler.waipu.tv/api/serials"
 URL_DELETE_REQUESTS = "https://recording-scheduler.waipu.tv/api/delete-requests"
+URL_MEDIATHEK = "https://waiputhek.waipu.tv/api"
 
 ACCEPT_RECORDINGS = "application/vnd.waipu.recordings-v4+json"
+MEDIATHEK_SORTS = ("mostWatched", "latest", "titleAsc", "vanishingSoon")
+MEDIATHEK_PAGE = 50
 EPG_WINDOW = timedelta(hours=4)  # the grid API serves 4 h windows aligned to UTC
 
 # fixed stream quality: up to 1080p50 H.264 and HEVC up to 2160p50, with AAC audio
@@ -446,6 +455,85 @@ class WaipuClient:
             if stream.get("protocol") == wanted and stream.get("href"):
                 return stream["href"]
         raise WaipuError(f"no {protocol} stream for recording {recording_id}", 404)
+
+    # --- Mediathek ------------------------------------------------------------------------------
+
+    async def mediathek_page(
+        self, category: str, sort: str = "mostWatched", genre: str | None = None, page: int = 0
+    ) -> tuple[list[MediathekItem], bool]:
+        """One page of a category's cards in the app's "all" list (titles and seasons of series),
+        and whether more pages follow."""
+        params = {"sortBy": sort, "page": page, "size": MEDIATHEK_PAGE}
+        if genre:
+            params["genreId"] = genre
+        query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
+        doc = await self._json(
+            "GET",
+            f"{URL_MEDIATHEK}/category/{quote(category)}/all?{query}",
+            accept="application/vnd.waipu.waiputhek-content-paged-v1+json",
+        )
+        content = (doc or {}).get("content") or []
+        items = [i for c in content if isinstance(c, dict) and (i := parse_mediathek_item(c))]
+        pages = int(((doc or {}).get("page") or {}).get("totalPages") or 0)
+        return items, page + 1 < pages
+
+    async def mediathek(
+        self, category: str, sort: str = "mostWatched", genre: str | None = None, limit: int = 100
+    ) -> list[MediathekItem]:
+        """A category's titles to play, up to limit; seasons of series left out."""
+        items: list[MediathekItem] = []
+        page, more = 0, True
+        while more and len(items) < limit:
+            found, more = await self.mediathek_page(category, sort, genre, page)
+            items += [i for i in found if not i.series]
+            page += 1
+        return items[:limit]
+
+    async def mediathek_categories(self) -> list[MediathekCategory]:
+        """The categories with their genres, in the app's order."""
+        doc = await self._json(
+            "GET",
+            f"{URL_MEDIATHEK}/filter",
+            accept="application/vnd.waipu.waiputhek-filter-tree-v1+json",
+        )
+        categories = [c for c in (doc or {}).get("categories") or [] if isinstance(c, dict)]
+        categories.sort(key=lambda c: c.get("rank") or 0)
+        return [category for c in categories if (category := parse_mediathek_category(c))]
+
+    async def mediathek_series(self, season_id: str) -> MediathekSeries:
+        """The series of a season, with all its seasons and episodes, from its collection's
+        microsite; season_id is "<collection>:<category>"."""
+        collection, _, category = season_id.partition(":")
+        doc = await self._json(
+            "GET", f"{URL_MEDIATHEK}/v1/tuner/microsites/{quote(collection)}/contents"
+        )
+        series = None
+        if isinstance(doc, dict):
+            series = parse_mediathek_series(doc, collection, category)
+        if series is None:
+            raise WaipuError(f"unknown Mediathek season {season_id}", 404)
+        return series
+
+    async def mediathek_content(self, content_id: str) -> dict[str, Any]:
+        """A title's details: title, description and its streamUrlProvider."""
+        doc = await self._json(
+            "GET", f"{URL_MEDIATHEK}/v1/tuner/contents/{quote(content_id, safe=':')}"
+        )
+        if not isinstance(doc, dict) or not doc.get("streamUrlProvider"):
+            raise WaipuError(f"unknown mediathek title {content_id}", 404)
+        return doc
+
+    async def mediathek_url(self, provider: str, protocol: str, slot: int = 0) -> str:
+        """The stream of a Mediathek title, from its streamUrlProvider; protocol is "dash" or
+        "hls"."""
+        user_handle = (await self.account()).user_handle
+        doc = await self._json(
+            "GET", f"{provider}?uh={quote(user_handle)}", headers=await self._slot_auth(slot)
+        )
+        url = ((doc or {}).get("player") or {}).get("mpd" if protocol == "dash" else "hls")
+        if not url:
+            raise WaipuError(f"no {protocol} stream at {provider}", 404)
+        return url
 
     # --- DRM ------------------------------------------------------------------------------------
 

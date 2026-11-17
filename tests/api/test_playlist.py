@@ -4,10 +4,17 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from custom_components.waipu_tv.api import Channel, Program, ProgramDetails, Recording
+from custom_components.waipu_tv.api import (
+    Channel,
+    MediathekItem,
+    Program,
+    ProgramDetails,
+    Recording,
+)
 from custom_components.waipu_tv.api.models import parse_program_details
 from custom_components.waipu_tv.api.playlist import (
     render_m3u,
+    render_mediathek_m3u,
     render_recordings_m3u,
     render_xmltv,
     rewrite_hls,
@@ -83,6 +90,15 @@ def test_hls_and_dash_entries():
     assert "KODIPROP" not in m3u.split("#EXTINF")[1]
 
 
+def test_dash_without_drm_for_clear_channels():
+    # Das Erste's DASH stream has no DRM: no license properties, so players play it as clear
+    m3u = render_m3u([ARD], BASE, "k", EPG, protocol="dash")
+
+    assert f"{BASE}/stream/ard.mpd?key=k" in m3u
+    assert "#KODIPROP:inputstream.adaptive.manifest_type=mpd" in m3u
+    assert "license" not in m3u
+
+
 def test_hls_proxy_option():
     assert "/stream/ard.m3u8?key=k\n" in render_m3u([ARD], BASE, "k", EPG)
     assert "/stream/ard.m3u8?proxy=1&key=k\n" in render_m3u([ARD], BASE, "k", EPG, hls_proxy=True)
@@ -96,15 +112,9 @@ def test_timeshift():
 
     assert f"\n{BASE}/stream/ard.m3u8?timeshift=1&key=k\n" in m3u
     assert f"\n{BASE}/stream/pro7.mpd?timeshift=1&key=k\n" in m3u
+    # on-demand channels already begin at the running program's start
     vod_block = m3u.split("#EXTINF")[3]
-    assert "/stream/vodch.mpd?key=k" in vod_block  # without instant restart, nothing restarts
-
-
-def test_on_demand_channels_always_restart():
-    m3u = render_m3u([ARD, VOD], BASE, "k", EPG, timeshift=False, restart=True)
-
-    assert f"\n{BASE}/stream/ard.m3u8?key=k\n" in m3u
-    assert f"\n{BASE}/stream/vodch.mpd?timeshift=1&key=k\n" in m3u
+    assert "/stream/vodch.mpd?key=k" in vod_block
 
 
 def test_force_protocol():
@@ -141,6 +151,31 @@ def test_recordings():
     hls = render_recordings_m3u([recording("9", "News")], BASE, "k", protocol="hls")
     assert "/recording/9.m3u8" in hls
     assert "KODIPROP" not in hls
+
+
+def test_mediathek():
+    item = MediathekItem(
+        id="filmlegenden:legenden-feed:rio",
+        title="Vier Fäuste, Rio",
+        image="http://img/rio.jpg",
+        genre="Comedy",
+        duration=timedelta(minutes=100),
+        channel="Filmlegenden",
+        expires=None,
+        series=False,
+        season=None,
+    )
+    m3u = render_mediathek_m3u([item], BASE, "k")
+
+    extinf = '#EXTINF:6000 tvg-logo="http://img/rio.jpg" group-title="Filmlegenden"'
+    assert f"{extinf},Vier Fäuste  Rio" in m3u
+    assert f"\n{BASE}/mediathek/filmlegenden%3Alegenden-feed%3Ario.m3u8?key=k\n" in m3u
+    assert "KODIPROP" not in m3u
+    dash = render_mediathek_m3u([item], BASE, "k", protocol="dash", hls_proxy=True)
+    assert "/mediathek/filmlegenden%3Alegenden-feed%3Ario.mpd?key=k" in dash
+    assert "license_type=com.widevine.alpha" in dash
+    proxied = render_mediathek_m3u([item], BASE, "k", hls_proxy=True)
+    assert ".m3u8?proxy=1&key=k" in proxied
 
 
 def test_master_playlist_proxies_variants():

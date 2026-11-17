@@ -22,7 +22,7 @@ from .const import DOMAIN
 IPTV_TIMEOUT = timedelta(hours=4)
 HLS_PROXY_TIMEOUT = timedelta(seconds=30)
 
-type Kind = Literal["live", "recording"]
+type Kind = Literal["live", "recording", "mediathek"]
 
 
 @dataclass

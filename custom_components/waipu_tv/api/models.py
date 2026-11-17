@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from importlib import resources
 from typing import Any
+from urllib.parse import parse_qs, urlsplit
 
 
 def _load_hls_allowlist() -> frozenset[str]:
@@ -181,4 +182,158 @@ def parse_recording(data: dict[str, Any]) -> Recording | None:
         image=_image(data.get("previewImage")),
         season=_str(data.get("season")),
         episode=_str(data.get("episode")),
+    )
+
+
+@dataclass(frozen=True)
+class MediathekCategory:
+    id: str
+    name: str
+    genres: tuple[tuple[str, str], ...]  # (id, name)
+
+
+def parse_mediathek_category(data: dict[str, Any]) -> MediathekCategory | None:
+    if not data.get("categoryId"):
+        return None
+    genres = tuple(
+        (str(g["genreId"]), str(g.get("displayName") or g["genreId"]))
+        for g in data.get("genres") or []
+        if isinstance(g, dict) and g.get("genreId")
+    )
+    return MediathekCategory(
+        id=str(data["categoryId"]),
+        name=str(data.get("displayName") or data["categoryId"]),
+        genres=genres,
+    )
+
+
+@dataclass(frozen=True)
+class MediathekItem:
+    """A card in a Mediathek (on-demand library) category: a title to play, or a season of a
+    series, which lists its episodes (MediathekSeason)."""
+
+    # a title's content id, "<collection>:<category>:<video>"; a season's "<collection>:<category>"
+    id: str
+    title: str
+    image: str | None
+    genre: str | None
+    duration: timedelta  # titles only
+    channel: str | None
+    expires: datetime | None
+    series: bool
+    season: int | None  # seasons only
+
+
+def parse_mediathek_item(data: dict[str, Any]) -> MediathekItem | None:
+    """End cards ("more") aren't titles; locked titles aren't in the package. A season's card
+    names its collection and category in the app link (channelId, categoryId); its tracking id
+    doesn't always."""
+    tracking = str(data.get("trackingContentId") or "")
+    if not tracking.startswith("vod/") or data.get("locked"):
+        return None
+    series = bool(data.get("series"))
+    if series:
+        query = parse_qs(urlsplit(str(data.get("url") or "")).query)
+        collection, category = query.get("channelId", [""])[0], query.get("categoryId", [""])[0]
+        if not (collection and category):
+            return None
+        id_ = f"{collection}:{category}"
+    else:
+        id_ = tracking.removeprefix("vod/")
+    season = data.get("season")
+    return MediathekItem(
+        id=id_,
+        title=str(data.get("title") or ""),
+        image=_str(data.get("img")),
+        genre=_str(data.get("genre")),
+        duration=timedelta(minutes=int(data.get("duration") or 0)),
+        channel=_str(data.get("channelDisplay")),
+        expires=parse_time(data.get("expiresAt")),
+        series=series,
+        season=season if isinstance(season, int) else None,
+    )
+
+
+@dataclass(frozen=True)
+class MediathekEpisode:
+    id: str  # content id, played like a title
+    title: str
+    description: str | None
+    image: str | None
+    season: int | None
+    episode: int | None
+    duration: timedelta
+    expires: datetime | None
+
+
+@dataclass(frozen=True)
+class MediathekSeason:
+    id: str  # "<collection>:<category>", like the season's MediathekItem
+    title: str
+    number: int | None
+    episodes: tuple[MediathekEpisode, ...]
+
+
+@dataclass(frozen=True)
+class MediathekSeries:
+    """A series with all its seasons and their episodes, as one collection holds them."""
+
+    channel: str | None  # the collection's name, e.g. "13th Street"
+    title: str
+    seasons: tuple[MediathekSeason, ...]
+
+
+def _episode(data: dict[str, Any]) -> MediathekEpisode | None:
+    video = data.get("video")
+    if data.get("type") != "tvfuse:video" or not isinstance(video, dict) or not video.get("id"):
+        return None
+    if video.get("locked"):
+        return None
+    window = data.get("publicationWindow") or {}
+    return MediathekEpisode(
+        id=str(video["id"]),
+        title=str(video.get("title") or ""),
+        description=_str(video.get("description")),
+        image=_str(video.get("img")),
+        season=video.get("season") if isinstance(video.get("season"), int) else None,
+        episode=video.get("episode") if isinstance(video.get("episode"), int) else None,
+        duration=timedelta(milliseconds=int(video.get("duration") or 0)),
+        expires=parse_time(window.get("publishedUntil")),
+    )
+
+
+def parse_mediathek_series(
+    microsite: dict[str, Any], collection: str, category: str
+) -> MediathekSeries | None:
+    """The series of a season out of a collection's microsite: its categories are seasons, each
+    with its episodes, and a series' seasons are the categories whose episodes share a
+    seriesId (a collection holds several series)."""
+    categories = [c for c in microsite.get("categories") or [] if isinstance(c, dict)]
+    found = next((c for c in categories if c.get("id") == category), None)
+    if found is None:
+        return None
+
+    def episodes(c: dict[str, Any]) -> tuple[MediathekEpisode, ...]:
+        parsed = (_episode(e) for e in c.get("contents") or [] if isinstance(e, dict))
+        listed = (e for e in parsed if e)
+        return tuple(sorted(listed, key=lambda e: (e.season or 0, e.episode or 0)))
+
+    def series_of(c: dict[str, Any]) -> tuple[str | None, str | None]:
+        videos = (e.get("video") for e in c.get("contents") or [] if isinstance(e, dict))
+        video = next((v for v in videos if isinstance(v, dict)), {})
+        return _str(video.get("seriesId")), _str(video.get("seriesTitle"))
+
+    series_id, series_title = series_of(found)
+    seasons = []
+    for c in categories:
+        if c is found or (series_id and series_of(c)[0] == series_id):
+            listed = episodes(c)
+            number = listed[0].season if listed else None
+            title = str(c.get("title") or "")
+            seasons.append(MediathekSeason(f"{collection}:{c['id']}", title, number, listed))
+    seasons.sort(key=lambda s: (s.number is None, s.number or 0, s.title))
+    return MediathekSeries(
+        channel=_str(microsite.get("title")),
+        title=series_title or str(found.get("title") or ""),
+        seasons=tuple(seasons),
     )
