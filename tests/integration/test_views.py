@@ -153,8 +153,8 @@ async def test_recordings_playlist(client, mock_waipu):
 
     # finished recordings only, newest first
     assert [line.rsplit(",", 1)[1] for line in m3u.splitlines() if line.startswith("#EXTINF")] == [
-        "Tatort – Ein Fall für zwei (2026-11-08)",
-        "heute-show S2026E12 – Folge 12 (2026-11-07)",
+        "Program C – Episode 3 (2026-11-08)",
+        "Program B S2026E12 – Folge 12 (2026-11-07)",
     ]
     assert f"{BASE}/recording/1000000001.mpd?key={KEY}" in m3u
 
@@ -163,25 +163,25 @@ async def test_recordings_playlist(client, mock_waipu):
 
 
 async def test_mediathek_playlist_and_stream(client, mock_waipu):
-    otto = "mediathek-kabeleinsclassics:kabeleinsclassics-filme:987e1c07084c4e949f7389bc2fe7cf6c"
+    film_b = "mediathek-kabeleinsclassics:kabeleinsclassics-filme:987e1c07084c4e949f7389bc2fe7cf6c"
     provider = "https://stream-url-provider.waipu.tv/api/v1/microsites/x/categories/y/videos/z"
     mock_waipu.get(
         f"{URL_MEDIATHEK}/category/spielfilme/all?sortBy=mostWatched&page=0&size=50",
         json=load_json("mediathek_page.json"),
     )
     mock_waipu.get(
-        f"{URL_MEDIATHEK}/v1/tuner/contents/{otto}",
-        json={"title": "Otto - Der Film", "streamUrlProvider": provider},
+        f"{URL_MEDIATHEK}/v1/tuner/contents/{film_b}",
+        json={"title": "Film B", "streamUrlProvider": provider},
     )
     mock_waipu.get(re.compile("^" + re.escape(provider)), json=load_json("mediathek_stream.json"))
 
     m3u = await (await get(client, "mediathek/spielfilme.m3u")).text()
     assert m3u.count("#EXTINF") == 2
-    stream = f"{BASE}/mediathek/{otto.replace(':', '%3A')}.m3u8?key={KEY}"
+    stream = f"{BASE}/mediathek/{film_b.replace(':', '%3A')}.m3u8?key={KEY}"
     assert stream in m3u
 
-    resp = await get(client, f"mediathek/{otto.replace(':', '%3A')}.m3u8")
-    assert resp.headers["Location"] == "https://cdn.example.com/vod/otto/manifest.m3u8"
+    resp = await get(client, f"mediathek/{film_b.replace(':', '%3A')}.m3u8")
+    assert resp.headers["Location"] == "https://cdn.example.com/vod/film_b/manifest.m3u8"
 
 
 @pytest.mark.parametrize(
@@ -198,9 +198,9 @@ async def test_epg(client):
     assert resp.content_type == "application/xml"
     assert xml.count("<channel ") == 1
     assert xml.count("<programme ") == 6
-    assert "<title>Tagesschau</title>" in xml
+    assert "<title>News</title>" in xml
     # details of the favorite (ard) from the background guide load
-    assert xml.count("<desc>Satire mit Oliver Welke.</desc>") == 6
+    assert xml.count("<desc>Description of program B.</desc>") == 6
 
     resp = await client.get(
         "/api/waipu_tv/epg.xml",

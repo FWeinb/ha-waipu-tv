@@ -39,7 +39,7 @@ async def test_takes_over_the_quietest_iptv_client(streams, freezer):
 
 async def test_panel_players_are_never_taken_over(streams):
     streams.acquire("panel:1", "Ann", "live", "ARD")
-    streams.acquire("panel:2", "Ben", "recording", "Tatort")
+    streams.acquire("panel:2", "Ben", "recording", "Program C")
 
     with pytest.raises(StreamsBusy) as err:
         streams.acquire("iptv:a", "a", "live", "ZDF", HOUR)

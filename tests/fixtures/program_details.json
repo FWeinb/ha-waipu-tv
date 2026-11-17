@@ -7,14 +7,14 @@
     "episodeNumber": "12"
   },
   "textContent": {
-    "title": "heute-show",
-    "descLong": "Satire mit Oliver Welke."
+    "title": "Program B",
+    "descLong": "Description of program B."
   },
   "production": {
     "year": "2026",
     "castMembers": [
       {
-        "name": "Oliver Welke",
+        "name": "Person A",
         "role": "Moderation"
       }
     ]

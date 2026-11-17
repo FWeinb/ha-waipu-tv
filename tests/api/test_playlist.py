@@ -126,7 +126,7 @@ def test_recordings():
         [
             recording(
                 "12/3",
-                "Tatort",
+                "Program C",
                 episode_title="Ende",
                 season="1",
                 episode="2",
@@ -142,8 +142,8 @@ def test_recordings():
     )
 
     assert (
-        '#EXTINF:5400 tvg-logo="http://img/480x270.jpg" group-title="Tatort",'
-        "Tatort S1E2 – Ende (2026-11-01)"
+        '#EXTINF:5400 tvg-logo="http://img/480x270.jpg" group-title="Program C",'
+        "Program C S1E2 – Ende (2026-11-01)"
     ) in m3u
     assert f"{BASE}/recording/12%2F3.mpd?key=k" in m3u
     assert 'group-title="Aufnahmen",News  live' in m3u
@@ -156,7 +156,7 @@ def test_recordings():
 def test_mediathek():
     item = MediathekItem(
         id="filmlegenden:legenden-feed:rio",
-        title="Vier Fäuste, Rio",
+        title="Film C, Part 2",
         image="http://img/rio.jpg",
         genre="Comedy",
         duration=timedelta(minutes=100),
@@ -168,7 +168,7 @@ def test_mediathek():
     m3u = render_mediathek_m3u([item], BASE, "k")
 
     extinf = '#EXTINF:6000 tvg-logo="http://img/rio.jpg" group-title="Filmlegenden"'
-    assert f"{extinf},Vier Fäuste  Rio" in m3u
+    assert f"{extinf},Film C  Part 2" in m3u
     assert f"\n{BASE}/mediathek/filmlegenden%3Alegenden-feed%3Ario.m3u8?key=k\n" in m3u
     assert "KODIPROP" not in m3u
     dash = render_mediathek_m3u([item], BASE, "k", protocol="dash", hls_proxy=True)
@@ -205,7 +205,7 @@ def test_xmltv():
     program = Program(
         id="1",
         channel_id="ard",
-        title="Tagesschau & Wetter",
+        title="News & Weather",
         episode_title="Spezial",
         genre="Nachrichten",
         start=start,
@@ -219,7 +219,7 @@ def test_xmltv():
 
     assert '<channel id="ard"><display-name>ARD</display-name></channel>' in xml
     assert 'start="20261114190000 +0000" stop="20261114191500 +0000" channel="ard"' in xml
-    assert "<title>Tagesschau &amp; Wetter</title>" in xml
+    assert "<title>News &amp; Weather</title>" in xml
     assert "<sub-title>Spezial</sub-title>" in xml
     assert "<category>Nachrichten</category>" in xml
     assert '<icon src="http://img/1.jpg"/>' in xml
@@ -231,7 +231,7 @@ def test_xmltv_details():
     program = Program(
         id="p1",
         channel_id="zdf",
-        title="heute-show",
+        title="Program B",
         episode_title=None,
         genre="Comedy",
         start=start,
@@ -241,19 +241,19 @@ def test_xmltv_details():
         recordable=True,
     )
     details = ProgramDetails(
-        description="Satire & mehr",
+        description="Description & more",
         year="2026",
         season="28",
         episode="12",
-        cast=(("Oliver Welke", "Moderation"), ("Gast", None)),
+        cast=(("Person A", "Moderation"), ("Person B", None)),
     )
 
     xml = render_xmltv([(ch("zdf"), [program])], {"p1": details})
 
     assert (
-        "    <title>heute-show</title>\n"
-        "    <desc>Satire &amp; mehr</desc>\n"
-        '    <credits><actor role="Moderation">Oliver Welke</actor><actor>Gast</actor></credits>\n'
+        "    <title>Program B</title>\n"
+        "    <desc>Description &amp; more</desc>\n"
+        '    <credits><actor role="Moderation">Person A</actor><actor>Person B</actor></credits>\n'
         "    <date>2026</date>\n"
         "    <category>Comedy</category>\n"
         '    <icon src="http://img/1.jpg"/>\n'

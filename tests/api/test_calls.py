@@ -18,7 +18,7 @@ URL_STREAM = "https://stream-url-provider.waipu.tv/api/stream-url"
 URL_RECORDINGS = "https://recording.waipu.tv/api/recordings"
 URL_MEDIATHEK = "https://waiputhek.waipu.tv/api"
 URL_PROVIDER = (
-    "https://stream-url-provider.waipu.tv/api/v1/microsites/mk/categories/filme/videos/otto"
+    "https://stream-url-provider.waipu.tv/api/v1/microsites/mk/categories/filme/videos/film_b"
 )
 
 
@@ -62,10 +62,10 @@ async def test_channels(aioclient_mock, client):
         vod=False,
         hls=True,
     )
-    assert ard.logo.startswith("https://images.wpstr.tv/station/ard/")
+    assert ard.logo.startswith("https://images.example.com/station/ard/")
     assert ard.logo.endswith("/hd/standard?res=320x180")
     filmtastic = channels[2]
-    # on-demand channels play via DASH (ARCHITECTURE.md decision 36)
+    # on-demand channels play via DASH (ARCHITECTURE.md decision 37)
     assert (filmtastic.vod, filmtastic.hls, filmtastic.visible) == (True, False, False)
     assert channels[3].favorite is False
 
@@ -164,13 +164,13 @@ async def test_recordings_expand_groups(aioclient_mock, client):
         id="1000000001",
         program_id="5e9b103c-e92d-5408-b5c9-cb15136c32dc",
         channel_id="ard",
-        title="Tatort",
-        episode_title="Ein Fall für zwei",
+        title="Program C",
+        episode_title="Episode 3",
         status="FINISHED",
         start=datetime(2026, 11, 8, 19, 15, tzinfo=UTC),
         duration=timedelta(minutes=90),
         group=None,
-        image="https://images.example.com/tatort?res=480x270",
+        image="https://images.example.com/program-c?res=480x270",
         season=None,
         episode=None,
     )
@@ -206,7 +206,7 @@ async def test_record_series(aioclient_mock, client):
     await client.record_series(program)
 
     (call,) = calls(aioclient_mock, "POST", url)
-    assert sent_json(call) == {"channel": "ZDF", "title": "heute-show", "seriesId": "4711"}
+    assert sent_json(call) == {"channel": "ZDF", "title": "Program B", "seriesId": "4711"}
     assert call[3]["Content-Type"] == "application/vnd.waipu.recording-scheduler-serials-v1+json"
 
 
@@ -337,7 +337,7 @@ async def test_mediathek_titles_leave_out_seasons_and_end_cards(aioclient_mock, 
 
     assert [i.id for i in items] == [
         "mediathek-kabeleinsclassics:kabeleinsclassics-filme:987e1c07084c4e949f7389bc2fe7cf6c",
-        "filmlegenden:legenden-feed:leonine_vierfustegegenrio_waipu",
+        "filmlegenden:legenden-feed:film_c",
     ]
     assert items[0].duration == timedelta(minutes=83)
     assert items[0].channel == "Kabel Eins CLASSICS"
@@ -365,15 +365,15 @@ async def test_mediathek_series(aioclient_mock, client):
     )
     series = await client.mediathek_series("mediathek-13thstreet:f30512196_1")
 
-    assert (series.title, series.channel) == ("CIA", "13th Street")
+    assert (series.title, series.channel) == ("Series A", "13th Street")
     # the series' seasons in order; another series in the same collection is left out
     assert [(s.id, s.title, s.number) for s in series.seasons] == [
-        ("mediathek-13thstreet:f30512196_1", "CIA - Staffel - 1", 1),
-        ("mediathek-13thstreet:f30512196_2", "CIA - Staffel - 2", 2),
+        ("mediathek-13thstreet:f30512196_1", "Series A - Staffel - 1", 1),
+        ("mediathek-13thstreet:f30512196_2", "Series A - Staffel - 2", 2),
     ]
     assert len(series.seasons[1].episodes) == 1
     first, second = series.seasons[0].episodes
-    assert (first.episode, first.title) == (1, "Strahlenwaffe")
+    assert (first.episode, first.title) == (1, "Episode 7")
     assert first.id == "mediathek-13thstreet:f30512196_1:13thnbcu0000213478834421"
     assert first.duration == timedelta(milliseconds=2498200)
     assert second.expires == datetime(2029, 12, 31, 23, 59, tzinfo=UTC)
@@ -404,8 +404,8 @@ async def test_mediathek_pages_up_to_the_limit(aioclient_mock, client):
 @pytest.mark.parametrize(
     ("protocol", "url"),
     [
-        ("hls", "https://cdn.example.com/vod/otto/manifest.m3u8"),
-        ("dash", "https://cdn.example.com/vod/otto/manifest.mpd"),
+        ("hls", "https://cdn.example.com/vod/film_b/manifest.m3u8"),
+        ("dash", "https://cdn.example.com/vod/film_b/manifest.mpd"),
     ],
 )
 async def test_mediathek_url(aioclient_mock, client, protocol, url):

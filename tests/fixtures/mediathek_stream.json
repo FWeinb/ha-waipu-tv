@@ -1,9 +1,9 @@
 {
   "contentID": "mediathek-kabeleinsclassics:kabeleinsclassics-filme:987e1c07084c4e949f7389bc2fe7cf6c",
   "player": {
-    "hls": "https://cdn.example.com/vod/otto/manifest.m3u8",
-    "mpd": "https://cdn.example.com/vod/otto/manifest.mpd"
+    "hls": "https://cdn.example.com/vod/film_b/manifest.m3u8",
+    "mpd": "https://cdn.example.com/vod/film_b/manifest.mpd"
   },
-  "title": "Otto - Der Film",
+  "title": "Film B",
   "duration": 4971760
 }

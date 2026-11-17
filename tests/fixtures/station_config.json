@@ -3,11 +3,11 @@
     {
       "id": "ard",
       "displayName": "Das Erste",
-      "description": "Das Erste bietet seit Jahren ein einzigartiges Fernseherlebnis für die ganze Familie: Filme, Serien, interessante Dokumentationen und aktuelle Nachrichten versorgt die Zuschauer rund um die Uhr beste Unterhaltung und Information.",
+      "description": "Description of channel ard.",
       "streamQualities": [
         "hd"
       ],
-      "logoTemplateUrl": "https://images.wpstr.tv/station/ard/13f3e0f0/${streamQuality}/${shape}?res=${resolution}",
+      "logoTemplateUrl": "https://images.example.com/station/ard/13f3e0f0/${streamQuality}/${shape}?res=${resolution}",
       "restrictions": {
         "pauseForbidden": false,
         "recordingForbidden": false,
@@ -31,11 +31,11 @@
     {
       "id": "zdf",
       "displayName": "ZDF",
-      "description": "Das ZDF bietet ein Vollprogramm aus Information, Bildung, Kultur und Unterhaltung. Es präsentiert den Zuschauern einen Überblick über das Weltgeschehen und vermittelt ein umfassendes Bild insbesondere auch in den Bereichen Gesellschaft, Politik, Wirtschaft und das kulturelle Geschehen.",
+      "description": "Description of channel zdf.",
       "streamQualities": [
         "hd"
       ],
-      "logoTemplateUrl": "https://images.wpstr.tv/station/zdf/74d6f9f9/${streamQuality}/${shape}?res=${resolution}",
+      "logoTemplateUrl": "https://images.example.com/station/zdf/74d6f9f9/${streamQuality}/${shape}?res=${resolution}",
       "restrictions": {
         "pauseForbidden": false,
         "recordingForbidden": false,
@@ -59,12 +59,12 @@
     {
       "id": "pro7",
       "displayName": "ProSieben",
-      "description": "We love to Entertain you! ProSieben: Sympathisch, unterhaltsam, modern, spannend, vielseitig und innovativ. Eine klare Haltung und viel Fläche für gesellschaftspolitische Themen machen den Sender relevant und geben wichtige Orientierung.",
+      "description": "Description of channel pro7.",
       "streamQualities": [
         "hd",
         "sd"
       ],
-      "logoTemplateUrl": "https://images.wpstr.tv/station/pro7/97cd877d/${streamQuality}/${shape}?res=${resolution}",
+      "logoTemplateUrl": "https://images.example.com/station/pro7/97cd877d/${streamQuality}/${shape}?res=${resolution}",
       "mediaCenter": {
         "micrositeUrl": "https://app.waipu.tv/web?format=overlay&url=https%3A%2F%2Fsites.waipu.tv%2Fmediathek-pro7",
         "apiUrl": "https://waiputhek.waipu.tv/api/v1/tuner/microsites/mediathek-pro7/contents"
@@ -91,11 +91,11 @@
     {
       "id": "filmtastic",
       "displayName": "FILMTASTIC",
-      "description": "Filmtastic bietet alles, was den Filmfan begeistert. Top-Unterhaltung über sämtliche Genre-Grenzen hinweg: Action-Highlights, außergewöhnliche Thriller und Dramen, Klassiker der Filmgeschichte und unvergessliche Kultfilme.",
+      "description": "Description of channel filmtastic.",
       "streamQualities": [
         "hd"
       ],
-      "logoTemplateUrl": "https://images.wpstr.tv/station/filmtastic/ef0cf97b/${streamQuality}/${shape}?res=${resolution}",
+      "logoTemplateUrl": "https://images.example.com/station/filmtastic/ef0cf97b/${streamQuality}/${shape}?res=${resolution}",
       "mediaCenter": {
         "micrositeUrl": "https://app.waipu.tv/web?format=overlay&url=https%3A%2F%2Fsites.waipu.tv%2Ffilmtastic",
         "apiUrl": "https://waiputhek.waipu.tv/api/v1/tuner/microsites/filmtastic/contents"
@@ -122,11 +122,11 @@
     {
       "id": "arte",
       "displayName": "ARTE",
-      "description": "Mit dem europäischen Kultursender Arte genießen sie großartige Filme, Dokumentationen, Reportagen, Nachrichtensendungen und vieles mehr. Des Weiteren bietet Arte internationale Inhalte und bereichert so die Fernsehwelt eines jeden Zuschauers.",
+      "description": "Description of channel arte.",
       "streamQualities": [
         "hd"
       ],
-      "logoTemplateUrl": "https://images.wpstr.tv/station/arte/7913d072/${streamQuality}/${shape}?res=${resolution}",
+      "logoTemplateUrl": "https://images.example.com/station/arte/7913d072/${streamQuality}/${shape}?res=${resolution}",
       "restrictions": {
         "pauseForbidden": false,
         "recordingForbidden": false,

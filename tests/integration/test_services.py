@@ -74,7 +74,7 @@ async def test_record_series(hass, waipu):
     await call(hass, "record_series", {"program_id": program})
 
     assert sent(waipu, "POST", url) == [
-        {"channel": "ZDF", "title": "heute-show", "seriesId": "4711"}
+        {"channel": "ZDF", "title": "Program B", "seriesId": "4711"}
     ]
 
 

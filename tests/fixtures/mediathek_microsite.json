@@ -17,15 +17,15 @@
             "episode": 1,
             "genre": "Crimeserie",
             "id": "mediathek-13thstreet:f30511118_13:13th13th0000000000110954",
-            "img": "https://images.wpstr.tv/vod/139/13TH13TH0000000000110954.jpg",
+            "img": "https://images.example.com/image/1.jpg",
             "parentalGuidance": "fsk-12",
             "pinRequired": false,
             "programID": "mediathek-13thstreet:f30511118_13:13th13th0000000000110954",
             "season": 13,
-            "seriesId": "law-order-special-victims-unit",
-            "seriesTitle": "Law & Order: Special Victims Unit",
+            "seriesId": "series-b",
+            "seriesTitle": "Series B",
             "source": "https://stream-url-provider.waipu.tv/api/v1/microsites/mediathek-13thstreet/categories/f30511118_13/videos/13th13th0000000000110954",
-            "title": "Hausarrest",
+            "title": "Episode 4",
             "locked": false,
             "trackingContentId": "vod/mediathek-13thstreet:f30511118_13:13th13th0000000000110954"
           }
@@ -33,7 +33,7 @@
       ],
       "description": "",
       "id": "f30511118_13",
-      "title": "Law & Order: Special Victims Unit - Staffel - 13"
+      "title": "Series B - Staffel - 13"
     },
     {
       "contents": [
@@ -50,15 +50,15 @@
             "episode": 1,
             "genre": "Crimeserie",
             "id": "mediathek-13thstreet:f30512196_2:13thnbcu0000213500000001",
-            "img": "https://images.wpstr.tv/vod/139/13THNBCU0000213500000001.jpg",
+            "img": "https://images.example.com/image/2.jpg",
             "parentalGuidance": "fsk-12",
             "pinRequired": false,
             "programID": "mediathek-13thstreet:f30512196_2:13thnbcu0000213500000001",
             "season": 2,
-            "seriesId": "cia",
-            "seriesTitle": "CIA",
+            "seriesId": "series-a",
+            "seriesTitle": "Series A",
             "source": "https://stream-url-provider.waipu.tv/api/v1/microsites/mediathek-13thstreet/categories/f30512196_2/videos/13thnbcu0000213500000001",
-            "title": "Neue Spuren",
+            "title": "Episode 5",
             "locked": false,
             "trackingContentId": "vod/mediathek-13thstreet:f30512196_2:13thnbcu0000213500000001"
           }
@@ -66,7 +66,7 @@
       ],
       "description": "",
       "id": "f30512196_2",
-      "title": "CIA - Staffel - 2"
+      "title": "Series A - Staffel - 2"
     },
     {
       "contents": [
@@ -83,15 +83,15 @@
             "episode": 2,
             "genre": "Crimeserie",
             "id": "mediathek-13thstreet:f30512196_1:13thnbcu0000213478834422",
-            "img": "https://images.wpstr.tv/vod/139/13THNBCU0000213478834422.jpg",
+            "img": "https://images.example.com/image/3.jpg",
             "parentalGuidance": "fsk-12",
             "pinRequired": false,
             "programID": "mediathek-13thstreet:f30512196_1:13thnbcu0000213478834422",
             "season": 1,
-            "seriesId": "cia",
-            "seriesTitle": "CIA",
+            "seriesId": "series-a",
+            "seriesTitle": "Series A",
             "source": "https://stream-url-provider.waipu.tv/api/v1/microsites/mediathek-13thstreet/categories/f30512196_1/videos/13thnbcu0000213478834422",
-            "title": "Die Überläuferin",
+            "title": "Episode 6",
             "locked": false,
             "trackingContentId": "vod/mediathek-13thstreet:f30512196_1:13thnbcu0000213478834422"
           }
@@ -109,15 +109,15 @@
             "episode": 1,
             "genre": "Crimeserie",
             "id": "mediathek-13thstreet:f30512196_1:13thnbcu0000213478834421",
-            "img": "https://images.wpstr.tv/vod/139/13THNBCU0000213478834421.jpg",
+            "img": "https://images.example.com/image/4.jpg",
             "parentalGuidance": "fsk-12",
             "pinRequired": false,
             "programID": "mediathek-13thstreet:f30512196_1:13thnbcu0000213478834421",
             "season": 1,
-            "seriesId": "cia",
-            "seriesTitle": "CIA",
+            "seriesId": "series-a",
+            "seriesTitle": "Series A",
             "source": "https://stream-url-provider.waipu.tv/api/v1/microsites/mediathek-13thstreet/categories/f30512196_1/videos/13thnbcu0000213478834421",
-            "title": "Strahlenwaffe",
+            "title": "Episode 7",
             "locked": false,
             "trackingContentId": "vod/mediathek-13thstreet:f30512196_1:13thnbcu0000213478834421"
           }
@@ -125,7 +125,7 @@
       ],
       "description": "",
       "id": "f30512196_1",
-      "title": "CIA - Staffel - 1"
+      "title": "Series A - Staffel - 1"
     }
   ],
   "channel": "mediathek-13thstreet",

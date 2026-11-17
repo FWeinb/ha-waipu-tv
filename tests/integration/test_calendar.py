@@ -58,9 +58,9 @@ async def test_current_event(hass, setup):
     state = hass.states.get("calendar.waipu_tv")
 
     assert state.state == STATE_ON
-    assert state.attributes["message"] == "Die Tierärzte - Retter mit Herz"
+    assert state.attributes["message"] == "Program A"
     assert state.attributes["location"] == "Das Erste HD"
-    assert state.attributes["description"] == "Die Rettungshunde"
+    assert state.attributes["description"] == "Episode 2"
 
 
 async def test_events_are_favorites_and_scheduled_recordings(hass, setup):
@@ -69,13 +69,13 @@ async def test_events_are_favorites_and_scheduled_recordings(hass, setup):
     summaries = [(e["summary"], e["location"]) for e in events]
     # ard is the only favorite; the scheduled recording on zdf is shown, the finished one not
     assert summaries == [
-        ("Die Tierärzte - Retter mit Herz", "Das Erste HD"),
-        ("Die Tierärzte - Retter mit Herz", "Das Erste HD"),
-        ("Tagesschau", "Das Erste HD"),
-        ("Zurück aufs Eis", "Das Erste HD"),
-        ("Tagesschau", "Das Erste HD"),
-        ("Sportschau", "Das Erste HD"),
-        ("⏺ heute-show", "ZDF HD"),
+        ("Program A", "Das Erste HD"),
+        ("Program A", "Das Erste HD"),
+        ("News", "Das Erste HD"),
+        ("Film A", "Das Erste HD"),
+        ("News", "Das Erste HD"),
+        ("Sports", "Das Erste HD"),
+        ("⏺ Program B", "ZDF HD"),
     ]
 
 
@@ -98,7 +98,7 @@ async def test_recorded_program_shows_once_as_recording(hass, config_entry, setu
     recordings[1].update(
         programId=load_json("epg_grid_ard.json")[3]["id"],
         stationId="ARD",
-        title="Zurück aufs Eis",
+        title="Film A",
         epgStartTime="2026-11-14T13:00:00.000Z",
         durationSeconds=5400,
     )
@@ -111,7 +111,7 @@ async def test_recorded_program_shows_once_as_recording(hass, config_entry, setu
 
     events = await get_events(hass, "2026-11-14T14:00:00+01:00", "2026-11-14T15:30:00+01:00")
 
-    assert [e["summary"] for e in events] == ["⏺ Zurück aufs Eis"]
+    assert [e["summary"] for e in events] == ["⏺ Film A"]
 
 
 async def test_nothing_before_today(hass, setup):
